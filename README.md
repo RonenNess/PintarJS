@@ -1,6 +1,6 @@
 # PintarJS
 
-Micro JS lib for direct WebGL and canvas rendering.
+Micro JS lib (52KB minified) for direct WebGL and canvas rendering.
 
 Live Demo: [todo]
 
@@ -17,7 +17,7 @@ If you have similar requirements, ie you just want to draw stuff on screen while
 Using PintarJS is super easy!
 
 ```js
-var pintar = new PintarJS();
+var pintar = new PintarJS();	// <-- HTML body must have a canvas element
 var sprite = new PintarJS.Sprite(new PintarJS.Texture("imgs/skeleton.png");
 
 setInterval(function() {
