@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>PintarJS - Demos</title>
+    <script src="../dist/pintar.js"></script>
+    <link href="style.css" rel="stylesheet" type="text/css" media="all">
+  </head>
+  <body>
+    <div class="container container-int">
+      <br />
+      <div style="position: fixed; z-index: 1009">
+        <h1>Example 5: Fullscreen</h1>
+        <p>PintarJS can help you set the canvas to fullscreen.<br />
+        Note: if you watch this example via the demos index page remember that the demo itself is inside an iframe, which means "fullscreen" can only cover the internal iframe boundaries (this is an HTML by-design limitation).</p> <br /><br />
+      </div>
+
+      <canvas></canvas>
+    </div>
+
+  </body>
+  <script>
+    // enable debug mode
+    //PintarJS.enableDebugMessages();
+
+    // set default renderer
+    var mode = location.search.substr(1);
+    PintarJS.DefaultRenderers = PintarJS.Renderers[mode] || PintarJS.DefaultRenderers;
+    
+    // initialize pintar
+    var pintar = new PintarJS();
+    pintar.clearColor = PintarJS.Color.lavender();
+    PintarJS.Sprite.defaults.smoothingEnabled = false;
+    pintar.makeFullscreen();
+    var texture = new PintarJS.Texture("imgs/necro.png");
+    var sprite = new PintarJS.Sprite(texture, new PintarJS.Point(500, 300), {scale: new PintarJS.Point(2, 2)});
+
+    // set a function to animate sprites and redraw
+    function drawSprites()
+    {
+      // start frame
+      pintar.startFrame();
+
+      // draw sprite
+      pintar.drawSprite(sprite);
+
+      // end frame
+      pintar.endFrame();
+    }
+
+    // draw sprite and start interval to animate and redraw
+    drawSprites();
+    setInterval(drawSprites, 1000 / 60);
+  </script>
+</html>

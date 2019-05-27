@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>PintarJS - Demos</title>
+    <script src="../dist/pintar.js"></script>
+    <link href="style.css" rel="stylesheet" type="text/css" media="all">
+  </head>
+  <body>
+    <div class="container container-int">
+      <br />
+      <h1>Example 1: Hello World</h1>
+      <p>There are 3 ways to initialize PintarJS:</p>
+      <ul>
+        <li>Without params: will use first canvas element in page.</li>
+        <li>With query string: will query to get canvas DOM element.</li>
+        <li>With canvas DOM: will use that canvas instance.</li>
+      </ul>
+      <p>This page show the different ways to initialize PintarJS + draw text on screen.</p> <br /><br />
+      
+      <!-- for first example - init without params -->
+      <canvas></canvas>
+
+      <!-- for second example, init with query -->
+      <canvas id="canvas2"></canvas>
+
+      <!-- for third example, init with DOM -->
+      <canvas id="canvas3"></canvas>
+    </div>
+
+  </body>
+  <script>
+
+    // enable debug mode
+    //PintarJS.enableDebugMessages();
+
+    // set default renderer
+    var mode = location.search.substr(1);
+    PintarJS.DefaultRenderers = PintarJS.Renderers[mode] || PintarJS.DefaultRenderers;
+
+    // init pintar renderers
+    var exm1 = new PintarJS();
+    var exm2 = new PintarJS("#canvas2");
+    var exm3 = new PintarJS(document.getElementById("canvas3"));
+
+    // start drawing loop
+    var drawScene = function() {
+
+      // example 1 - creating PintarJS without params
+      exm1.startFrame();
+      exm1.drawText(new PintarJS.TextSprite("Hello world", new PintarJS.Point(30, 30)));
+      exm1.drawText(new PintarJS.TextSprite("(created without params)", new PintarJS.Point(30, 60), {fontSize: 20, color: PintarJS.Color.red()}));
+      exm1.endFrame();
+
+      // example 2 - creating PintarJS with query string
+      exm2.startFrame();
+      exm2.drawText(new PintarJS.TextSprite("Hello world", new PintarJS.Point(30, 30)));
+      exm2.drawText(new PintarJS.TextSprite("(created with query string)", new PintarJS.Point(30, 60), {fontSize: 20, color: PintarJS.Color.green()}));
+      exm2.endFrame();
+
+      // example 3 - creating PintarJS with dom element
+      exm3.startFrame();
+      exm3.drawText(new PintarJS.TextSprite("Hello world", new PintarJS.Point(30, 30)));
+      exm3.drawText(new PintarJS.TextSprite("(created with DOM element)", new PintarJS.Point(30, 60), {fontSize: 20, color: PintarJS.Color.blue()}));
+      exm3.endFrame();
+
+    };
+    window.onresize = drawScene;
+    drawScene();
+
+  </script>
+</html>

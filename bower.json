@@ -1,0 +1,26 @@
+{
+  "name": "pintar",
+  "version": "1.0.0.0",
+  "homepage": "https://github.com/RonenNess/PintarJS/",
+  "authors": [
+    "Ronen Ness <ronenness@gmail.com>"
+  ],
+  "description": "Micro JS lib for direct WebGL and canvas rendering.",
+  "keywords": [
+    "webgl",
+	  "canvas",
+	  "rendering",
+    "drawing",
+    "graphics",
+    "game"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "main": "dist/pintar.js"
+}

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>PintarJS - Demos</title>
+    <script src="../dist/pintar.js"></script>
+    <link href="style.css" rel="stylesheet" type="text/css" media="all">
+  </head>
+  <body>
+    <div class="container container-int">
+      <br />
+      <h1>Example 7: Viewport</h1>
+      <p>Viewports define rendering offset and target region, and are useful as a form of basic cameras.<br />
+      In this example we define a rendering region (meaning we won't render on the entire canvas) + we move the viewport offset over time, making the "camera" move around in the level.</p> <br /><br />
+
+      <canvas></canvas>
+    </div>
+
+  </body>
+  <script>
+    // enable debug mode
+    //PintarJS.enableDebugMessages();
+
+    // set default renderer
+    var mode = location.search.substr(1);
+    PintarJS.DefaultRenderers = PintarJS.Renderers[mode] || PintarJS.DefaultRenderers;
+    
+    // initialize pintar
+    var pintar = new PintarJS();
+    pintar.clearColor = PintarJS.Color.lavender();
+
+    // set viewport
+    var viewport = new PintarJS.Viewport(PintarJS.Point.zero(), new PintarJS.Rectangle(50, 50, 550, 450));
+    pintar.setViewport(viewport);
+
+    // adjust size
+    pintar.adjustToParentSize();
+    window.onresize = () => {
+      pintar.adjustToParentSize();
+    };
+
+    // load texture and set callback to invoke when ready
+    var texture = new PintarJS.Texture("imgs/grass.png", () => {
+      
+      // create tilemap
+      var tiles = [];
+      for (var i = 0; i < 35; ++i) {
+        for (var j = 0; j < 35; ++j) {
+          var sprite = new PintarJS.Sprite(texture);
+          if (Math.random() < 0.65) {
+            sprite.setSourceFromSpritesheet(new PintarJS.Point(1, 0), new PintarJS.Point(4, 2));
+          }
+          else {
+            sprite.setSourceFromSpritesheet(new PintarJS.Point(Math.floor(Math.random() * 4), Math.floor(Math.random() * 2)), 
+            new PintarJS.Point(4, 2));
+          }
+          sprite.smoothingEnabled = false;
+          sprite.width = 64;
+          sprite.height = 64;
+          sprite.position = new PintarJS.Point(i * 64, j * 64);
+          tiles.push(sprite);
+        }
+      }
+
+      // to animate viewport movement
+      var viewportPos = 0;
+
+      // set a function to animate sprites and redraw
+      function drawSprites()
+      {
+        // start frame
+        pintar.startFrame();
+
+        // move viewport
+        viewportPos += 0.00085;
+        viewport.offset.x = (Math.sin(viewportPos) + 1) * 650;
+        viewport.offset.y = (Math.cos(viewportPos) + 1) * 650;
+
+        // draw tiles
+        for (var i = 0; i < tiles.length; ++i) {
+          pintar.drawSprite(tiles[i]);
+        }
+
+        // end frame
+        pintar.endFrame();
+        requestAnimationFrame(drawSprites);
+      }
+
+      // draw sprite and start interval to animate and redraw
+      drawSprites();
+    });
+  </script>
+</html>

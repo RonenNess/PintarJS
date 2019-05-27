@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>PintarJS - Demos</title>
+    <script src="../dist/pintar.js"></script>
+    <link href="style.css" rel="stylesheet" type="text/css" media="all">
+  </head>
+  <body>
+    <div class="container container-int">
+      <br />
+      <h1>Example 4: Transformations</h1>
+      <p>This example shows sprite transformations, effects and blending modes.</p> <br /><br />
+
+      <canvas></canvas>
+    </div>
+
+  </body>
+  <script>
+    // enable debug mode
+    //PintarJS.enableDebugMessages();
+
+    // set default renderer
+    var mode = location.search.substr(1);
+    PintarJS.DefaultRenderers = PintarJS.Renderers[mode] || PintarJS.DefaultRenderers;
+    
+    // initialize pintar
+    var pintar = new PintarJS();
+    pintar.clearColor = PintarJS.Color.lavender();
+    PintarJS.Sprite.defaults.smoothingEnabled = false;
+
+    // not supported message for canvas
+    var isCanvas = pintar.rendererName === "CanvasRenderer";
+    var notSupported = isCanvas ? "\n[GL only]" : ""
+
+    // adjust size
+    pintar.adjustToParentSize();
+    window.onresize = () => {
+      pintar.adjustToParentSize();
+    };
+
+    // background sprite
+    var backTexture = new PintarJS.Texture("imgs/clouds.png");
+    var backSprite = new PintarJS.Sprite(backTexture);
+
+    // load texture and set callback to invoke when ready
+    var texture = new PintarJS.Texture("imgs/necro.png", () => {
+      
+      // initialize sprites
+      var _spritesInstance = [];
+      var _texts = [];
+      var scale = new PintarJS.Point(4, 4);
+      var width = texture.width * scale.x;
+      var height = texture.height * scale.y;
+      var paddedWidth = width * 1.25;
+      var paddedHeight = height * 1.25;
+
+      // function create a demo sprite with options to show
+      function createDemoSprite(i, j, text, options, glOnly)
+      {
+        // create the sprite and add to sprites list
+        options.scale = options.scale || scale;
+        options.extraPos = options.extraPos || PintarJS.Point.zero();
+        var x = 20 + paddedWidth * i * 1.15;
+        var y = 20 + paddedHeight * j * 1.25;
+        var newSprite = new PintarJS.Sprite(texture, new PintarJS.Point(x + options.extraPos.x, y + options.extraPos.y), options);
+        newSprite.size = new PintarJS.Point(texture.width, texture.height);
+        _spritesInstance.push(newSprite);
+
+        // add display text
+        _texts.push(new PintarJS.TextSprite(text + (glOnly ? notSupported : ""), 
+                    new PintarJS.Point(x + width / 2, y + paddedHeight), 
+                    {fontSize: 14, alignment: "center", 
+                    color: (isCanvas && glOnly) ? PintarJS.Color.red() : null}));
+
+          // attach metadata for animations to sprite
+          for (var key in options)
+          {
+            if (options.hasOwnProperty(key) && key[0] == '_') {
+              newSprite[key] = options[key];
+            }
+          }  
+      }
+
+      // create all demo sprites
+
+      var i = 0;
+      var j = 0;
+      
+      // sprites to show blend modes
+      for (var blend in PintarJS.BlendModes) {
+        if (PintarJS.BlendModes.hasOwnProperty(blend)) {
+          createDemoSprite(i++, j, blend, {blendMode: PintarJS.BlendModes[blend]});
+        }
+      }
+
+      // sprites to show color effects
+      i = 0;
+      j++;
+      createDemoSprite(i++, j, "Tint (Red)", {color: PintarJS.Color.red()}, true);
+      createDemoSprite(i++, j, "Amplify (Red)", {color: new PintarJS.Color(10, 1, 1, 1)}, true);
+      createDemoSprite(i++, j, "Boost (Red)", {colorBoost: new PintarJS.Color(1, 0, 0, 0)}, true);
+      createDemoSprite(i++, j, "Silhouette (Green)", {colorBoost: new PintarJS.Color(1, 1, 1, 0), color: PintarJS.Color.green()}, true);
+      createDemoSprite(i++, j, "Opacity", {color: new PintarJS.Color(1, 1, 1, 0.5)}, false);
+      createDemoSprite(i++, j, "Brightness", {_animateBrightness: true}, false);
+      createDemoSprite(i++, j, "Glowing", {colorBoost: new PintarJS.Color(1, 0, 0, 0), blendMode: PintarJS.BlendModes.Additive, smoothingEnabled: true}, true);
+      createDemoSprite(i++, j, "Amplify Alpha", {_animateAlpha: true}, true);      
+      createDemoSprite(i, j, "Shadow Trick", {skew: new PintarJS.Point(-1.5, 0), brightness: -10, color: new PintarJS.Color(0, 0, 0, 0.25), blendMode: PintarJS.BlendModes.Multiply, origin: new PintarJS.Point(0.5, 1), extraPos: new PintarJS.Point(width / 2, height), scale: new PintarJS.Point(scale.x, scale.y / 2)}, false);
+      createDemoSprite(i++, j, "", {}, false);
+
+      // sprites to show transformations
+      i = 0;
+      j++;
+      createDemoSprite(i++, j, "Smooth Filter", {smoothingEnabled: true}, false);
+      createDemoSprite(i++, j, "Rotation", {_animateRotation: true, origin: PintarJS.Point.half(), extraPos: new PintarJS.Point(width / 2, height / 2)}, false);
+      createDemoSprite(i++, j, "Rotation + Origin", {_animateRotation: true, origin: new PintarJS.Point(0.5, 1), extraPos: new PintarJS.Point(width / 2, height)}, false);
+      createDemoSprite(i++, j, "Skew X", {skew: new PintarJS.Point(0.75, 0), origin: PintarJS.Point.half(), extraPos: new PintarJS.Point(width / 2, height / 2)}, false);
+      createDemoSprite(i++, j, "Skew Y", {skew: new PintarJS.Point(0, 0.75), origin: PintarJS.Point.half(), extraPos: new PintarJS.Point(width / 2, height / 2)}, false);
+      createDemoSprite(i++, j, "Skew Both", {skew: new PintarJS.Point(0.75, 0.75), origin: PintarJS.Point.half(), extraPos: new PintarJS.Point(width / 2, height / 2)}, false);
+      createDemoSprite(i++, j, "Flip X", {_animateScaleY: true, origin: new PintarJS.Point.half(), extraPos: new PintarJS.Point(width / 2, height / 2)}, false);
+      createDemoSprite(i++, j, "Flip y", {_animateScaleX: true, origin: new PintarJS.Point.half(), extraPos: new PintarJS.Point(width / 2, height / 2)}, false);
+      createDemoSprite(i++, j, "Scaling", {_animateScaleYPosOnly: true, origin: new PintarJS.Point(0.5, 1), extraPos: new PintarJS.Point(width / 2, height)}, false);
+      
+      // for animations
+      var animValue = 0;
+
+      // set a function to animate sprites and redraw
+      function drawSprites()
+      {
+        // start frame
+        pintar.startFrame();
+
+        // draw background
+        backSprite.width = pintar.canvas.width;
+        backSprite.height = pintar.canvas.height;
+        pintar.drawSprite(backSprite);
+        
+        // advance animation
+        animValue += pintar.deltaTime;
+
+        // draw (and animate) all sprites
+        for (var i = 0; i < _spritesInstance.length; ++i) {
+          
+          // get current sprite
+          var sprite = _spritesInstance[i];
+
+          // animate
+          if (sprite._animateRotation) { sprite.rotation = animValue * 50; }
+          if (sprite._animateScaleX) { sprite.scale.x = Math.sin(animValue) * scale.x; }
+          if (sprite._animateScaleY) { sprite.scale.y = Math.sin(animValue) * scale.y; }
+          if (sprite._animateBrightness) { sprite.brightness = (Math.sin(animValue) + 1) * 2; }
+          if (sprite._animateAlpha) { sprite.alpha = 1 + (Math.sin(animValue) + 1) * 10; }
+          if (sprite._animateScaleYPosOnly) { sprite.scale.y = Math.abs(Math.sin(animValue)) * scale.y; }
+
+          // draw sprite and text
+          pintar.drawSprite(sprite);
+          pintar.drawText(_texts[i]);
+        }
+
+        // end frame
+        pintar.endFrame();
+      }
+
+      // draw sprite and start interval to animate and redraw
+      drawSprites();
+      setInterval(drawSprites, 1000 / 60);
+    });
+  </script>
+</html>

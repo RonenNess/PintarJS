@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>PintarJS - Demos</title>
+    <link href="style.css" rel="stylesheet" type="text/css" media="all">
+  </head>
+  <body style="overflow: scroll;">
+      <div class="container" style="height: 100vh;">
+
+        <br /><br />
+
+          <!-- warning when serving from files -->
+          <div id="no-cross-origin" style="display:none; color:red">
+            <h2>Warning, examples won't work when accessed via filesystem!</h2>
+            <p>When opening the HTML page from filesystem, textures won't work due to cross-origin protection. <br />
+            To view examples properly execute 'serve.bat' from the root folder (requires Python) and enter 'http://localhost:8000/demos/index.html' in your browser.</p>
+          </div>
+
+          <!-- example selection -->
+          <div class="row">
+              <a class="nav-link" style="padding: 1px;" href="#example1_hello.html"><button type="button" class="btn btn-primary">Hello World</button></a>
+              <a class="nav-link" style="padding: 1px;" href="#example2_animation.html"><button type="button" class="btn btn-primary">Basic Animation</button></a>
+              <a class="nav-link" style="padding: 1px;" href="#example3_performance.html"><button type="button" class="btn btn-primary">Performance</button></a>
+              <a class="nav-link" style="padding: 1px;" href="#example4_transformations.html"><button type="button" class="btn btn-primary">Transformations</button></a>
+              <a class="nav-link" style="padding: 1px;" href="#example5_fullscreen.html"><button type="button" class="btn btn-primary">Fullscreen</button></a>
+              <a class="nav-link" style="padding: 1px;" href="#example6_resolution.html"><button type="button" class="btn btn-primary">Resolution</button></a> 
+              <a class="nav-link" style="padding: 1px;" href="#example7_viewport.html"><button type="button" class="btn btn-primary">Viewports</button></a> 
+            </div>
+
+          <!-- example content -->
+          <div class="row">
+            <p id="forced-canvas-show" style="display:none; color:red; position: relative; top:5px; left:10px; z-index:1000; margin-bottom: -100%;">Forced fallback to canvas - some features will not work</p>
+            <iframe id="example-show" style="width:100%; height: 950px;" src=""></iframe>
+          </div>
+
+          <!-- Force canvas? -->
+          <div class="row">
+            <div class="custom-control custom-checkbox noselect">
+                <input type="checkbox" class="custom-control-input" style="cursor: pointer" id="forceCanvas">
+                <label class="custom-control-label" style="cursor: pointer" for="forceCanvas">Force using Canvas?</label>
+            </div>
+          </div>
+          <br /><br />
+      </div>
+
+      <!-- Error message on files -->
+      <script>
+        if (location.protocol == "file:") {
+          alert("Warning! Due to cross-origin protection examples won't work properly.");
+          document.getElementById("no-cross-origin").style.display = "block";
+        }
+      </script>
+
+      <!-- handle example selection-->
+      <script>
+
+        // init default demo
+        if (!location.hash) {
+          location.hash = "example1_hello.html";
+        }
+
+        // init using canvas mode
+        if (location.hash.indexOf("?Canvas") !== -1) {
+          document.getElementById("forceCanvas").checked = true;
+        }
+        
+        // this function get current selected example and load it
+        function setExampleOnChange() 
+        {
+          // get current selection from hash params
+          var curr = location.hash.substr(1);
+
+          // set flag if forcing canvas
+          var useCanvas = document.getElementById("forceCanvas").checked;
+          if (useCanvas && curr.indexOf("?Canvas") === -1) {
+            location.hash = location.hash + "?Canvas";
+          } else if (!useCanvas && curr.indexOf("?Canvas") !== -1) {
+            location.hash = location.hash.split('?')[0];
+          }
+          document.getElementById("forced-canvas-show").style.display = useCanvas ? "block" : "none";
+
+          // if example changed..
+          if (curr && curr != window._loadedExample) {
+
+            // store current and update example
+            window._loadedExample = curr;
+            document.getElementById("example-show").src = curr;
+
+            // adjust selected example color
+            var buttons = document.querySelectorAll("button");
+            for (var i = 0; i < buttons.length; ++i) {
+              if (location.hash.indexOf(buttons[i].parentElement.href.split('#')[1]) != -1) {
+                buttons[i].className = "btn btn-success"
+              } else {
+                buttons[i].className = "btn btn-primary"
+              }
+            }
+          }
+        }
+
+        // set example on load + update every few miliseconds
+        setExampleOnChange();
+        setInterval(setExampleOnChange, 50);
+      </script>
+  </body>
+</html>

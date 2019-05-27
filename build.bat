@@ -1,0 +1,1 @@
+browserify src/pintar.js --s PintarJS --outfile dist/pintar.js & uglifyjs --keep-fnames -o dist/pintar.min.js dist/pintar.js

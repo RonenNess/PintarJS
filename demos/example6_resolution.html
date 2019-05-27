@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>PintarJS - Demos</title>
+    <script src="../dist/pintar.js"></script>
+    <link href="style.css" rel="stylesheet" type="text/css" media="all">
+  </head>
+  <body>
+    <div class="container container-int">
+      <br />
+      <div style="position: fixed; z-index: 1009">
+        <h1>Example 6: Resolution</h1>
+        <p>PintarJS can help you maintain a constant rendering resolution. Due to browser limitations and the fact that users can control the window size, you can't really set both X and Y resolution, you must either set resolution width or height, and PintarJS will adjust the other axis accordingly to maintain a 1:1 ratio.<br/><br/>
+          In this example, we lock width to 800px resolution, which means our rendering width will always be 800, and height will vary based on browser size.</p> <br /><br />
+      </div>
+
+      <canvas></canvas>
+    </div>
+
+  </body>
+  <script>
+    // enable debug mode
+    //PintarJS.enableDebugMessages();
+
+    // set default renderer
+    var mode = location.search.substr(1);
+    PintarJS.DefaultRenderers = PintarJS.Renderers[mode] || PintarJS.DefaultRenderers;
+    
+    // initialize pintar
+    var pintar = new PintarJS();
+    pintar.clearColor = PintarJS.Color.lavender();
+    PintarJS.Sprite.defaults.smoothingEnabled = false;
+    pintar.makeFullscreen();
+    pintar.makePixelatedScaling();
+    pintar.fixedResolutionX = 800;
+    var texture = new PintarJS.Texture("imgs/necro.png");
+    var sprite = new PintarJS.Sprite(texture, new PintarJS.Point(400, 200), {scale: new PintarJS.Point(2, 2)});
+
+    // set a function to animate sprites and redraw
+    function drawSprites()
+    {
+      // start frame
+      pintar.startFrame();
+
+      // draw sprite
+      pintar.drawSprite(sprite);
+
+      // end frame
+      pintar.endFrame();
+    }
+
+    // draw sprite and start interval to animate and redraw
+    drawSprites();
+    setInterval(drawSprites, 1000 / 60);
+  </script>
+</html>
