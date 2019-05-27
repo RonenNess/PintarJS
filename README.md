@@ -4,6 +4,8 @@ Micro JS lib (52KB minified) for direct WebGL and canvas rendering.
 
 Live Demo: [todo]
 
+![PintarJS example](https://github.com/RonenNess/PintarJS/raw/master/demos/example.png "PintarJS transformations example")
+
 ## Why
 
 When it comes to WebGL, there are two types of libraries you can find: either high-level huge libraries that manage everything for you (like PIXI), or really low-level stuff that merely wrap WebGL with a more comfortable API and require a lot of work to use.
