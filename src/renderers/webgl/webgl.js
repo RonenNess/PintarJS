@@ -256,6 +256,9 @@ class WebGlRenderer extends Renderer
 
         // update the overlay canvas position and size
         this._updateOverlayCanvas();
+
+        // clear texture caching
+        this._texture = null;
     }
 
     /**
