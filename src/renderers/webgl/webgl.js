@@ -259,6 +259,7 @@ class WebGlRenderer extends Renderer
 
         // clear texture caching
         this._texture = null;
+        this._textureWidth = -1;
     }
 
     /**

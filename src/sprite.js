@@ -24,6 +24,7 @@ for (var i = 0; i <= 360 / 5; ++i) {
     if (Object.freeze) { Object.freeze(predefinedRotationVectors[deg]); }
 }
 
+
 /**
  * A drawable sprite instance.
  */
@@ -90,15 +91,26 @@ class Sprite extends Renderable
      */
     get sourceRectangleRelative()
     {
-        if (!this._sourceRectangleRelative || !this._lastSrcRect.equals(this.sourceRectangle) || isNaN(this._sourceRectangleRelative.width)) {
-            this._lastSrcRect = this.sourceRectangle.clone();
+        // if source rect was changed, recalc the relative source rect
+        if (!this._sourceRectangleRelative || !this._lastSrcRect.equals(this.sourceRectangle)) {
+            
+            // get texture size
             var twidth = this.texture.width;
             var theight = this.texture.height;
+
+            // texture not yet loaded? stop here..
+            if (!twidth || !theight) {
+                return new Rectangle(0, 0, 0, 0);
+            }
+
+            // store last source rect and recalc relative rect
+            this._lastSrcRect = this.sourceRectangle.clone();
             this._sourceRectangleRelative = new Rectangle(
-                this.sourceRectangle.x / twidth, 
-                this.sourceRectangle.y / theight, 
-                (this.sourceRectangle.width || this.texture.width) / twidth, 
-                (this.sourceRectangle.height || this.texture.height) / theight);
+                (this.sourceRectangle.x + 0.5) / twidth, 
+                (this.sourceRectangle.y + 0.5) / theight, 
+                ((this.sourceRectangle.width || this.texture.width) - 0.5) / twidth, 
+                ((this.sourceRectangle.height || this.texture.height) - 0.5) / theight);
+                // note: the + 0.5 and -1 is to sample the pixel's center to avoid bleeding in texture atlases.
         }
         return this._sourceRectangleRelative;
     }

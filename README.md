@@ -463,6 +463,13 @@ You can use PintarJS to adjust the canvas size to its parent:
 pintar.adjustToParentSize();
 ```
 
+## Changes
+
+### 1.0.0.1
+
+- Fixed texture bleeding while using atlas.
+- Fixed bug with single texture delayed load / wrong source rectangle.
+
 ## License
 
 PintarJS is distributed under the permissive MIT License and is absolutely free to use for any purpose, commercial or not.
