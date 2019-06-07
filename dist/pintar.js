@@ -367,7 +367,7 @@ const Viewport = require('./viewport');
 const PintarConsole = require('./console');
 
 // current version and author
-const __version__ = "1.0.0.0";
+const __version__ = "1.0.0.2";
 const __author__ = "Ronen Ness";
 
 /**
@@ -885,6 +885,7 @@ module.exports = Point;
  * since: 2019.
  */
 "use strict";
+const Point = require('./point');
 
 
 /**
@@ -921,7 +922,55 @@ class Rectangle
         this.width = width;
         this.height = height;
     }
-        
+
+    /**
+     * Get position as point.
+     */
+    getPosition()
+    {
+        return new Point(this.x, this.y);
+    }
+    
+    /**
+     * Get size as point.
+     */
+    getSize()
+    {
+        return new Point(this.width, this.height);
+    }
+
+    /**
+     * Get left value.
+     */
+    get left()
+    {
+        return this.x;
+    }
+
+    /**
+     * Get right value.
+     */
+    get right()
+    {
+        return this.x + this.width;
+    }
+
+    /**
+     * Get top value.
+     */
+    get top()
+    {
+        return this.y;
+    }
+
+    /**
+     * Get bottom value.
+     */
+    get bottom()
+    {
+        return this.y + this.height;
+    }
+
     /**
      * Return a clone of this rectangle.
      */
@@ -942,7 +991,7 @@ class Rectangle
 
 // export Rect
 module.exports = Rectangle;
-},{}],7:[function(require,module,exports){
+},{"./point":5}],7:[function(require,module,exports){
 /**
  * file: renderable.js
  * description: A renderable object base class.

@@ -44,7 +44,7 @@ View bower:
 bower install pintar
 ```
 
-Via npm:
+Via npm (update less frequently):
 
 ```
 npm install pintar
@@ -469,6 +469,10 @@ pintar.adjustToParentSize();
 
 - Fixed texture bleeding while using atlas.
 - Fixed bug with single texture delayed load / wrong source rectangle.
+
+### 1.0.0.2 [not released yet]
+
+- Added some useful API functions to base objects.
 
 ## License
 
