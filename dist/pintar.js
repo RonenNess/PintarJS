@@ -2941,8 +2941,6 @@ module.exports = WebGlHybridRenderer;
 "use strict";
 const Renderer = require('./../renderer');
 const PintarConsole = require('./../../console');
-const CanvasRenderer = require('./../canvas');
-const Color = require('./../../color');
 const Point = require('./../../point');
 const BlendModes = require('../../blend_modes');
 const Viewport = require('./../../viewport');
@@ -3051,8 +3049,6 @@ class WebGlRenderer extends Renderer
         // Set the parameters so we can render any size image.
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        //gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-        //gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 
         // Tell it to use our program (pair of shaders)
         gl.useProgram(program);
@@ -3205,9 +3201,9 @@ class WebGlRenderer extends Renderer
      * Draw text.
      * For more info check out renderer.js.
      */
-    drawText(textSprite) 
-    { 
-        //this._overlayCanvasRender.drawText(textSprite);
+    drawText(textSprite)
+    {
+        // TODO
     }
 
     /**
@@ -3402,7 +3398,7 @@ class WebGlRenderer extends Renderer
 
 // export WebGlRenderer
 module.exports = WebGlRenderer;
-},{"../../blend_modes":1,"./../../color":2,"./../../console":3,"./../../point":5,"./../../rectangle":6,"./../../viewport":20,"./../canvas":9,"./../renderer":11,"./shaders":13,"./webgl-utils":15}],17:[function(require,module,exports){
+},{"../../blend_modes":1,"./../../console":3,"./../../point":5,"./../../rectangle":6,"./../../viewport":20,"./../renderer":11,"./shaders":13,"./webgl-utils":15}],17:[function(require,module,exports){
 /**
  * file: sprite.js
  * description: A drawable sprite.
@@ -3661,8 +3657,10 @@ class TextSprite extends Renderable
      */
     constructor(text, position, options)
     {
+        // set basics
         options = options || {};
         super(position || Point.zero(), options.color || TextSprite.defaults.color, options.blendMode || TextSprite.defaults.blendMode);
+        this._version = 0;
         this.text = text;
         this.font = options.font || TextSprite.defaults.font;
         this.fontSize = options.fontSize || TextSprite.defaults.fontSize;
@@ -3670,6 +3668,109 @@ class TextSprite extends Renderable
         this.strokeWidth = options.strokeWidth || TextSprite.defaults.strokeWidth;
         this.maxWidth = null;
         this.strokeColor = (options.strokeColor || TextSprite.defaults.strokeColor).clone();
+
+        // reset version after init
+        this._version = 0;
+    }
+
+    /**
+     * Get hash code of text
+     */
+    getHashCode() 
+    {
+        var text = this.text;
+        var hash = 0, i, chr;
+        if (text.length === 0) return hash;
+        for (i = 0; i < text.length; i++) {
+            chr   = text.charCodeAt(i);
+            hash  = ((hash << 5) - hash) + chr;
+            hash |= 0;
+        }
+        return hash;
+    };
+    
+    /**
+     * Get unique id representing this text sprite and all its properties.
+     */
+    getUniqueId()
+    {
+        // take id from cache
+        if (this._uniqueId && (this._lastUniqueIdVersion == this._version)) {
+            return this._uniqueId;
+        }
+
+        // if got here it means we need to generate a new id
+        this._uniqueId = this.getHashCode().toString() + this.fontPropertyAsString + this.alignment + this.strokeWidth + this.color.asHex() + this.strokeColor.asHex() + this.maxWidth;
+        this._lastUniqueIdVersion = this._version;
+        return this._uniqueId;
+    }
+
+    /**
+     * Set alignment.
+     */
+    set alignment(val)
+    {
+        this._alignment = val;
+        this._version++;
+    }
+
+    /**
+     * Get alignment.
+     */
+    get alignment()
+    {
+        return this._alignment;
+    }
+
+    /**
+     * Set stroke color.
+     */
+    set strokeColor(val)
+    {
+        this._strokeColor = val;
+        this._version++;
+    }
+
+    /**
+     * Get stroke color.
+     */
+    get strokeColor()
+    {
+        return this._strokeColor;
+    }
+
+    /**
+     * Set max line width.
+     */
+    set maxWidth(val)
+    {
+        this._maxWidth = val;
+        this._version++;
+    }
+
+    /**
+     * Get max line width.
+     */
+    get maxWidth()
+    {
+        return this._maxWidth;
+    }
+
+    /**
+     * Set stroke width.
+     */
+    set strokeWidth(val)
+    {
+        this._strokeWidth = val;
+        this._version++;
+    }
+
+    /**
+     * Get stroke width.
+     */
+    get strokeWidth()
+    {
+        return this._strokeWidth;
     }
 
     /**
@@ -3679,6 +3780,7 @@ class TextSprite extends Renderable
     {
         this._text = val;
         this._textLines = val.split('\n');
+        this._version++;
     }
 
     /**
@@ -3707,6 +3809,7 @@ class TextSprite extends Renderable
     {
         this._font = val;
         this._fontString = null;
+        this._version++;
     }
 
     /**
@@ -3724,6 +3827,7 @@ class TextSprite extends Renderable
     {
         this._fontSize = val;
         this._fontString = null;
+        this._version++;
     }
 
     /**
@@ -3740,11 +3844,15 @@ class TextSprite extends Renderable
     set lineHeight(val)
     {
         this._lineHeight = val;
+        this._version++;
     }
 
+    /**
+     * Get text line height.
+     */
     get lineHeight()
     {
-        return this._lineHeight || (this.fontSize + 1);
+        return this._lineHeight || (Math.ceil(this.fontSize) + 1);
     }
 
     /**

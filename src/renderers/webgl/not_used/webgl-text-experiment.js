@@ -5,12 +5,15 @@
  * since: 2019.
  */
 "use strict";
-const Renderer = require('./../renderer');
-const PintarConsole = require('./../../console');
-const Point = require('./../../point');
+const Renderer = require('../renderer');
+const PintarConsole = require('../../console');
+const Sprite = require('../../sprite');
+const Texture = require('../../texture');
+const Point = require('../../point');
+const Color = require('../../color');
 const BlendModes = require('../../blend_modes');
-const Viewport = require('./../../viewport');
-const Rectangle = require('./../../rectangle');
+const Viewport = require('../../viewport');
+const Rectangle = require('../../rectangle');
 const Shaders = require('./shaders');
 const WebglUtils = require('./webgl-utils').webglUtils;
 
@@ -49,6 +52,9 @@ class WebGlRenderer extends Renderer
 
         // init shaders and internal stuff
         this._initShadersAndBuffers();
+
+        // cache of temporary textures we use to draw texts
+        this._cachedTextsAsPlainSprites = {};
 
         // ready!
         PintarConsole.debug("WebGL renderer ready!");
@@ -211,6 +217,12 @@ class WebGlRenderer extends Renderer
      */
     endFrame()
     {
+        // check if need to remove some texts textures
+        for (var key in this._cachedTextsAsPlainSprites) {
+            if (this._cachedTextsAsPlainSprites[key].ttl-- < 0) {
+                delete this._cachedTextsAsPlainSprites[key];
+            }
+        }
     }
 
     /**
@@ -270,6 +282,87 @@ class WebGlRenderer extends Renderer
     drawText(textSprite)
     {
         // TODO
+    }
+
+    /**
+     * Experimental - draw text as a plain sprite, by using canvas and creating a temporary texture.
+     * This method was deprecated but partially supported.
+     */
+    drawTextAsRegularSprite(textSprite) 
+    { 
+        // check if we need to generate texture for this text
+        var id = textSprite.getUniqueId();
+        if (!this._cachedTextsAsPlainSprites[id]) {
+
+            // create text texture
+            var _this = this;
+            (function(textSprite, id){
+                _this._cachedTextsAsPlainSprites[id] = {
+                    sprite: _this.textSpriteToRegularSprite(textSprite, function() { 
+                        _this._drawTextFromExistingCachedSprite(textSprite); 
+                    }),
+                    version: textSprite._version,
+                    ttl: 1000,
+                }
+            })(textSprite, id);
+            return;
+        }
+
+        // if already got texture for this text, draw it
+        this._drawTextFromExistingCachedSprite(textSprite);
+    }
+
+    /**
+     * Draw text from existing cached text sprite.
+     */
+    _drawTextFromExistingCachedSprite(textSprite)
+    {
+        var sprite = this._cachedTextsAsPlainSprites[textSprite.getUniqueId()].sprite;
+        sprite.width = sprite.texture.width;
+        sprite.height = sprite.texture.height;
+        sprite.position = new Point(textSprite.position.x, textSprite.position.y - textSprite.lineHeight);
+        sprite.alpha = textSprite.alpha;
+        this.drawSprite(sprite);
+    }
+
+    /**
+     * Generate a regular sprite with texture (using canvas draw) to display a given text sprite.
+     * @param {*} textSprite Text sprite to generate texture for.
+     * @param {Function} onReady Optional callback to invoke when texture is ready.
+     * @returns {Sprite} Sprite containing a texture to display the text.
+     */
+    textSpriteToRegularSprite(textSprite, onReady)
+    {
+        // get canvas renderer
+        const CanvasRenderer = require('../canvas');
+
+        // create canvas to generate the texture on and init canvas renderer
+        var canvas = document.createElement('canvas');
+        var renderer = new CanvasRenderer();
+        renderer._init(canvas);
+
+        // use canvas to measure text size
+        var context = canvas.getContext("2d");
+        context.font = textSprite.fontPropertyAsString;
+        var metrics = context.measureText(textSprite.text);
+        canvas.width = metrics.width;
+        canvas.height = textSprite.lineHeight * 1.25 * textSprite.textLines.length;
+
+        // reset text sprite position and draw it on temporary canvas
+        var prevPos = textSprite.position;
+        textSprite.position = new Point(0, textSprite.lineHeight);
+        renderer.drawText(textSprite);
+
+        // restore position and end frame
+        textSprite.position = prevPos;
+
+        // get texture from canvas
+        var img = new Image();
+        img.src = canvas.toDataURL("image/png");
+        var sprite = new Sprite(new Texture(img, onReady));
+        sprite.smoothingEnabled = false;
+        sprite.color = Color.white();
+        return sprite;
     }
 
     /**
