@@ -44,6 +44,9 @@ class CanvasRenderer extends Renderer
     {
         // update viewport clipping
         this.setViewport(this._viewport);
+
+        // reset font used
+        this._currFont = null;
     }
 
     /**
@@ -154,12 +157,15 @@ class CanvasRenderer extends Renderer
         this._setBlendMode(textSprite.blendMode);
 
         // set font and alignment
-        this._ctx.font = textSprite.fontPropertyAsString;
+        var newFont = textSprite.fontPropertyAsString;
+        if (this._currFont != newFont) {
+          this._ctx.font = this._currFont = newFont;
+        }
         this._ctx.textAlign = textSprite.alignment;
 
         // get position x and y
-        var posX = textSprite.position.x - this._viewport.offset.x;
-        var posY = textSprite.position.y - this._viewport.offset.y;
+        var posX = Math.round(textSprite.position.x - this._viewport.offset.x);
+        var posY = Math.round(textSprite.position.y - this._viewport.offset.y);
 
         // get text and break into lines
         var lines = textSprite.textLines;

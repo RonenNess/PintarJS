@@ -58,7 +58,7 @@ class TextSprite extends Renderable
     get fontPropertyAsString()
     {
         if (!this._fontString) {
-            this._fontString = this.fontSize + "px " + this.font;
+            this._fontString = Math.ceil(this.fontSize) + "px " + this.font;
         }
         return this._fontString;
     }
