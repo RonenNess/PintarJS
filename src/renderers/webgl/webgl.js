@@ -49,9 +49,6 @@ class WebGlRenderer extends Renderer
             throw new PintarConsole.Error("WebGL is not supported or canvas is already used with a different context!");
         }
 
-        // create the internal canvas renderer, used to draw text
-        this._initOverlayCanvas();
-
         // init shaders and internal stuff
         this._initShadersAndBuffers();
 
@@ -181,7 +178,7 @@ class WebGlRenderer extends Renderer
     }
 
     /**
-     * Called whenever canvas resize to adjust resolution and overlay size.
+     * Called whenever canvas resize to adjust resolution.
      */
     _onResize()
     {
@@ -197,52 +194,6 @@ class WebGlRenderer extends Renderer
         this._lastSize = new Point(gl.canvas.width, gl.canvas.height);
     }
 
-
-    /**
-     * Create the overlay canvas for text rendering.
-     */
-    _initOverlayCanvas()
-    {
-        PintarConsole.debug("Create internal canvas renderer to use as overlay layer for text..");
-        var canvas = this._canvas;
-        this._overlayCanvas = document.createElement('canvas');
-        this._overlayCanvas.id = "pintarjs-webgl-overlay-canvas";
-        this._canvasRender = new CanvasRenderer();
-        this._canvasRender._init(this._overlayCanvas);
-        this._updateOverlayCanvas();
-        canvas.parentNode.insertBefore(this._overlayCanvas, canvas.nextSibling);
-        PintarConsole.debug("Done creating canvas renderer.");
-    }
-
-    /**
-     * Update the overlay canvas position and size.
-     */
-    _updateOverlayCanvas()
-    {
-        // adjust canvas width and height
-        if (this._overlayCanvas.width != this._canvas.width) { this._overlayCanvas.width = this._canvas.width; }
-        if (this._overlayCanvas.height != this._canvas.height) { this._overlayCanvas.height = this._canvas.height; }
-        
-        // get bounding rect, and if nothing changed - skip
-        var rect = this._canvas.getBoundingClientRect();
-        if (this._lastBounding && 
-            (this._lastBounding.left === rect.left && this._lastBounding.right === rect.right && this._lastBounding.top === rect.top && this._lastBounding.bottom === rect.bottom)) {
-            return;
-        }
-        this._lastBounding = rect;
-        
-        // set overlay canvas bounding rect        
-        this._overlayCanvas.style.position = "fixed";
-        this._overlayCanvas.style.zIndex = this._canvas.style.zIndex + 1;
-        this._overlayCanvas.style.display = "block";
-        this._overlayCanvas.style.left = rect.left + "px";
-        this._overlayCanvas.style.right = rect.right + "px";
-        this._overlayCanvas.style.top = rect.top + "px";
-        this._overlayCanvas.style.bottom = rect.bottom + "px";
-        this._overlayCanvas.style.width = this._canvas.style.width;
-        this._overlayCanvas.style.height = this._canvas.style.height;
-    }
-
     /**
      * Start a rendering frame.
      */
@@ -253,9 +204,6 @@ class WebGlRenderer extends Renderer
         {
             this._onResize();
         }
-
-        // update the overlay canvas position and size
-        this._updateOverlayCanvas();
 
         // clear texture caching
         this._texture = null;
@@ -275,9 +223,6 @@ class WebGlRenderer extends Renderer
      */
     clear(color, rect)
     {
-        // clear the overlay canvas
-        this._canvasRender.clear(new Color(0, 0, 0, 0));
-
         // clear whole canvas
         if (!rect) {
             this._gl.clearColor(color.r, color.g, color.b, color.a);
@@ -301,9 +246,7 @@ class WebGlRenderer extends Renderer
      * Set viewport.
      */
     setViewport(viewport)
-    {
-        this._canvasRender.setViewport(viewport);
-        
+    {   
         if (viewport) {
             var rect = viewport.drawingRegion || new Rectangle(0, 0, this._canvas.width, this._canvas.height);
             this._setScissor(rect);
@@ -330,7 +273,7 @@ class WebGlRenderer extends Renderer
      */
     drawText(textSprite) 
     { 
-        this._canvasRender.drawText(textSprite);
+        //this._overlayCanvasRender.drawText(textSprite);
     }
 
     /**

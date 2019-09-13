@@ -740,7 +740,7 @@ PintarConsole.log("PintarJS v" + __version__ + " ready! 🎨");
 // export main module
 module.exports = PintarJS;
 
-},{"./blend_modes":1,"./color":2,"./console":3,"./point":5,"./rectangle":6,"./renderers":10,"./sprite":16,"./text_sprite":17,"./texture":18,"./viewport":19}],5:[function(require,module,exports){
+},{"./blend_modes":1,"./color":2,"./console":3,"./point":5,"./rectangle":6,"./renderers":10,"./sprite":17,"./text_sprite":18,"./texture":19,"./viewport":20}],5:[function(require,module,exports){
 /**
  * file: point.js
  * description: Simple 2d point object.
@@ -1304,7 +1304,7 @@ class CanvasRenderer extends Renderer
 
 // export CanvasRenderer
 module.exports = CanvasRenderer;
-},{"./../../blend_modes":1,"./../../console":3,"./../../point":5,"./../../rectangle":6,"./../../viewport":19,"./../renderer":11}],9:[function(require,module,exports){
+},{"./../../blend_modes":1,"./../../console":3,"./../../point":5,"./../../rectangle":6,"./../../viewport":20,"./../renderer":11}],9:[function(require,module,exports){
 /**
  * file: index.js
  * description: Index file for canvas renderer.
@@ -1328,8 +1328,9 @@ module.exports = require('./canvas')
 module.exports = {
     Canvas: require('./canvas'),
     WebGL: require('./webgl'),
+    WebGLHybrid: require('./webgl/webgl-hybrid'),
 };
-},{"./canvas":9,"./webgl":12}],11:[function(require,module,exports){
+},{"./canvas":9,"./webgl":12,"./webgl/webgl-hybrid":14}],11:[function(require,module,exports){
 /**
  * file: renderer.js
  * description: Define the renderer interface, which is the low-level layer that draw stuff.
@@ -1418,7 +1419,7 @@ module.exports = Renderer;
 
 // export the webgl renderer.
 module.exports = require('./webgl')
-},{"./webgl":15}],13:[function(require,module,exports){
+},{"./webgl":16}],13:[function(require,module,exports){
 /**
  * file: shaders.js
  * description: Create the basic 2d shaders for rendering with webGL.
@@ -1510,6 +1511,129 @@ module.exports = {
 }
 
 },{}],14:[function(require,module,exports){
+/**
+ * file: webgl.js
+ * description: Implement webgl renderer.
+ * author: Ronen Ness.
+ * since: 2019.
+ */
+"use strict";
+const WebGlBase = require('../webgl');
+const PintarConsole = require('../../console');
+const CanvasRenderer = require('../canvas');
+const Color = require('../../color');
+
+/**
+ * Implement a hybrid class that uses web-GL for rendering and an overlay canvas renderer just for text drawing.
+ * This is older technology and obselete, but can be useful if you need a lot of different, constantly changing texts, which will consume
+ * a lot of memory with the regular WebGL renderer.
+ */
+class WebGlHybridRenderer extends WebGlBase
+{
+    /**
+     * Init renderer.
+     */
+    _init(canvas)
+    {
+        // call parent init
+        super._init(canvas);
+
+        // create the overlay canvas
+        this._initOverlayCanvas();
+    }
+
+    /**
+     * Create the overlay canvas for text rendering.
+     */
+    _initOverlayCanvas()
+    {
+        PintarConsole.debug("Create internal canvas renderer to use as overlay layer for text..");
+        var canvas = this._canvas;
+        this._overlayCanvas = document.createElement('canvas');
+        this._overlayCanvas.id = "pintarjs-webgl-overlay-canvas";
+        this._overlayCanvasRender = new CanvasRenderer();
+        this._overlayCanvasRender._init(this._overlayCanvas);
+        this._updateOverlayCanvas();
+        canvas.parentNode.insertBefore(this._overlayCanvas, canvas.nextSibling);
+        PintarConsole.debug("Done creating canvas renderer.");
+    }
+
+    /**
+     * Update the overlay canvas position and size.
+     */
+    _updateOverlayCanvas()
+    {
+        // adjust canvas width and height
+        if (this._overlayCanvas.width != this._canvas.width) { this._overlayCanvas.width = this._canvas.width; }
+        if (this._overlayCanvas.height != this._canvas.height) { this._overlayCanvas.height = this._canvas.height; }
+        
+        // get bounding rect, and if nothing changed - skip
+        var rect = this._canvas.getBoundingClientRect();
+        if (this._lastBounding && 
+            (this._lastBounding.left === rect.left && this._lastBounding.right === rect.right && this._lastBounding.top === rect.top && this._lastBounding.bottom === rect.bottom)) {
+            return;
+        }
+        this._lastBounding = rect;
+        
+        // set overlay canvas bounding rect        
+        this._overlayCanvas.style.position = "fixed";
+        this._overlayCanvas.style.zIndex = this._canvas.style.zIndex + 1;
+        this._overlayCanvas.style.display = "block";
+        this._overlayCanvas.style.left = rect.left + "px";
+        this._overlayCanvas.style.right = rect.right + "px";
+        this._overlayCanvas.style.top = rect.top + "px";
+        this._overlayCanvas.style.bottom = rect.bottom + "px";
+        this._overlayCanvas.style.width = this._canvas.style.width;
+        this._overlayCanvas.style.height = this._canvas.style.height;
+    }
+
+    /**
+     * Start a rendering frame.
+     */
+    startFrame()
+    {
+        // call base start frame
+        super.startFrame();
+
+        // update the overlay canvas position and size
+        this._updateOverlayCanvas();
+    }
+
+    /**
+     * Clear screen or part of it.
+     * For more info check out renderer.js.
+     */
+    clear(color, rect)
+    {
+        // clear the overlay canvas
+        this._overlayCanvasRender.clear(new Color(0, 0, 0, 0));
+
+        // clear base renderer
+        super.clear(color, rect);
+    }
+    
+    /**
+     * Set viewport.
+     */
+    setViewport(viewport)
+    {
+        this._overlayCanvasRender.setViewport(viewport);
+        super.setViewport(viewport);
+    }
+
+    /**
+     * Draw text using the overlay canvas renderer.
+     * For more info check out renderer.js.
+     */
+    drawText(textSprite) 
+    { 
+        this._overlayCanvasRender.drawText(textSprite);
+    }
+}
+
+// export WebGlHybridRenderer
+module.exports = WebGlHybridRenderer;
+},{"../../color":2,"../../console":3,"../canvas":9,"../webgl":12}],15:[function(require,module,exports){
 /*
  * Copyright 2012, Gregg Tavares.
  * All rights reserved.
@@ -2807,7 +2931,7 @@ module.exports = {
   }));
   
   
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 /**
  * file: webgl.js
  * description: Implement webgl renderer.
@@ -2858,9 +2982,6 @@ class WebGlRenderer extends Renderer
         if (!this._gl) {
             throw new PintarConsole.Error("WebGL is not supported or canvas is already used with a different context!");
         }
-
-        // create the internal canvas renderer, used to draw text
-        this._initOverlayCanvas();
 
         // init shaders and internal stuff
         this._initShadersAndBuffers();
@@ -2991,7 +3112,7 @@ class WebGlRenderer extends Renderer
     }
 
     /**
-     * Called whenever canvas resize to adjust resolution and overlay size.
+     * Called whenever canvas resize to adjust resolution.
      */
     _onResize()
     {
@@ -3007,52 +3128,6 @@ class WebGlRenderer extends Renderer
         this._lastSize = new Point(gl.canvas.width, gl.canvas.height);
     }
 
-
-    /**
-     * Create the overlay canvas for text rendering.
-     */
-    _initOverlayCanvas()
-    {
-        PintarConsole.debug("Create internal canvas renderer to use as overlay layer for text..");
-        var canvas = this._canvas;
-        this._overlayCanvas = document.createElement('canvas');
-        this._overlayCanvas.id = "pintarjs-webgl-overlay-canvas";
-        this._canvasRender = new CanvasRenderer();
-        this._canvasRender._init(this._overlayCanvas);
-        this._updateOverlayCanvas();
-        canvas.parentNode.insertBefore(this._overlayCanvas, canvas.nextSibling);
-        PintarConsole.debug("Done creating canvas renderer.");
-    }
-
-    /**
-     * Update the overlay canvas position and size.
-     */
-    _updateOverlayCanvas()
-    {
-        // adjust canvas width and height
-        if (this._overlayCanvas.width != this._canvas.width) { this._overlayCanvas.width = this._canvas.width; }
-        if (this._overlayCanvas.height != this._canvas.height) { this._overlayCanvas.height = this._canvas.height; }
-        
-        // get bounding rect, and if nothing changed - skip
-        var rect = this._canvas.getBoundingClientRect();
-        if (this._lastBounding && 
-            (this._lastBounding.left === rect.left && this._lastBounding.right === rect.right && this._lastBounding.top === rect.top && this._lastBounding.bottom === rect.bottom)) {
-            return;
-        }
-        this._lastBounding = rect;
-        
-        // set overlay canvas bounding rect        
-        this._overlayCanvas.style.position = "fixed";
-        this._overlayCanvas.style.zIndex = this._canvas.style.zIndex + 1;
-        this._overlayCanvas.style.display = "block";
-        this._overlayCanvas.style.left = rect.left + "px";
-        this._overlayCanvas.style.right = rect.right + "px";
-        this._overlayCanvas.style.top = rect.top + "px";
-        this._overlayCanvas.style.bottom = rect.bottom + "px";
-        this._overlayCanvas.style.width = this._canvas.style.width;
-        this._overlayCanvas.style.height = this._canvas.style.height;
-    }
-
     /**
      * Start a rendering frame.
      */
@@ -3063,9 +3138,6 @@ class WebGlRenderer extends Renderer
         {
             this._onResize();
         }
-
-        // update the overlay canvas position and size
-        this._updateOverlayCanvas();
 
         // clear texture caching
         this._texture = null;
@@ -3085,9 +3157,6 @@ class WebGlRenderer extends Renderer
      */
     clear(color, rect)
     {
-        // clear the overlay canvas
-        this._canvasRender.clear(new Color(0, 0, 0, 0));
-
         // clear whole canvas
         if (!rect) {
             this._gl.clearColor(color.r, color.g, color.b, color.a);
@@ -3111,9 +3180,7 @@ class WebGlRenderer extends Renderer
      * Set viewport.
      */
     setViewport(viewport)
-    {
-        this._canvasRender.setViewport(viewport);
-        
+    {   
         if (viewport) {
             var rect = viewport.drawingRegion || new Rectangle(0, 0, this._canvas.width, this._canvas.height);
             this._setScissor(rect);
@@ -3140,7 +3207,7 @@ class WebGlRenderer extends Renderer
      */
     drawText(textSprite) 
     { 
-        this._canvasRender.drawText(textSprite);
+        //this._overlayCanvasRender.drawText(textSprite);
     }
 
     /**
@@ -3335,7 +3402,7 @@ class WebGlRenderer extends Renderer
 
 // export WebGlRenderer
 module.exports = WebGlRenderer;
-},{"../../blend_modes":1,"./../../color":2,"./../../console":3,"./../../point":5,"./../../rectangle":6,"./../../viewport":19,"./../canvas":9,"./../renderer":11,"./shaders":13,"./webgl-utils":14}],16:[function(require,module,exports){
+},{"../../blend_modes":1,"./../../color":2,"./../../console":3,"./../../point":5,"./../../rectangle":6,"./../../viewport":20,"./../canvas":9,"./../renderer":11,"./shaders":13,"./webgl-utils":15}],17:[function(require,module,exports){
 /**
  * file: sprite.js
  * description: A drawable sprite.
@@ -3567,7 +3634,7 @@ Sprite.defaults = {
 
 // export Sprite
 module.exports = Sprite;
-},{"./blend_modes":1,"./color":2,"./point":5,"./rectangle":6,"./renderable":7}],17:[function(require,module,exports){
+},{"./blend_modes":1,"./color":2,"./point":5,"./rectangle":6,"./renderable":7}],18:[function(require,module,exports){
 /**
  * file: text_sprite.js
  * description: A drawable text sprite.
@@ -3729,7 +3796,7 @@ TextSprite.defaults = {
 
 // export TextSprite
 module.exports = TextSprite;
-},{"./blend_modes":1,"./color":2,"./point":5,"./renderable":7}],18:[function(require,module,exports){
+},{"./blend_modes":1,"./color":2,"./point":5,"./renderable":7}],19:[function(require,module,exports){
 /**
  * file: texture.js
  * description: A drawable texture class.
@@ -3819,7 +3886,7 @@ class Texture
 
 // export Texture
 module.exports = Texture;
-},{"./console":3,"./point":5}],19:[function(require,module,exports){
+},{"./console":3,"./point":5}],20:[function(require,module,exports){
 /**
  * file: viewport.js
  * description: Viewport to define rendering region and offset.
