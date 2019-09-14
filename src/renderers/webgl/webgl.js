@@ -12,7 +12,8 @@ const BlendModes = require('../../blend_modes');
 const Viewport = require('./../../viewport');
 const Rectangle = require('./../../rectangle');
 const Shaders = require('./shaders');
-const WebglUtils = require('./webgl-utils').webglUtils;
+const FontTexture = require('./font_texture');
+const WebglUtils = require('./webgl_utils').webglUtils;
 
 
 // null image to use when trying to render invalid textures, so we won't get annoying webgl warnings
@@ -237,6 +238,29 @@ class WebGlRenderer extends Renderer
         this.setViewport(this._viewport);
     }
 
+    /**
+     * Generate a font texture manually, which will be later used when drawing texts with this font.
+     * @param {String} fontName Font name to create texture for (default to 'Ariel').
+     * @param {Number} fontSize Font size to use when creating texture (default to 30). Bigger size = better text quality, but more memory consumption.
+     * @param {String} charsSet String with all the characters to generate (default to whole ASCII range). If you try to render a character that's not in this string, it will draw 'missingCharPlaceholder' instead.
+     * @param {Number} maxTextureWidth Max texture width (default to 2048). 
+     * @param {Char} missingCharPlaceholder Character to use when trying to render a missing character (defaults to '?').
+     */
+    generateFontTexture(fontName, fontSize, charsSet, maxTextureWidth, missingCharPlaceholder) 
+    {
+        this._fontTextures[fontName] = new FontTexture(fontName, fontSize, charsSet, maxTextureWidth, missingCharPlaceholder);
+    }
+
+    /**
+     * Get or create a font texture.
+     */
+    _getOrCreateFontTexture(fontName)
+    {
+        if (!this._fontTextures[fontName]) {
+            this.generateFontTexture(fontName, 64);
+        }
+        return this._fontTextures[fontName];
+    }
     
     /**
      * Set viewport.

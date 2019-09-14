@@ -5,7 +5,7 @@
  * since: 2019.
  */
 "use strict";
-const WebGlBase = require('../webgl');
+const WebGlBase = require('./webgl');
 const PintarConsole = require('../../console');
 const CanvasRenderer = require('../canvas');
 const Color = require('../../color');
