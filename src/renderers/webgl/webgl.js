@@ -78,6 +78,12 @@ class WebGlRenderer extends Renderer
         var positionLocation = gl.getAttribLocation(program, "a_position");
         var texcoordLocation = gl.getAttribLocation(program, "a_texCoord");
 
+        // create texture for the null texture
+        var gltexture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, gltexture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 8, 8, 0, gl.RGB, gl.UNSIGNED_BYTE, nullImg);
+        this.nullTexture = gltexture;
+
         // Create a buffer to put three 2d clip space points in
         var positionBuffer = gl.createBuffer();
 
@@ -113,10 +119,6 @@ class WebGlRenderer extends Renderer
             0.0,  1.0,
             1.0,  1.0,
         ]), gl.STATIC_DRAW);
-
-        // create a texture.
-        var texture = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, texture);
 
         // Set the parameters so we can render any size image.
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -208,8 +210,7 @@ class WebGlRenderer extends Renderer
         }
 
         // clear texture caching
-        this._texture = null;
-        this._textureWidth = -1;
+        this._currTexture = null;
     }
 
     /**
@@ -386,27 +387,39 @@ class WebGlRenderer extends Renderer
 
     /**
      * Set uniform image with check if changed.
+     * @param {Texture} texture Texture instance.
      * @param {Number} textureMode Should be either gl.RGBA, gl.RGB or gl.LUMINANCE.
      */
-    _setTexture(img, textureMode)
+    _setTexture(texture, textureMode)
     {
         var gl = this._gl;
 
-        // only update if texture changed
-        // note: the comparison to width is so we'll update the image if it used to be invalid but now loaded
-        if ((this._texture !== img) || 
-        (this._textureWidth !== img.width) || 
-        ((this._lastTextureMode !== textureMode))) {
+        // get image from texture
+        var img = texture.image;
+
+        // if first call, generate gl textures dict
+        texture._glTextures = texture._glTextures || {};
+
+        // only update if texture or mode changed
+        if ((this._currTexture !== texture) || (this._currTextureMode !== textureMode)) 
+        {
         
             // update cached values
-            this._textureWidth = img.width;
-            this._lastTextureMode = textureMode;
-            this._texture = img;
-
-            // set texture
-            img = img.width !== 0 ? img : nullImg;
-            //gl.texImage2D(gl.TEXTURE_2D, 0, textureMode, textureMode, gl.UNSIGNED_BYTE, img.width !== 0 ? img : nullImg);
-            gl.texImage2D(gl.TEXTURE_2D, 0, textureMode, img.width, img.height, 0, textureMode, gl.UNSIGNED_BYTE, img); 
+            this._currTextureMode = textureMode;
+            this._currTexture = texture;
+            
+            // create a gl texture, if needed (happens once per texture and mode).
+            if (!texture._glTextures[textureMode]) {
+                var gltexture = gl.createTexture();
+                gl.bindTexture(gl.TEXTURE_2D, gltexture);
+                gl.texImage2D(gl.TEXTURE_2D, 0, textureMode, img.width, img.height, 0, textureMode, gl.UNSIGNED_BYTE, img);
+                texture._glTextures[textureMode] = gltexture;
+            }
+            // if already got a gl texture, just bind to existing texture
+            else {
+                var glTexture = texture._glTextures[textureMode];
+                gl.bindTexture(gl.TEXTURE_2D, glTexture);
+            }
         }
     }
 
@@ -535,9 +548,12 @@ class WebGlRenderer extends Renderer
      */
     drawSprite(sprite) 
     {
+        // if texture is not yet ready, don't render
+        if (!sprite.texture.isReady) { return; }
+
         // set texture
         var textureMode = this._calcTextureMode(sprite);
-        this._setTexture(sprite.texture.image, textureMode);
+        this._setTexture(sprite.texture, textureMode);
 
         // set position and size
         this._gl.uniform2f(this._uniforms.offset, sprite.position.x - this._viewport.offset.x, -sprite.position.y + this._viewport.offset.y);

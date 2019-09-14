@@ -159,12 +159,8 @@
 
           // draw sprite
           pintar.drawSprite(sprite);
+		  pintar.drawText(_texts[i]);
         }
-		
-		// draw all texts
-        for (var i = 0; i < _spritesInstance.length; ++i) {    
-			pintar.drawText(_texts[i]);
-		}
 
         // end frame
         pintar.endFrame();
