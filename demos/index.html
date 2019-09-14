@@ -85,7 +85,7 @@
 
             // store current and update example
             window._loadedExample = curr;
-            document.getElementById("example-show").src = curr;
+            document.getElementById("example-show").src = curr + '?_t=' + (new Date).getTime();
 
             // adjust selected example color
             var buttons = document.querySelectorAll("button");

@@ -49,6 +49,7 @@ class Sprite extends Renderable
         this.rotation = options.rotation || 0;
         this.brightness = options.brightness || 1;
         this.colorBoost = (options.colorBoost || Sprite.defaults.colorBoost).clone();
+        this.greyscale = Boolean(options.greyscale);
         this.skew = options.skew ? options.skew.clone() : Point.zero();
     }
 
@@ -209,6 +210,7 @@ class Sprite extends Renderable
         ret.rotation = this.rotation;
         ret.brightness = this.brightness;
         ret.colorBoost = this.colorBoost.clone();
+        ret.greyscale = this.greyscale;
         ret.skew = this.skew.clone();
         this._copyBasics(ret);
         return ret;

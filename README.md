@@ -339,6 +339,15 @@ Skew sprite on X and Y axis:
 sprite.skew = new PintarJS.Point(1, 0.5);
 ```
 
+#### sprite.greyscale
+
+If true, will render this sprite in black and white. Only works with WebGL renderer.
+
+```js
+// will draw sprite in black and white
+sprite.greyscale = true;
+```
+
 #### Sprite Defaults
 
 You can set some of the default properties of all new sprites by changing `PintarJS.Sprite.defaults`. To learn more, check out the keys contained in the defaults dictionary.

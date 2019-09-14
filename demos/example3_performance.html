@@ -21,7 +21,7 @@
     //PintarJS.enableDebugMessages();
 
     // set default renderer
-    var mode = location.search.substr(1);
+    var mode = location.search.substr(1).split('?')[0];
     PintarJS.DefaultRenderers = PintarJS.Renderers[mode] || PintarJS.DefaultRenderers;
     
     // initialize pintar

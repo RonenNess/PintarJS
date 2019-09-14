@@ -8,6 +8,7 @@
 const Renderer = require('./../renderer');
 const PintarConsole = require('./../../console');
 const Point = require('./../../point');
+const Sprite = require('./../../sprite');
 const BlendModes = require('../../blend_modes');
 const Viewport = require('./../../viewport');
 const Rectangle = require('./../../rectangle');
@@ -50,6 +51,10 @@ class WebGlRenderer extends Renderer
 
         // init shaders and internal stuff
         this._initShadersAndBuffers();
+
+        // dictionary to hold generated font textures
+        this._fontTextures = {};
+        this.smoothText = true;
 
         // ready!
         PintarConsole.debug("WebGL renderer ready!");
@@ -109,7 +114,7 @@ class WebGlRenderer extends Renderer
             1.0,  1.0,
         ]), gl.STATIC_DRAW);
 
-        // Create a texture.
+        // create a texture.
         var texture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, texture);
 
@@ -248,7 +253,9 @@ class WebGlRenderer extends Renderer
      */
     generateFontTexture(fontName, fontSize, charsSet, maxTextureWidth, missingCharPlaceholder) 
     {
-        this._fontTextures[fontName] = new FontTexture(fontName, fontSize, charsSet, maxTextureWidth, missingCharPlaceholder);
+        var ret = new FontTexture(fontName, fontSize, charsSet, maxTextureWidth, missingCharPlaceholder);
+        this._fontTextures[fontName] = ret;
+        return ret;
     }
 
     /**
@@ -293,7 +300,52 @@ class WebGlRenderer extends Renderer
      */
     drawText(textSprite)
     {
-        // TODO
+        // get font texture to use
+        var fontTexture = this._getOrCreateFontTexture(textSprite.font);
+
+        // create sprite to draw
+        var sprite = new Sprite(fontTexture.texture);
+
+        // get text lines
+        var lines = textSprite.textLines;
+
+        // first draw stroke (TODO!!!)
+
+        // now draw text front
+        for (var i = 0; i < lines.length; ++i) {
+
+            var offset = 0;
+            var line = lines[i];
+            for (var j = 0; j < line.length; ++j) {
+
+                // get current character
+                var char = line[j];
+
+                // get source rect
+                var srcRect = fontTexture.getSourceRect(char);
+                
+                // no source rect? skip
+                if (!srcRect) { continue; }
+
+                // calc actual size
+                var ratio = (textSprite.fontSize / fontTexture.fontSize);
+                var width = ratio * srcRect.width;
+                var height = ratio * srcRect.height;
+
+                // set sprite params and draw
+                sprite.sourceRectangle = srcRect;
+                sprite.position.x = textSprite.position.x + offset;
+                sprite.position.y = textSprite.position.y + (i * textSprite.lineHeight) - height * 0.75;
+                sprite.width = width;
+                sprite.height = height;
+                sprite.color = textSprite.color;
+                sprite.smoothingEnabled = this.smoothText;
+                this.drawSprite(sprite);
+
+                // update offset
+                offset += width;
+            }
+        }
     }
 
     /**
@@ -334,20 +386,27 @@ class WebGlRenderer extends Renderer
 
     /**
      * Set uniform image with check if changed.
+     * @param {Number} textureMode Should be either gl.RGBA, gl.RGB or gl.LUMINANCE.
      */
-    _setTexture(img)
+    _setTexture(img, textureMode)
     {
+        var gl = this._gl;
+
         // only update if texture changed
         // note: the comparison to width is so we'll update the image if it used to be invalid but now loaded
-        if (this._texture !== img || this._textureWidth !== img.width) {
+        if ((this._texture !== img) || 
+        (this._textureWidth !== img.width) || 
+        ((this._lastTextureMode !== textureMode))) {
         
             // update cached values
             this._textureWidth = img.width;
+            this._lastTextureMode = textureMode;
             this._texture = img;
 
-            // set values
-            var gl = this._gl;
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img.width !== 0 ? img : nullImg);
+            // set texture
+            img = img.width !== 0 ? img : nullImg;
+            //gl.texImage2D(gl.TEXTURE_2D, 0, textureMode, textureMode, gl.UNSIGNED_BYTE, img.width !== 0 ? img : nullImg);
+            gl.texImage2D(gl.TEXTURE_2D, 0, textureMode, img.width, img.height, 0, textureMode, gl.UNSIGNED_BYTE, img); 
         }
     }
 
@@ -390,8 +449,6 @@ class WebGlRenderer extends Renderer
             switch (blendMode) 
             {
                 case BlendModes.AlphaBlend:
-                    // gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-                    // gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
                     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
                     break;
 
@@ -444,13 +501,43 @@ class WebGlRenderer extends Renderer
     }
 
     /**
+     * Calculate texture mode for a given sprite.
+     */
+    _calcTextureMode(sprite)
+    {
+        // by default its rgba
+        var textMode = this._gl.RGBA;
+
+        // get if opaque or greyscale
+        var opaque = sprite.blendMode == BlendModes.Opaque;
+        var greyscale = sprite.greyscale;
+
+        // opaque and greyscale?
+        if (opaque && greyscale) {
+            textMode = this._gl.LUMINANCE;
+        }
+        // opaque?
+        else if (opaque) {
+            textMode = this._gl.RGB;
+        }
+        // greyscale?
+        else if (greyscale) {
+            textMode = this._gl.LUMINANCE_ALPHA;
+        }
+
+        // return texture mode
+        return textMode;
+    }
+
+    /**
      * Draw a sprite.
      * For more info check out renderer.js.
      */
     drawSprite(sprite) 
     {
         // set texture
-        this._setTexture(sprite.texture.image);
+        var textureMode = this._calcTextureMode(sprite);
+        this._setTexture(sprite.texture.image, textureMode);
 
         // set position and size
         this._gl.uniform2f(this._uniforms.offset, sprite.position.x - this._viewport.offset.x, -sprite.position.y + this._viewport.offset.y);

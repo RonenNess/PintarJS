@@ -740,7 +740,7 @@ PintarConsole.log("PintarJS v" + __version__ + " ready! 🎨");
 // export main module
 module.exports = PintarJS;
 
-},{"./blend_modes":1,"./color":2,"./console":3,"./point":5,"./rectangle":6,"./renderers":10,"./sprite":17,"./text_sprite":18,"./texture":19,"./viewport":20}],5:[function(require,module,exports){
+},{"./blend_modes":1,"./color":2,"./console":3,"./point":5,"./rectangle":6,"./renderers":10,"./sprite":18,"./text_sprite":19,"./texture":20,"./viewport":21}],5:[function(require,module,exports){
 /**
  * file: point.js
  * description: Simple 2d point object.
@@ -1304,7 +1304,7 @@ class CanvasRenderer extends Renderer
 
 // export CanvasRenderer
 module.exports = CanvasRenderer;
-},{"./../../blend_modes":1,"./../../console":3,"./../../point":5,"./../../rectangle":6,"./../../viewport":20,"./../renderer":11}],9:[function(require,module,exports){
+},{"./../../blend_modes":1,"./../../console":3,"./../../point":5,"./../../rectangle":6,"./../../viewport":21,"./../renderer":11}],9:[function(require,module,exports){
 /**
  * file: index.js
  * description: Index file for canvas renderer.
@@ -1330,7 +1330,7 @@ module.exports = {
     WebGL: require('./webgl'),
     WebGLHybrid: require('./webgl/webgl_hybrid'),
 };
-},{"./canvas":9,"./webgl":12,"./webgl/webgl_hybrid":15}],11:[function(require,module,exports){
+},{"./canvas":9,"./webgl":13,"./webgl/webgl_hybrid":16}],11:[function(require,module,exports){
 /**
  * file: renderer.js
  * description: Define the renderer interface, which is the low-level layer that draw stuff.
@@ -1410,6 +1410,150 @@ class Renderer
 module.exports = Renderer;
 },{"./../console":3}],12:[function(require,module,exports){
 /**
+ * file: webgl.js
+ * description: Implement webgl renderer.
+ * author: Ronen Ness.
+ * since: 2019.
+ */
+"use strict";
+const Point = require('../../point');
+const Rectangle = require('../../rectangle');
+const Texture = require('./../../texture');
+const PintarConsole = require('./../../console');
+
+
+// default ascii characters to generate font textures
+const defaultAsciiChars = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~ ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾";
+
+// return the closest power-of-two value to a given number
+function makePowerTwo(val)
+{
+    var ret = 2;
+    while (ret < val) {
+        ret = ret * 2;
+        if (ret >= val) { return ret; }
+    }
+    return ret;
+}
+
+/**
+ * Class to convert a font and a set of characters into a texture, so it can be later rendered as sprites.
+ * This technique is often known as "bitmap font rendering".
+ */
+class FontTexture
+{ 
+    /**
+     * Create the font texture.
+     * @param {String} fontName Font name to create texture for (default to 'Ariel').
+     * @param {Number} fontSize Font size to use when creating texture (default to 30). Bigger size = better text quality, but more memory consumption.
+     * @param {String} charsSet String with all the characters to generate (default to whole ASCII range). If you try to render a character that's not in this string, it will draw 'missingCharPlaceholder' instead.
+     * @param {Number} maxTextureWidth Max texture width (default to 2048). 
+     * @param {Char} missingCharPlaceholder Character to use when trying to render a missing character (defaults to '?').
+     */
+    constructor(fontName, fontSize, charsSet, maxTextureWidth, missingCharPlaceholder) 
+    {
+        // set default missing char placeholder + store it
+        missingCharPlaceholder = (missingCharPlaceholder || '?')[0];
+        this._placeholderChar = missingCharPlaceholder;
+
+        // default max texture size
+        maxTextureWidth = maxTextureWidth || 2048;
+
+        // default chars set
+        charsSet = charsSet || defaultAsciiChars;
+
+        // make sure charSet got the placeholder char
+        if (charsSet.indexOf(missingCharPlaceholder) === -1) {
+            charsSet += missingCharPlaceholder;
+        }
+
+        // calc estimated size of a single character in texture
+        var estimatedCharSizeInTexture = new Point(Math.round(fontSize * 1.15), Math.round(fontSize * 1.25));
+
+        // calc texture size
+        var charsPerRow = Math.floor(maxTextureWidth / estimatedCharSizeInTexture.x);
+        var textureWidth = Math.min(charsSet.length * estimatedCharSizeInTexture.x, maxTextureWidth);
+        var textureHeight = Math.ceil(charsSet.length / charsPerRow) * estimatedCharSizeInTexture.y;
+
+        // make width and height powers of two
+        if (FontTexture.enforceValidTexureSize) {
+            textureWidth = makePowerTwo(textureWidth);
+            textureHeight = makePowerTwo(textureHeight);
+        }
+
+        // a dictionary to store the source rect of every character
+        this._sourceRects = {};
+
+        // create a canvas to generate the texture on
+        var canvas = document.createElement('canvas');
+        canvas.width = textureWidth;
+        canvas.height = textureHeight;
+        var ctx = canvas.getContext('2d');
+
+        // store font size
+        this.fontSize = fontSize || 30;
+
+        // set font and white color
+        ctx.font = this.fontSize.toString() + 'px ' + (fontName || 'Ariel');
+        ctx.fillStyle = '#ffffffff';
+
+        PintarConsole.debug("Generate Font Texture:", ctx.font, "Chars set: ", charsSet, " Texture size: ", textureWidth, textureHeight);
+
+        // draw the font texture
+        var x = 0; var y = 0;
+        for (var i = 0; i < charsSet.length; ++i) {
+            
+            // get actual width of current character
+            var currChar = charsSet[i];
+            var currCharWidth = ctx.measureText(currChar).width;
+
+            // check if need to break line down in texture
+            if (x + currCharWidth > textureWidth) {
+                y += estimatedCharSizeInTexture.y + 6;
+                x = 0;
+            }
+
+            // calc source rect
+            var sourceRect = new Rectangle(x, y, currCharWidth, estimatedCharSizeInTexture.y);
+            this._sourceRects[currChar] = sourceRect;
+
+            // draw character
+            ctx.fillText(currChar, x, y + fontSize);
+
+            // move to next spot in texture
+            x += currCharWidth + 6;
+        }
+
+        // convert canvas to texture
+        var img = new Image();
+        img.src = canvas.toDataURL("image/png");
+        this._texture = new Texture(img, null);
+    }
+
+    /**
+     * Get texture instance of this font texture.
+     */
+    get texture()
+    {
+        return this._texture;
+    }
+
+    /**
+     * Get the source rect of a character.
+     */
+    getSourceRect(char)
+    {
+        return this._sourceRects[char] || this._sourceRects[this._placeholderChar];
+    }
+}
+
+// should we enforce power of 2?
+FontTexture.enforceValidTexureSize = true;
+
+// export the font texture class
+module.exports = FontTexture;
+},{"../../point":5,"../../rectangle":6,"./../../console":3,"./../../texture":20}],13:[function(require,module,exports){
+/**
  * file: index.js
  * description: Index file for webgl renderer.
  * author: Ronen Ness.
@@ -1419,7 +1563,7 @@ module.exports = Renderer;
 
 // export the webgl renderer.
 module.exports = require('./webgl')
-},{"./webgl":14}],13:[function(require,module,exports){
+},{"./webgl":15}],14:[function(require,module,exports){
 /**
  * file: shaders.js
  * description: Create the basic 2d shaders for rendering with webGL.
@@ -1510,7 +1654,7 @@ module.exports = {
     fragment: fsSource
 }
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 /**
  * file: webgl.js
  * description: Implement webgl renderer.
@@ -1521,10 +1665,12 @@ module.exports = {
 const Renderer = require('./../renderer');
 const PintarConsole = require('./../../console');
 const Point = require('./../../point');
+const Sprite = require('./../../sprite');
 const BlendModes = require('../../blend_modes');
 const Viewport = require('./../../viewport');
 const Rectangle = require('./../../rectangle');
 const Shaders = require('./shaders');
+const FontTexture = require('./font_texture');
 const WebglUtils = require('./webgl_utils').webglUtils;
 
 
@@ -1562,6 +1708,10 @@ class WebGlRenderer extends Renderer
 
         // init shaders and internal stuff
         this._initShadersAndBuffers();
+
+        // dictionary to hold generated font textures
+        this._fontTextures = {};
+        this.smoothText = true;
 
         // ready!
         PintarConsole.debug("WebGL renderer ready!");
@@ -1750,6 +1900,31 @@ class WebGlRenderer extends Renderer
         this.setViewport(this._viewport);
     }
 
+    /**
+     * Generate a font texture manually, which will be later used when drawing texts with this font.
+     * @param {String} fontName Font name to create texture for (default to 'Ariel').
+     * @param {Number} fontSize Font size to use when creating texture (default to 30). Bigger size = better text quality, but more memory consumption.
+     * @param {String} charsSet String with all the characters to generate (default to whole ASCII range). If you try to render a character that's not in this string, it will draw 'missingCharPlaceholder' instead.
+     * @param {Number} maxTextureWidth Max texture width (default to 2048). 
+     * @param {Char} missingCharPlaceholder Character to use when trying to render a missing character (defaults to '?').
+     */
+    generateFontTexture(fontName, fontSize, charsSet, maxTextureWidth, missingCharPlaceholder) 
+    {
+        var ret = new FontTexture(fontName, fontSize, charsSet, maxTextureWidth, missingCharPlaceholder);
+        this._fontTextures[fontName] = ret;
+        return ret;
+    }
+
+    /**
+     * Get or create a font texture.
+     */
+    _getOrCreateFontTexture(fontName)
+    {
+        if (!this._fontTextures[fontName]) {
+            this.generateFontTexture(fontName, 64);
+        }
+        return this._fontTextures[fontName];
+    }
     
     /**
      * Set viewport.
@@ -1782,7 +1957,52 @@ class WebGlRenderer extends Renderer
      */
     drawText(textSprite)
     {
-        // TODO
+        // get font texture to use
+        var fontTexture = this._getOrCreateFontTexture(textSprite.font);
+
+        // create sprite to draw
+        var sprite = new Sprite(fontTexture.texture);
+
+        // get text lines
+        var lines = textSprite.textLines;
+
+        // first draw stroke (TODO!!!)
+
+        // now draw text front
+        for (var i = 0; i < lines.length; ++i) {
+
+            var offset = 0;
+            var line = lines[i];
+            for (var j = 0; j < line.length; ++j) {
+
+                // get current character
+                var char = line[j];
+
+                // get source rect
+                var srcRect = fontTexture.getSourceRect(char);
+                
+                // no source rect? skip
+                if (!srcRect) { continue; }
+
+                // calc actual size
+                var ratio = (textSprite.fontSize / fontTexture.fontSize);
+                var width = ratio * srcRect.width;
+                var height = ratio * srcRect.height;
+
+                // set sprite params and draw
+                sprite.sourceRectangle = srcRect;
+                sprite.position.x = textSprite.position.x + offset;
+                sprite.position.y = textSprite.position.y + (i * textSprite.lineHeight) - height * 0.75;
+                sprite.width = width;
+                sprite.height = height;
+                sprite.color = textSprite.color;
+                sprite.smoothingEnabled = this.smoothText;
+                this.drawSprite(sprite);
+
+                // update offset
+                offset += width;
+            }
+        }
     }
 
     /**
@@ -1823,20 +2043,27 @@ class WebGlRenderer extends Renderer
 
     /**
      * Set uniform image with check if changed.
+     * @param {Number} textureMode Should be either gl.RGBA, gl.RGB or gl.LUMINANCE.
      */
-    _setTexture(img)
+    _setTexture(img, textureMode)
     {
+        var gl = this._gl;
+
         // only update if texture changed
         // note: the comparison to width is so we'll update the image if it used to be invalid but now loaded
-        if (this._texture !== img || this._textureWidth !== img.width) {
+        if ((this._texture !== img) || 
+        (this._textureWidth !== img.width) || 
+        ((this._lastTextureMode !== textureMode))) {
         
             // update cached values
             this._textureWidth = img.width;
+            this._lastTextureMode = textureMode;
             this._texture = img;
 
-            // set values
-            var gl = this._gl;
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img.width !== 0 ? img : nullImg);
+            // set texture
+            img = img.width !== 0 ? img : nullImg;
+            //gl.texImage2D(gl.TEXTURE_2D, 0, textureMode, textureMode, gl.UNSIGNED_BYTE, img.width !== 0 ? img : nullImg);
+            gl.texImage2D(gl.TEXTURE_2D, 0, textureMode, img.width, img.height, 0, textureMode, gl.UNSIGNED_BYTE, img); 
         }
     }
 
@@ -1879,8 +2106,6 @@ class WebGlRenderer extends Renderer
             switch (blendMode) 
             {
                 case BlendModes.AlphaBlend:
-                    // gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-                    // gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
                     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
                     break;
 
@@ -1933,13 +2158,43 @@ class WebGlRenderer extends Renderer
     }
 
     /**
+     * Calculate texture mode for a given sprite.
+     */
+    _calcTextureMode(sprite)
+    {
+        // by default its rgba
+        var textMode = this._gl.RGBA;
+
+        // get if opaque or greyscale
+        var opaque = sprite.blendMode == BlendModes.Opaque;
+        var greyscale = sprite.greyscale;
+
+        // opaque and greyscale?
+        if (opaque && greyscale) {
+            textMode = this._gl.LUMINANCE;
+        }
+        // opaque?
+        else if (opaque) {
+            textMode = this._gl.RGB;
+        }
+        // greyscale?
+        else if (greyscale) {
+            textMode = this._gl.LUMINANCE_ALPHA;
+        }
+
+        // return texture mode
+        return textMode;
+    }
+
+    /**
      * Draw a sprite.
      * For more info check out renderer.js.
      */
     drawSprite(sprite) 
     {
         // set texture
-        this._setTexture(sprite.texture.image);
+        var textureMode = this._calcTextureMode(sprite);
+        this._setTexture(sprite.texture.image, textureMode);
 
         // set position and size
         this._gl.uniform2f(this._uniforms.offset, sprite.position.x - this._viewport.offset.x, -sprite.position.y + this._viewport.offset.y);
@@ -1977,7 +2232,7 @@ class WebGlRenderer extends Renderer
 
 // export WebGlRenderer
 module.exports = WebGlRenderer;
-},{"../../blend_modes":1,"./../../console":3,"./../../point":5,"./../../rectangle":6,"./../../viewport":20,"./../renderer":11,"./shaders":13,"./webgl_utils":16}],15:[function(require,module,exports){
+},{"../../blend_modes":1,"./../../console":3,"./../../point":5,"./../../rectangle":6,"./../../sprite":18,"./../../viewport":21,"./../renderer":11,"./font_texture":12,"./shaders":14,"./webgl_utils":17}],16:[function(require,module,exports){
 /**
  * file: webgl.js
  * description: Implement webgl renderer.
@@ -2100,7 +2355,7 @@ class WebGlHybridRenderer extends WebGlBase
 
 // export WebGlHybridRenderer
 module.exports = WebGlHybridRenderer;
-},{"../../color":2,"../../console":3,"../canvas":9,"./webgl":14}],16:[function(require,module,exports){
+},{"../../color":2,"../../console":3,"../canvas":9,"./webgl":15}],17:[function(require,module,exports){
 /*
  * Copyright 2012, Gregg Tavares.
  * All rights reserved.
@@ -3398,7 +3653,7 @@ module.exports = WebGlHybridRenderer;
   }));
   
   
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 /**
  * file: sprite.js
  * description: A drawable sprite.
@@ -3450,6 +3705,7 @@ class Sprite extends Renderable
         this.rotation = options.rotation || 0;
         this.brightness = options.brightness || 1;
         this.colorBoost = (options.colorBoost || Sprite.defaults.colorBoost).clone();
+        this.greyscale = Boolean(options.greyscale);
         this.skew = options.skew ? options.skew.clone() : Point.zero();
     }
 
@@ -3610,6 +3866,7 @@ class Sprite extends Renderable
         ret.rotation = this.rotation;
         ret.brightness = this.brightness;
         ret.colorBoost = this.colorBoost.clone();
+        ret.greyscale = this.greyscale;
         ret.skew = this.skew.clone();
         this._copyBasics(ret);
         return ret;
@@ -3630,7 +3887,7 @@ Sprite.defaults = {
 
 // export Sprite
 module.exports = Sprite;
-},{"./blend_modes":1,"./color":2,"./point":5,"./rectangle":6,"./renderable":7}],18:[function(require,module,exports){
+},{"./blend_modes":1,"./color":2,"./point":5,"./rectangle":6,"./renderable":7}],19:[function(require,module,exports){
 /**
  * file: text_sprite.js
  * description: A drawable text sprite.
@@ -3904,7 +4161,7 @@ TextSprite.defaults = {
 
 // export TextSprite
 module.exports = TextSprite;
-},{"./blend_modes":1,"./color":2,"./point":5,"./renderable":7}],19:[function(require,module,exports){
+},{"./blend_modes":1,"./color":2,"./point":5,"./renderable":7}],20:[function(require,module,exports){
 /**
  * file: texture.js
  * description: A drawable texture class.
@@ -3994,7 +4251,7 @@ class Texture
 
 // export Texture
 module.exports = Texture;
-},{"./console":3,"./point":5}],20:[function(require,module,exports){
+},{"./console":3,"./point":5}],21:[function(require,module,exports){
 /**
  * file: viewport.js
  * description: Viewport to define rendering region and offset.
