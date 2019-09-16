@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>PintarJS - Demos</title>
+    <script src="../dist/pintar.js"></script>
+    <link href="style.css" rel="stylesheet" type="text/css" media="all">
+  </head>
+  <body>
+    <div class="container container-int">
+      <br />
+      <h1>Example 8: Texts</h1>
+      <p>PintarJS can draw texts with some basic transformations and effects. <br />
+	  Unlike sprites, with texts the Canvas renderer is actually superior to the WebGL one. There's also a hybrid renderer that uses both WebGL and Canvas just for texts. For more info, see the readme file.</p> <br /><br />
+
+      <canvas></canvas>
+    </div>
+
+  </body>
+  <script>
+    // enable debug mode
+    //PintarJS.enableDebugMessages();
+
+    // set default renderer
+    var mode = location.search.substr(1).split('?')[0];
+    PintarJS.DefaultRenderers = PintarJS.Renderers[mode] || PintarJS.DefaultRenderers;
+    
+    // initialize pintar
+    var pintar = new PintarJS();
+    pintar.clearColor = PintarJS.Color.lavender();
+
+    // adjust size
+    pintar.adjustToParentSize();
+    window.onresize = () => {
+      pintar.adjustToParentSize();
+    };
+
+    // draw everything
+    function drawSprites()
+    {
+	  // start frame
+	  pintar.startFrame();
+
+      // regular text with stroke
+	  var textSprite = new PintarJS.TextSprite("Text With Stroke\nAlign left..");
+      textSprite.color = PintarJS.Color.white();
+      textSprite.strokeWidth = 2;
+      textSprite.strokeColor = PintarJS.Color.black();
+      textSprite.fontSize = 32;
+      textSprite.position = new PintarJS.Point(20, 40);
+	  pintar.draw(textSprite);
+
+	  // text with center align
+	  textSprite.text = "Different colors\nAnd align to center.";
+	  textSprite.strokeColor = PintarJS.Color.red();
+	  textSprite.color = PintarJS.Color.yellow();
+      textSprite.position = new PintarJS.Point(500, 40);
+	  textSprite.alignment = "center";
+	  pintar.draw(textSprite);
+	  
+	  // text with right align
+	  textSprite.text = "No stroke\nAnd align to right.";
+	  textSprite.position = new PintarJS.Point(500, 200);
+	  textSprite.strokeWidth = 0;
+	  textSprite.color = PintarJS.Color.blue();
+	  textSprite.alignment = "right";
+	  pintar.draw(textSprite);
+		  
+	  // text with opacity
+	  textSprite.text = "Opacity..";
+	  textSprite.color = new PintarJS.Color(1, 0, 1, 0.25);
+	  textSprite.alignment = "left";
+	  textSprite.position = new PintarJS.Point(20, 200);
+	  pintar.draw(textSprite);
+	  		  
+	  // text with opacity
+	  textSprite.text = "Bigger Stroke";
+	  textSprite.color = new PintarJS.Color(1, 1, 1, 1);
+	  textSprite.alignment = "left";
+	  textSprite.position = new PintarJS.Point(20, 350);
+	  textSprite.strokeWidth = 6;
+      textSprite.strokeColor = PintarJS.Color.black();
+	  pintar.draw(textSprite);
+	  
+	  // end frame
+	  pintar.endFrame();
+	  requestAnimationFrame(drawSprites);
+    }
+
+    // draw sprite and start interval to animate and redraw
+    drawSprites();
+  </script>
+</html>

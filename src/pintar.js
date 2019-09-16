@@ -360,7 +360,7 @@ class PintarJS
             this.drawSprite(obj);
         }
         else if (obj instanceof TextSprite) {
-            this.drawSprite(obj);
+            this.drawText(obj);
         }
         else {
             throw new PintarConsole.Error("Unknown object type to draw!");

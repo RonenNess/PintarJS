@@ -117,13 +117,8 @@
       createDemoSprite(i++, j, "Skew X", {skew: new PintarJS.Point(0.75, 0), origin: PintarJS.Point.half(), extraPos: new PintarJS.Point(width / 2, height / 2)}, false);
       createDemoSprite(i++, j, "Skew Y", {skew: new PintarJS.Point(0, 0.75), origin: PintarJS.Point.half(), extraPos: new PintarJS.Point(width / 2, height / 2)}, false);
       createDemoSprite(i++, j, "Skew Both", {skew: new PintarJS.Point(0.75, 0.75), origin: PintarJS.Point.half(), extraPos: new PintarJS.Point(width / 2, height / 2)}, false);
-      createDemoSprite(i++, j, "Flip X", {_animateScaleY: true, origin: new PintarJS.Point.half(), extraPos: new PintarJS.Point(width / 2, height / 2)}, false);
-      createDemoSprite(i++, j, "Flip y", {_animateScaleX: true, origin: new PintarJS.Point.half(), extraPos: new PintarJS.Point(width / 2, height / 2)}, false);
-      createDemoSprite(i++, j, "Scaling", {_animateScaleYPosOnly: true, origin: new PintarJS.Point(0.5, 1), extraPos: new PintarJS.Point(width / 2, height)}, false);
-	  
-	  // extras
-	  i = 0;
-      j++;
+      createDemoSprite(i++, j, "Flip / Scale X", {_animateScaleY: true, origin: new PintarJS.Point.half(), extraPos: new PintarJS.Point(width / 2, height / 2)}, false);
+      createDemoSprite(i++, j, "Flip / Scale Y", {_animateScaleX: true, origin: new PintarJS.Point.half(), extraPos: new PintarJS.Point(width / 2, height / 2)}, false);
       createDemoSprite(i++, j, "Greyscale", {greyscale: true}, true);
 	  
       // for animations

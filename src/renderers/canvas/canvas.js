@@ -44,9 +44,14 @@ class CanvasRenderer extends Renderer
     {
         // update viewport clipping
         this.setViewport(this._viewport);
+    }
 
-        // reset font used
-        this._currFont = null;
+    /**
+     * End a rendering frame.
+     */
+    endFrame()
+    {
+        this._currFont = "null";
     }
 
     /**
@@ -150,17 +155,20 @@ class CanvasRenderer extends Renderer
      */
     drawText(textSprite)
     {  
+        // set font and alignment
+        var newFont = textSprite.fontPropertyAsString;
+        if (this._currFont !== newFont) {
+            this._ctx.font = newFont;
+            this._currFont = newFont;
+        }
+
         // save ctx before drawing
         this._ctx.save();
 
         // set blend mode
         this._setBlendMode(textSprite.blendMode);
 
-        // set font and alignment
-        var newFont = textSprite.fontPropertyAsString;
-        if (this._currFont != newFont) {
-          this._ctx.font = this._currFont = newFont;
-        }
+        // set alignment
         this._ctx.textAlign = textSprite.alignment;
 
         // get position x and y

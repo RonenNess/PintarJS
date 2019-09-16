@@ -708,7 +708,7 @@ class PintarJS
             this.drawSprite(obj);
         }
         else if (obj instanceof TextSprite) {
-            this.drawSprite(obj);
+            this.drawText(obj);
         }
         else {
             throw new PintarConsole.Error("Unknown object type to draw!");
@@ -1092,9 +1092,14 @@ class CanvasRenderer extends Renderer
     {
         // update viewport clipping
         this.setViewport(this._viewport);
+    }
 
-        // reset font used
-        this._currFont = null;
+    /**
+     * End a rendering frame.
+     */
+    endFrame()
+    {
+        this._currFont = "null";
     }
 
     /**
@@ -1198,17 +1203,20 @@ class CanvasRenderer extends Renderer
      */
     drawText(textSprite)
     {  
+        // set font and alignment
+        var newFont = textSprite.fontPropertyAsString;
+        if (this._currFont !== newFont) {
+            this._ctx.font = newFont;
+            this._currFont = newFont;
+        }
+
         // save ctx before drawing
         this._ctx.save();
 
         // set blend mode
         this._setBlendMode(textSprite.blendMode);
 
-        // set font and alignment
-        var newFont = textSprite.fontPropertyAsString;
-        if (this._currFont != newFont) {
-          this._ctx.font = this._currFont = newFont;
-        }
+        // set alignment
         this._ctx.textAlign = textSprite.alignment;
 
         // get position x and y
@@ -1709,9 +1717,10 @@ class WebGlRenderer extends Renderer
         // init shaders and internal stuff
         this._initShadersAndBuffers();
 
-        // dictionary to hold generated font textures
-        this._fontTextures = {};
+        // dictionary to hold generated font textures + default font size
+        this.fontTextureDefaultSize = 100;
         this.smoothText = true;
+        this._fontTextures = {};
 
         // ready!
         PintarConsole.debug("WebGL renderer ready!");
@@ -1868,6 +1877,7 @@ class WebGlRenderer extends Renderer
 
         // clear texture caching
         this._currTexture = null;
+        this._smoothing = null;
     }
 
     /**
@@ -1922,7 +1932,7 @@ class WebGlRenderer extends Renderer
     _getOrCreateFontTexture(fontName)
     {
         if (!this._fontTextures[fontName]) {
-            this.generateFontTexture(fontName, 64);
+            this.generateFontTexture(fontName, this.fontTextureDefaultSize);
         }
         return this._fontTextures[fontName];
     }
@@ -1967,41 +1977,92 @@ class WebGlRenderer extends Renderer
         // get text lines
         var lines = textSprite.textLines;
 
-        // first draw stroke (TODO!!!)
-
         // now draw text front
         for (var i = 0; i < lines.length; ++i) {
 
-            var offset = 0;
+            // get current line
             var line = lines[i];
+
+            // calculate line width and individual character sizes
+            var lineWidth = 0;
+            var charsData = [];
+            for (var j = 0; j < line.length; ++j) {
+                
+                // get source rect
+                var char = line[j];
+                var srcRect = fontTexture.getSourceRect(char);
+
+                // calc actual size
+                var ratio = (textSprite.fontSize / fontTexture.fontSize);
+                var width = Math.ceil(ratio * srcRect.width);
+                var height = Math.ceil(ratio * srcRect.height);
+
+                // add character data
+                charsData.push({
+                    srcRect: srcRect,
+                    size: new Point(width, height),
+                });
+                lineWidth += width - 1 * ratio;
+            }
+
+            // calc offset based on alignment
+            var offset = 0;
+            switch (textSprite.alignment) {
+
+                case "right":
+                    offset -= lineWidth;
+                    break;
+
+                case "center":
+                    offset -= lineWidth / 2;
+                    break;
+            }
+
+            // now actually draw characters
             for (var j = 0; j < line.length; ++j) {
 
                 // get current character
                 var char = line[j];
 
-                // get source rect
-                var srcRect = fontTexture.getSourceRect(char);
-                
-                // no source rect? skip
-                if (!srcRect) { continue; }
+                // get source rect and size
+                var srcRect = charsData[j].srcRect;
+                var size = charsData[j].size;
 
-                // calc actual size
-                var ratio = (textSprite.fontSize / fontTexture.fontSize);
-                var width = ratio * srcRect.width;
-                var height = ratio * srcRect.height;
-
-                // set sprite params and draw
+                // set sprite params
                 sprite.sourceRectangle = srcRect;
-                sprite.position.x = textSprite.position.x + offset;
-                sprite.position.y = textSprite.position.y + (i * textSprite.lineHeight) - height * 0.75;
-                sprite.width = width;
-                sprite.height = height;
-                sprite.color = textSprite.color;
+                var position = new Point(textSprite.position.x + offset, textSprite.position.y + (i * textSprite.lineHeight) - height * 0.75);
+                sprite.width = size.x;
+                sprite.height = size.y;
                 sprite.smoothingEnabled = this.smoothText;
+
+                // draw character stroke
+                if (textSprite.strokeWidth > 0 && textSprite.strokeColor.a > 0) {
+                    sprite.color = textSprite.strokeColor;
+                    for (var sx = -1; sx <= 1; sx++) {
+                        for (var sy = -1; sy <= 1; sy++) {      
+                            var centerPart = sx == 0 && sy == 0;
+                            var extraWidth = (centerPart ? textSprite.strokeWidth : 0);
+                            var extraHeight = (centerPart ? textSprite.strokeWidth : 0);
+                            sprite.width = size.x + extraWidth;
+                            sprite.height = size.y + extraHeight;
+                            sprite.position.x = position.x + sx * (textSprite.strokeWidth / 2.5) - extraWidth / 2;
+                            sprite.position.y = position.y + sy * (textSprite.strokeWidth / 2.5) - extraHeight / 2;
+                            this.drawSprite(sprite);
+                        }   
+                    }
+                }
+
+                // set character size
+                sprite.width = size.x;
+                sprite.height = size.y;
+
+                // draw character fill
+                sprite.position = position;
+                sprite.color = textSprite.color;
                 this.drawSprite(sprite);
 
                 // update offset
-                offset += width;
+                offset += size.x - 1 * ratio;
             }
         }
     }
