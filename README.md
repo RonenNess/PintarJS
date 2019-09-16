@@ -58,7 +58,8 @@ Or you can download `dist/pinter.js` and include in your HTML file.
 - Text drawing
     - Alignment
     - Stroke
-    - Line breaks
+    - Multiline
+	- Bitmap font rendering
 - Sprites
     - Color Effects
         - Tint (reduce color compontents)
@@ -553,9 +554,14 @@ pintar.adjustToParentSize();
 - Fixed texture bleeding while using atlas.
 - Fixed bug with single texture delayed load / wrong source rectangle.
 
-### 1.0.0.2 [not released yet]
+### 1.0.0.2
 
 - Added some useful API functions to base objects.
+- Added bitmap font rendering for pure WebGL renderer.
+- Added Hybrid WebGL.
+- Bug fixes in basic APIs.
+- Optimizations, huge improvement in WebGL texture swapping.
+- Added Greyscale to sprites.
 
 ## License
 
