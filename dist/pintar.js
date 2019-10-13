@@ -367,7 +367,7 @@ const Viewport = require('./viewport');
 const PintarConsole = require('./console');
 
 // current version and author
-const __version__ = "1.0.0.2";
+const __version__ = "1.0.0.3";
 const __author__ = "Ronen Ness";
 
 /**
@@ -848,6 +848,17 @@ class Point
     equals(other)
     {
         return other && this.x == other.x && this.y == other.y;
+    }
+        
+    /**
+     * Calculate distance from another point.
+     * @param {PintarJS.Point} other Other point to calculate distance to.
+     */
+    distance(other)
+    {
+      var a = this.x - other.x;
+      var b = this.y - other.y;
+      return Math.sqrt(a*a + b*b);
     }
 }
 
@@ -1744,12 +1755,6 @@ class WebGlRenderer extends Renderer
         var positionLocation = gl.getAttribLocation(program, "a_position");
         var texcoordLocation = gl.getAttribLocation(program, "a_texCoord");
 
-        // create texture for the null texture
-        var gltexture = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, gltexture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 8, 8, 0, gl.RGB, gl.UNSIGNED_BYTE, nullImg);
-        this.nullTexture = gltexture;
-
         // Create a buffer to put three 2d clip space points in
         var positionBuffer = gl.createBuffer();
 
@@ -1785,10 +1790,6 @@ class WebGlRenderer extends Renderer
             0.0,  1.0,
             1.0,  1.0,
         ]), gl.STATIC_DRAW);
-
-        // Set the parameters so we can render any size image.
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
         // Tell it to use our program (pair of shaders)
         gl.useProgram(program);
@@ -1877,6 +1878,7 @@ class WebGlRenderer extends Renderer
 
         // clear texture caching
         this._currTexture = null;
+        this._lastBlend = null;
         this._smoothing = null;
     }
 
@@ -2121,22 +2123,25 @@ class WebGlRenderer extends Renderer
         // only update if texture or mode changed
         if ((this._currTexture !== texture) || (this._currTextureMode !== textureMode)) 
         {
-        
+            // reset smoothing so we'll set texture params again
+            this._smoothing = null;
+
             // update cached values
             this._currTextureMode = textureMode;
             this._currTexture = texture;
             
             // create a gl texture, if needed (happens once per texture and mode).
-            if (!texture._glTextures[textureMode]) {
+            if (!texture._glTextures[textureMode] && img.width && img.height) {
                 var gltexture = gl.createTexture();
+                if (!gltexture) {throw new Error("Invalid texture! Internal error?");}
                 gl.bindTexture(gl.TEXTURE_2D, gltexture);
                 gl.texImage2D(gl.TEXTURE_2D, 0, textureMode, img.width, img.height, 0, textureMode, gl.UNSIGNED_BYTE, img);
                 texture._glTextures[textureMode] = gltexture;
             }
             // if already got a gl texture, just bind to existing texture
             else {
-                var glTexture = texture._glTextures[textureMode];
-                gl.bindTexture(gl.TEXTURE_2D, glTexture);
+                var gltexture = texture._glTextures[textureMode];
+                gl.bindTexture(gl.TEXTURE_2D, gltexture);
             }
         }
     }

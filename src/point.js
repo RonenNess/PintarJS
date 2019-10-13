@@ -106,6 +106,17 @@ class Point
     {
         return other && this.x == other.x && this.y == other.y;
     }
+        
+    /**
+     * Calculate distance from another point.
+     * @param {PintarJS.Point} other Other point to calculate distance to.
+     */
+    distance(other)
+    {
+      var a = this.x - other.x;
+      var b = this.y - other.y;
+      return Math.sqrt(a*a + b*b);
+    }
 }
 
 /**

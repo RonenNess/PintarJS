@@ -563,6 +563,13 @@ pintar.adjustToParentSize();
 - Optimizations, huge improvement in WebGL texture swapping.
 - Added Greyscale to sprites.
 
+### 1.0.0.3
+
+- Fixed bug with replacing GL textures sometimes turning black.
+- Fixed bug with blend mode sometimes not properly update between frames.
+- Removed some dead code.
+- Added function to calculate point distance.
+
 ## License
 
 PintarJS is distributed under the permissive MIT License and is absolutely free to use for any purpose, commercial or not.
