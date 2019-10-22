@@ -455,7 +455,7 @@ class WebGlRenderer extends Renderer
             this._currTexture = texture;
             
             // create a gl texture, if needed (happens once per texture and mode).
-            if (!texture._glTextures[textureMode] && img.width && img.height) {
+            if (!texture._glTextures[textureMode] && img.width && img.height && img.complete) {
                 var gltexture = gl.createTexture();
                 if (!gltexture) {throw new Error("Invalid texture! Internal error?");}
                 gl.bindTexture(gl.TEXTURE_2D, gltexture);

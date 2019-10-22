@@ -570,6 +570,11 @@ pintar.adjustToParentSize();
 - Removed some dead code.
 - Added function to calculate point distance.
 
+### 1.0.0.4 [Not Released Yet]
+
+- Added some useful helper functions (Point.sub and more color formats).
+- Added validation that image is completed before loading texture, to prevent black texture bug if drawing while loading.
+
 ## License
 
 PintarJS is distributed under the permissive MIT License and is absolutely free to use for any purpose, commercial or not.
