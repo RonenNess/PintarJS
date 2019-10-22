@@ -131,6 +131,22 @@ class Color
     }
 
     /**
+     * Convert this color to decimal number.
+     */
+    asDecimalRGBA()
+    {
+      return ((Math.round(this.r * 255) << (8 * 3)) | (Math.round(this.g * 255) << (8 * 2)) | (Math.round(this.b * 255) << (8 * 1)) | (Math.round(this.a * 255)))>>>0;
+    }
+
+    /**
+     * Convert this color to decimal number.
+     */
+    asDecimalABGR()
+    {
+      return ((Math.round(this.a * 255) << (8 * 3)) | (Math.round(this.b * 255) << (8 * 2)) | (Math.round(this.g * 255) << (8 * 1)) | (Math.round(this.r * 255)))>>>0;
+    }
+
+    /**
      * Return a clone of this color.
      */
     clone()
