@@ -35,6 +35,7 @@ class TextSprite extends Renderable
         this.strokeWidth = options.strokeWidth || TextSprite.defaults.strokeWidth;
         this.maxWidth = null;
         this.strokeColor = (options.strokeColor || TextSprite.defaults.strokeColor).clone();
+        this.useStyleCommands = TextSprite.defaults.useStyleCommands;
 
         // reset version after init
         this._version = 0;
@@ -229,6 +230,29 @@ class TextSprite extends Renderable
     {
         return this._textLines;
     }
+
+    /**
+     * Get all text without any style commands in it.
+     */
+    getTextWithoutStyleCommands()
+    {
+        var ret = "";
+        var parts = this.text.split("{{");
+        for (var i = 0; i < parts.length; ++i) 
+        {
+            var currPart = parts[i];
+            var currPartOrigin = i === 0 ? currPart : "{{" + currPart;
+            var startPart = currPart.substr(0, 3);
+            if (startPart !== "fc:" && startPart !== "sc:" && startPart !== "sw:") {
+                ret += currPartOrigin;
+                continue;
+            }
+
+            var closing = currPart.indexOf("}}");
+            ret += closing === -1 ? (currPartOrigin) : (currPart.substr(closing + 2));
+        }
+        return ret;
+    }
  
     /**
      * Return a clone of this text sprite.
@@ -260,13 +284,14 @@ TextSprite._Alignments = {
 
 // default values
 TextSprite.defaults = {
-    font: "Arial",                              // default font to use when drawing text
-    fontSize: 30,                               // default font size
-    color: Color.black(),                       // default text color
-    alignment: TextSprite._Alignments.Left,     // default text alignment
-    strokeWidth: 0,                             // default text stroke width
-    strokeColor: Color.transparent(),           // default text stroke color
-    blendMode: BlendModes.AlphaBlend,           // default blending mode
+    font: "Arial",                              // default font to use when drawing text.
+    fontSize: 30,                               // default font size.
+    color: Color.black(),                       // default text color.
+    alignment: TextSprite._Alignments.Left,     // default text alignment.
+    strokeWidth: 0,                             // default text stroke width.
+    strokeColor: Color.transparent(),           // default text stroke color.
+    blendMode: BlendModes.AlphaBlend,           // default blending mode.
+    useStyleCommands: false,                    // default if sprite texts should use style commands.
 };
 
 // export TextSprite

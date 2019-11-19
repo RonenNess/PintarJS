@@ -131,6 +131,19 @@ class Color
     }
 
     /**
+     * Get color from hex value.
+     * @param {Number} val Number value (hex), as 0xrrggbb[aa].
+     * @param {Boolean} includeAlpha If true, will include alpha channel.
+     */
+    fromHex(val, includeAlpha)
+    {
+        if (includeAlpha) { this.a = (val & 0xff) / 255.0; val = val >> 8; }
+        this.b = (val & 0xff) / 255.0; val = val >> 8;
+        this.g = (val & 0xff) / 255.0; val = val >> 8;
+        this.r = (val & 0xff) / 255.0;
+    }
+
+    /**
      * Convert this color to decimal number.
      */
     asDecimalRGBA()
