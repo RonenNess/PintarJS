@@ -19,7 +19,7 @@ const Viewport = require('./viewport');
 const PintarConsole = require('./console');
 
 // current version and author
-const __version__ = "1.0.0.0";
+const __version__ = "1.0.0.4";
 const __author__ = "Ronen Ness";
 
 /**
@@ -360,7 +360,7 @@ class PintarJS
             this.drawSprite(obj);
         }
         else if (obj instanceof TextSprite) {
-            this.drawSprite(obj);
+            this.drawText(obj);
         }
         else {
             throw new PintarConsole.Error("Unknown object type to draw!");

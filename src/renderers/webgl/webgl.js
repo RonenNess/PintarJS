@@ -7,14 +7,15 @@
 "use strict";
 const Renderer = require('./../renderer');
 const PintarConsole = require('./../../console');
-const CanvasRenderer = require('./../canvas');
-const Color = require('./../../color');
 const Point = require('./../../point');
+const Sprite = require('./../../sprite');
+const Color = require('./../../color');
 const BlendModes = require('../../blend_modes');
 const Viewport = require('./../../viewport');
 const Rectangle = require('./../../rectangle');
 const Shaders = require('./shaders');
-const WebglUtils = require('./webgl-utils').webglUtils;
+const FontTexture = require('./font_texture');
+const WebglUtils = require('./webgl_utils').webglUtils;
 
 
 // null image to use when trying to render invalid textures, so we won't get annoying webgl warnings
@@ -49,11 +50,13 @@ class WebGlRenderer extends Renderer
             throw new PintarConsole.Error("WebGL is not supported or canvas is already used with a different context!");
         }
 
-        // create the internal canvas renderer, used to draw text
-        this._initOverlayCanvas();
-
         // init shaders and internal stuff
         this._initShadersAndBuffers();
+
+        // dictionary to hold generated font textures + default font size
+        this.fontTextureDefaultSize = 100;
+        this.smoothText = true;
+        this._fontTextures = {};
 
         // ready!
         PintarConsole.debug("WebGL renderer ready!");
@@ -113,16 +116,6 @@ class WebGlRenderer extends Renderer
             1.0,  1.0,
         ]), gl.STATIC_DRAW);
 
-        // Create a texture.
-        var texture = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, texture);
-
-        // Set the parameters so we can render any size image.
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        //gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-        //gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-
         // Tell it to use our program (pair of shaders)
         gl.useProgram(program);
 
@@ -181,7 +174,7 @@ class WebGlRenderer extends Renderer
     }
 
     /**
-     * Called whenever canvas resize to adjust resolution and overlay size.
+     * Called whenever canvas resize to adjust resolution.
      */
     _onResize()
     {
@@ -197,52 +190,6 @@ class WebGlRenderer extends Renderer
         this._lastSize = new Point(gl.canvas.width, gl.canvas.height);
     }
 
-
-    /**
-     * Create the overlay canvas for text rendering.
-     */
-    _initOverlayCanvas()
-    {
-        PintarConsole.debug("Create internal canvas renderer to use as overlay layer for text..");
-        var canvas = this._canvas;
-        this._overlayCanvas = document.createElement('canvas');
-        this._overlayCanvas.id = "pintarjs-webgl-overlay-canvas";
-        this._canvasRender = new CanvasRenderer();
-        this._canvasRender._init(this._overlayCanvas);
-        this._updateOverlayCanvas();
-        canvas.parentNode.insertBefore(this._overlayCanvas, canvas.nextSibling);
-        PintarConsole.debug("Done creating canvas renderer.");
-    }
-
-    /**
-     * Update the overlay canvas position and size.
-     */
-    _updateOverlayCanvas()
-    {
-        // adjust canvas width and height
-        if (this._overlayCanvas.width != this._canvas.width) { this._overlayCanvas.width = this._canvas.width; }
-        if (this._overlayCanvas.height != this._canvas.height) { this._overlayCanvas.height = this._canvas.height; }
-        
-        // get bounding rect, and if nothing changed - skip
-        var rect = this._canvas.getBoundingClientRect();
-        if (this._lastBounding && 
-            (this._lastBounding.left === rect.left && this._lastBounding.right === rect.right && this._lastBounding.top === rect.top && this._lastBounding.bottom === rect.bottom)) {
-            return;
-        }
-        this._lastBounding = rect;
-        
-        // set overlay canvas bounding rect        
-        this._overlayCanvas.style.position = "fixed";
-        this._overlayCanvas.style.zIndex = this._canvas.style.zIndex + 1;
-        this._overlayCanvas.style.display = "block";
-        this._overlayCanvas.style.left = rect.left + "px";
-        this._overlayCanvas.style.right = rect.right + "px";
-        this._overlayCanvas.style.top = rect.top + "px";
-        this._overlayCanvas.style.bottom = rect.bottom + "px";
-        this._overlayCanvas.style.width = this._canvas.style.width;
-        this._overlayCanvas.style.height = this._canvas.style.height;
-    }
-
     /**
      * Start a rendering frame.
      */
@@ -254,8 +201,10 @@ class WebGlRenderer extends Renderer
             this._onResize();
         }
 
-        // update the overlay canvas position and size
-        this._updateOverlayCanvas();
+        // clear texture caching
+        this._currTexture = null;
+        this._lastBlend = null;
+        this._smoothing = null;
     }
 
     /**
@@ -271,9 +220,6 @@ class WebGlRenderer extends Renderer
      */
     clear(color, rect)
     {
-        // clear the overlay canvas
-        this._canvasRender.clear(new Color(0, 0, 0, 0));
-
         // clear whole canvas
         if (!rect) {
             this._gl.clearColor(color.r, color.g, color.b, color.a);
@@ -292,14 +238,37 @@ class WebGlRenderer extends Renderer
         this.setViewport(this._viewport);
     }
 
+    /**
+     * Generate a font texture manually, which will be later used when drawing texts with this font.
+     * @param {String} fontName Font name to create texture for (default to 'Ariel').
+     * @param {Number} fontSize Font size to use when creating texture (default to 30). Bigger size = better text quality, but more memory consumption.
+     * @param {String} charsSet String with all the characters to generate (default to whole ASCII range). If you try to render a character that's not in this string, it will draw 'missingCharPlaceholder' instead.
+     * @param {Number} maxTextureWidth Max texture width (default to 2048). 
+     * @param {Char} missingCharPlaceholder Character to use when trying to render a missing character (defaults to '?').
+     */
+    generateFontTexture(fontName, fontSize, charsSet, maxTextureWidth, missingCharPlaceholder) 
+    {
+        var ret = new FontTexture(fontName, fontSize, charsSet, maxTextureWidth, missingCharPlaceholder);
+        this._fontTextures[fontName] = ret;
+        return ret;
+    }
+
+    /**
+     * Get or create a font texture.
+     */
+    _getOrCreateFontTexture(fontName)
+    {
+        if (!this._fontTextures[fontName]) {
+            this.generateFontTexture(fontName, this.fontTextureDefaultSize);
+        }
+        return this._fontTextures[fontName];
+    }
     
     /**
      * Set viewport.
      */
     setViewport(viewport)
-    {
-        this._canvasRender.setViewport(viewport);
-        
+    {   
         if (viewport) {
             var rect = viewport.drawingRegion || new Rectangle(0, 0, this._canvas.width, this._canvas.height);
             this._setScissor(rect);
@@ -324,9 +293,177 @@ class WebGlRenderer extends Renderer
      * Draw text.
      * For more info check out renderer.js.
      */
-    drawText(textSprite) 
-    { 
-        this._canvasRender.drawText(textSprite);
+    drawText(textSprite)
+    {
+        // get font texture to use
+        var fontTexture = this._getOrCreateFontTexture(textSprite.font);
+
+        // create sprite to draw
+        var sprite = new Sprite(fontTexture.texture);
+
+        // get text lines
+        var lines = textSprite.textLines;
+        
+        // starting properties
+        var fillColor = null;
+        var strokeWidth = null;
+        var strokeColor = null;
+
+        // now draw text front
+        for (var i = 0; i < lines.length; ++i) {
+
+            // get current line
+            var line = lines[i];
+
+            // calculate line width and individual character sizes
+            var lineWidth = 0;
+            var charsData = [];
+            for (var j = 0; j < line.length; ++j) {
+                
+                // get source rect
+                var char = line[j];
+                var srcRect = fontTexture.getSourceRect(char);
+
+                // calc actual size
+                var ratio = (textSprite.fontSize / fontTexture.fontSize);
+                var width = Math.ceil(ratio * srcRect.width);
+                var height = Math.ceil(ratio * srcRect.height);
+
+                // add character data
+                charsData.push({
+                    srcRect: srcRect,
+                    size: new Point(width, height),
+                });
+                lineWidth += width - 1 * ratio;
+            }
+
+            // calc offset based on alignment
+            var offset = 0;
+            switch (textSprite.alignment) {
+
+                case "right":
+                    offset -= lineWidth;
+                    break;
+
+                case "center":
+                    offset -= lineWidth / 2;
+                    break;
+            }
+
+            // now actually draw characters
+            for (var j = 0; j < line.length; ++j) {
+
+                // check if its a style command
+                if (textSprite.useStyleCommands) 
+                {
+                    while (line[j] == '{' && line[j + 1] == '{') 
+                    {
+                        // reset command
+                        if (line.substr(j, "{{res}}".length) === "{{res}}") {
+                            fillColor = strokeWidth = strokeColor = null;
+                            j += "{{res}}".length;
+                        }
+                        else
+                        {
+                            // get command part
+                            var command = line.substr(j, "{{xx:".length);
+
+                            // method to get value part of the command
+                            var getValuePart = () => 
+                            {
+                                var closingIndex = line.substr(j, 64).indexOf('}}');
+                                if (closingIndex === -1) { 
+                                    throw new PintarConsole.Error("Invalid broken style command in line: '" + line + "'!");
+                                }
+                                return line.substring(j + 5, j + closingIndex);
+                            };
+
+                            // parse color value for style command
+                            var parseColor = (colorVal) => 
+                            {
+                                if (colorVal[0] === '#') {
+                                    return Color.fromHex(colorVal);
+                                }
+                                return Color[colorVal]();
+                            }
+
+                            // get style value part and advance index
+                            var styleVal = getValuePart();
+                            j += styleVal.length + 2 + 5;
+
+                            // is it front color?
+                            if (command == "{{fc:") {
+                                var val = parseColor(styleVal);
+                                fillColor = val;
+                            }
+                            // is it stroke color?
+                            else if (command == "{{sc:") {
+                                var val = parseColor(styleVal);
+                                strokeColor = val;
+                            }
+                            // is it stroke color?
+                            else if (command == "{{sw:") {
+                                var val = parseInt(styleVal);
+                                strokeWidth = val;
+                            }
+                        } 
+                    }
+                }
+
+                // special case - if end of ext was a style command for whatever reason, we now exceed line length..
+                if (j >= line.length) {
+                    continue;
+                }
+
+                // get current character
+                var char = line[j];
+
+                // set starting properties
+                if (fillColor === null) { fillColor = textSprite.color; }
+                if (strokeWidth === null) { strokeWidth = textSprite.strokeWidth; }
+                if (strokeColor === null) { strokeColor = textSprite.strokeColor; }
+
+                // get source rect and size
+                var srcRect = charsData[j].srcRect;
+                var size = charsData[j].size;
+
+                // set sprite params
+                sprite.sourceRectangle = srcRect;
+                var position = new Point(textSprite.position.x + offset, textSprite.position.y + (i * textSprite.lineHeight) - height * 0.75);
+                sprite.width = size.x;
+                sprite.height = size.y;
+                sprite.smoothingEnabled = this.smoothText;
+
+                // draw character stroke
+                if (strokeWidth > 0 && strokeColor.a > 0) {
+                    sprite.color = strokeColor;
+                    for (var sx = -1; sx <= 1; sx++) {
+                        for (var sy = -1; sy <= 1; sy++) {      
+                            var centerPart = sx == 0 && sy == 0;
+                            var extraWidth = (centerPart ? strokeWidth : 0);
+                            var extraHeight = (centerPart ? strokeWidth : 0);
+                            sprite.width = size.x + extraWidth;
+                            sprite.height = size.y + extraHeight;
+                            sprite.position.x = position.x + sx * (strokeWidth / 2.5) - extraWidth / 2;
+                            sprite.position.y = position.y + sy * (strokeWidth / 2.5) - extraHeight / 2;
+                            this.drawSprite(sprite);
+                        }   
+                    }
+                }
+
+                // set character size
+                sprite.width = size.x;
+                sprite.height = size.y;
+
+                // draw character fill
+                sprite.position = position;
+                sprite.color = fillColor;
+                this.drawSprite(sprite);
+
+                // update offset
+                offset += size.x - 1 * ratio;
+            }
+        }
     }
 
     /**
@@ -367,20 +504,42 @@ class WebGlRenderer extends Renderer
 
     /**
      * Set uniform image with check if changed.
+     * @param {Texture} texture Texture instance.
+     * @param {Number} textureMode Should be either gl.RGBA, gl.RGB or gl.LUMINANCE.
      */
-    _setTexture(img)
+    _setTexture(texture, textureMode)
     {
-        // only update if texture changed
-        // note: the comparison to width is so we'll update the image if it used to be invalid but now loaded
-        if (this._texture !== img || this._textureWidth !== img.width) {
-        
-            // update cached values
-            this._textureWidth = img.width;
-            this._texture = img;
+        var gl = this._gl;
 
-            // set values
-            var gl = this._gl;
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img.width !== 0 ? img : nullImg);
+        // get image from texture
+        var img = texture.image;
+
+        // if first call, generate gl textures dict
+        texture._glTextures = texture._glTextures || {};
+
+        // only update if texture or mode changed
+        if ((this._currTexture !== texture) || (this._currTextureMode !== textureMode)) 
+        {
+            // reset smoothing so we'll set texture params again
+            this._smoothing = null;
+
+            // update cached values
+            this._currTextureMode = textureMode;
+            this._currTexture = texture;
+            
+            // create a gl texture, if needed (happens once per texture and mode).
+            if (!texture._glTextures[textureMode] && img.width && img.height && img.complete) {
+                var gltexture = gl.createTexture();
+                if (!gltexture) {throw new PintarConsole.Error("Invalid texture! Internal error?");}
+                gl.bindTexture(gl.TEXTURE_2D, gltexture);
+                gl.texImage2D(gl.TEXTURE_2D, 0, textureMode, img.width, img.height, 0, textureMode, gl.UNSIGNED_BYTE, img);
+                texture._glTextures[textureMode] = gltexture;
+            }
+            // if already got a gl texture, just bind to existing texture
+            else {
+                var gltexture = texture._glTextures[textureMode];
+                gl.bindTexture(gl.TEXTURE_2D, gltexture);
+            }
         }
     }
 
@@ -423,8 +582,6 @@ class WebGlRenderer extends Renderer
             switch (blendMode) 
             {
                 case BlendModes.AlphaBlend:
-                    // gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-                    // gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
                     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
                     break;
 
@@ -477,13 +634,46 @@ class WebGlRenderer extends Renderer
     }
 
     /**
+     * Calculate texture mode for a given sprite.
+     */
+    _calcTextureMode(sprite)
+    {
+        // by default its rgba
+        var textMode = this._gl.RGBA;
+
+        // get if opaque or greyscale
+        var opaque = sprite.blendMode == BlendModes.Opaque;
+        var greyscale = sprite.greyscale;
+
+        // opaque and greyscale?
+        if (opaque && greyscale) {
+            textMode = this._gl.LUMINANCE;
+        }
+        // opaque?
+        else if (opaque) {
+            textMode = this._gl.RGB;
+        }
+        // greyscale?
+        else if (greyscale) {
+            textMode = this._gl.LUMINANCE_ALPHA;
+        }
+
+        // return texture mode
+        return textMode;
+    }
+
+    /**
      * Draw a sprite.
      * For more info check out renderer.js.
      */
     drawSprite(sprite) 
     {
+        // if texture is not yet ready, don't render
+        if (!sprite.texture.isReady) { return; }
+
         // set texture
-        this._setTexture(sprite.texture.image);
+        var textureMode = this._calcTextureMode(sprite);
+        this._setTexture(sprite.texture, textureMode);
 
         // set position and size
         this._gl.uniform2f(this._uniforms.offset, sprite.position.x - this._viewport.offset.x, -sprite.position.y + this._viewport.offset.y);

@@ -11,6 +11,7 @@ const Rectangle = require('./../../rectangle');
 const BlendModes = require('./../../blend_modes');
 const Point = require('./../../point');
 const Viewport = require('./../../viewport');
+const TextSprite = require('./../../text_sprite');
 
 /**
  * Implement the built-in canvas renderer.
@@ -44,6 +45,14 @@ class CanvasRenderer extends Renderer
     {
         // update viewport clipping
         this.setViewport(this._viewport);
+    }
+
+    /**
+     * End a rendering frame.
+     */
+    endFrame()
+    {
+        this._currFont = "null";
     }
 
     /**
@@ -147,19 +156,25 @@ class CanvasRenderer extends Renderer
      */
     drawText(textSprite)
     {  
+        // set font and alignment
+        var newFont = textSprite.fontPropertyAsString;
+        if (this._currFont !== newFont) {
+            this._ctx.font = newFont;
+            this._currFont = newFont;
+        }
+
         // save ctx before drawing
         this._ctx.save();
 
         // set blend mode
         this._setBlendMode(textSprite.blendMode);
 
-        // set font and alignment
-        this._ctx.font = textSprite.fontPropertyAsString;
+        // set alignment
         this._ctx.textAlign = textSprite.alignment;
 
         // get position x and y
-        var posX = textSprite.position.x - this._viewport.offset.x;
-        var posY = textSprite.position.y - this._viewport.offset.y;
+        var posX = Math.round(textSprite.position.x - this._viewport.offset.x);
+        var posY = Math.round(textSprite.position.y - this._viewport.offset.y);
 
         // get text and break into lines
         var lines = textSprite.textLines;
@@ -169,16 +184,26 @@ class CanvasRenderer extends Renderer
         if (textSprite.strokeWidth) {
             this._ctx.strokeStyle = textSprite.strokeColor.asHex();
             this._ctx.lineWidth = textSprite.strokeWidth;
-            for (var i = 0; i < lines.length; ++i) {
-                this._ctx.strokeText(lines[i], posX, posY + i * lineHeight, textSprite.maxWidth || undefined);
+            for (var i = 0; i < lines.length; ++i) 
+            {
+                var line = lines[i];
+                if (textSprite.useStyleCommands) {
+                    line = TextSprite.getTextWithoutStyleCommands(line);
+                }
+                this._ctx.strokeText(line, posX, posY + i * lineHeight, textSprite.maxWidth || undefined);
             }
         }
 
         // draw text fill
         if (textSprite.color.a) {
             this._ctx.fillStyle  = textSprite.color.asHex();
-            for (var i = 0; i < lines.length; ++i) {
-                this._ctx.fillText(lines[i], posX, posY + i * lineHeight, textSprite.maxWidth || undefined);
+            for (var i = 0; i < lines.length; ++i) 
+            {
+                var line = lines[i];
+                if (textSprite.useStyleCommands) {
+                    line = TextSprite.getTextWithoutStyleCommands(line);
+                }
+                this._ctx.fillText(line, posX, posY + i * lineHeight, textSprite.maxWidth || undefined);
             }
         }
         

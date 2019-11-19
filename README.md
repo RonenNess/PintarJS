@@ -2,7 +2,7 @@
 
 Micro JS lib (52KB minified) for direct WebGL and canvas rendering.
 
-Live Demo: [todo]
+[PintarJS Live Demo](https://ronenness.github.io/PintarJS/demos/index.html)
 
 ![PintarJS example](https://github.com/RonenNess/PintarJS/raw/master/demos/example.png "PintarJS transformations example")
 
@@ -44,7 +44,7 @@ View bower:
 bower install pintar
 ```
 
-Via npm:
+Via npm (update less frequently):
 
 ```
 npm install pintar
@@ -58,7 +58,8 @@ Or you can download `dist/pinter.js` and include in your HTML file.
 - Text drawing
     - Alignment
     - Stroke
-    - Line breaks
+    - Multiline
+	- Bitmap font rendering
 - Sprites
     - Color Effects
         - Tint (reduce color compontents)
@@ -110,6 +111,36 @@ To control the order of renderers PintarJS will attempt to use you can provide a
 ```js
 var canvasPintar = new PintarJS(null, PintarJS.Renderers.Canvas);
 ```
+
+Will just use the Canvas renderer, without trying anything else.
+
+### Renderers
+
+As mentioned above, PintarJS support few types of renderers. These are:
+
+#### WebGL Renderer
+
+The default renderer, which uses WebGL2 and fallback to WebGL1 if not supported.
+This is the fastest option, with more effects supported.
+
+Note: the default WebGL renderer uses 'bitmap font rendering' to handle texts (described later), which is the preferred method because it only uses WebGL and its the fastest, but there's also a Hybrid method that utilize canvas for texts.
+
+#### WebGL Hybrid Renderer
+
+This renderer is the same as WebGL renderer, but instead of using bitmap font rendering it will create a transparent overlay canvas and use canvas rendering API to handle texts.
+
+While it solve all the bitmap font rendering drawbacks (described later), it has the following drawbacks of its own:
+
+1. Its slower.
+2. On some browsers, like some versions of FireFox, mixing WebGL and canvas cause heavy stuttering anf FPS drops, which makes it unusable.
+3. You can't sort Sprites and Texts; Texts will always be rendered above sprites in this technique.
+
+This renderer will never be used, unless you explicitly pick it.
+
+#### Canvas Renderer
+
+Canvas renderer is the fallback renderer that PintarJS will use if WebGL is not supported.
+Its slower than WebGL and don't support all effects / blend modes, but its pretty good and covers almost everything the WebGL covers.
 
 ### Drawing Frame
 
@@ -309,6 +340,15 @@ Skew sprite on X and Y axis:
 sprite.skew = new PintarJS.Point(1, 0.5);
 ```
 
+#### sprite.greyscale
+
+If true, will render this sprite in black and white. Only works with WebGL renderer.
+
+```js
+// will draw sprite in black and white
+sprite.greyscale = true;
+```
+
 #### Sprite Defaults
 
 You can set some of the default properties of all new sprites by changing `PintarJS.Sprite.defaults`. To learn more, check out the keys contained in the defaults dictionary.
@@ -328,6 +368,42 @@ Then draw it:
 pintar.drawText(text);
 ```
 
+### Style Commands
+
+Text Sprite support embedded style commands, but only for WebGL renderer.
+Style commands are special tags you can put in text to change colors and styles mid-text.
+
+For example, the following TextSprite:
+
+```js
+textSprite.useStyleCommands = true;
+textSprite.color = PintarJS.Color.black();
+textSprite.text = "Hello world, this is {{fc:red}}RED{{fc:black}}.";
+```
+
+Will draw the text "Hellow world, this is" in black, while "RED" part will be in red.
+
+The following commands are supported:
+
+#### {{fc:<color>}}
+
+Change the fill color of the text.
+`<color>` can either be one of the built-in color names (white, black, red, blue, green...) or a hex value (for example red is `#ff0000ff`).
+
+#### {{sc:<color>}}
+
+Change the stroke color of the text.
+`<color>` param is the same as with fill color.
+
+#### {{sw:<width>}}
+
+Change the stroke width of the text.
+`<width>` param is the new stroke width.
+
+#### {{res}}
+
+Reset style back to the Text Sprite properties.
+
 ### Text Sprite properties
 
 Text Sprites support the following properties:
@@ -345,8 +421,10 @@ text.position = new PintarJS.Point(100, 100);
 Set the text fill color:
 
 ```js
-// draw red text
-text.color = new PintarJS.Color(1, 0, 0, 1);
+text.color = new PintarJS.Color(1, 0, 0, 1);  // <-- red color
+
+// or, you can do this:
+text.color = PintarJS.Color.red();
 ```
 
 #### text.blendMode
@@ -368,6 +446,10 @@ Text font size (in pixels):
 ```js
 text.fontSize = 30;
 ```
+
+#### text.useStyleCommands
+
+Set to true to support style commands. If false, will draw text as-is.
 
 #### text.alignment
 
@@ -397,6 +479,7 @@ text.strokeColor = PintarJS.Color.blue();
 
 Similar to with Sprites, Text Sprites got defaults dictionary as well you can set to control default values when creating new text sprites - `PintarJS.TextSprite.defaults`. To learn more, check out the keys contained in the defaults dictionary.
 
+
 ### Viewport
 
 Viewports can define rendering area (ie a rectangle region that we'll only draw on it) + drawing offset, that will affect the position of all renderings.
@@ -422,6 +505,71 @@ PintarJS works best if you follow these rules:
 - Try to use round rotation degrees where possible (will allow more caching and less calculations).
 - Don't update things when not necessary (for example don't call 'setSourceFromSpritesheet()' every frame if you know the source sprite index has not changed).
 - If you draw massive amount of sprites avoid using `pintar.draw()` and use the more specific `pintar.drawSprite()` and `pintar.drawText()` accordingly.
+
+
+### Font Texture (WebGL Only)
+
+Drawing text in WebGL is a bit tricky. To tackle this, PintarJS implements a technique called 'bitmap font rendering' with its WebGL renderer. 
+
+In this technique, PintarJS uses a texture containing all the characters of a given font, and draw the text by drawing the characters individually as if they were regular sprites. 
+
+To get the texture for a given font, PintarJS will generate it at runtime automatically, on the moment you'll try to draw a TextSprite that requires it.
+
+You can, however, ask the renderer to generate a font texture on demand with your own custom parameters. To do so, use the following method:
+
+```js
+// will only work if you use the WebGL renderer!
+pintar._renderer.generateFontTexture(fontName, fontSize, charsSet, maxTextureWidth, missingCharPlaceholder);
+```
+
+Generating the font texture manually can help you solve some of the drawbacks of this technique, which will be listed next.
+
+#### Preload Custom Fonts
+
+If you want to use a custom font, it is recommended to preload it, to make sure its available for the time of first rendering (if not, it will fallback to default font). To do so, you can add the following tag before including your JS file:
+
+```<div style="font-family: my-font;">.</div>```
+
+You can remove it later once everything is up and ready. Note that it can't be invisible and it must have an actual text (in this case, '.') in it.
+
+#### Advantages
+
+Bitmap font rendering have the following advantages:
+
+##### Sort with Sprites
+
+Rendering order applies for texts that use this technique, which means you can render texts in front or behind sprites. 
+
+##### Support Style Commands
+
+With Bitmap font rendering PintarJS support style commands, that allow you to change colors and styles mid-text.
+Read more about it under `TextSprite` section.
+
+##### Fix Slowness Bug
+
+As mentioned before, mixing WebGL and canvas text cause unexplained slowness in some browsers. 
+Bitmap fonts fix this problem.
+
+#### Drawbacks
+
+Bitmap font rendering has some drawbacks you should be aware of, including:
+
+##### Only ASCII
+
+By default, PintarJS will only generate textures for ASCII character set.
+If you need other languages / symbols, you can generate font textures manually and provide your own characters set.
+
+##### Font Scaling
+
+Since fonts are converted to textures (pixels), scaling them is no longer without artifacts.
+If you need to draw large texts, you'll need to generate larger Font Textures to make it look good, which cost more memory.
+
+##### Memory Consumption
+
+Using multiple fonts will result in multiple textures, and multiple languages in larger textures. Be careful not to end up with too much memory used on fonts.
+
+If all your texts are small you can generate Font Textures manually with smaller size than PintarJS default, which is pretty large.
+
 
 
 ### Extras
@@ -462,6 +610,36 @@ You can use PintarJS to adjust the canvas size to its parent:
 ```js
 pintar.adjustToParentSize();
 ```
+
+## Changes
+
+### 1.0.0.1
+
+- Fixed texture bleeding while using atlas.
+- Fixed bug with single texture delayed load / wrong source rectangle.
+
+### 1.0.0.2
+
+- Added some useful API functions to base objects.
+- Added bitmap font rendering for pure WebGL renderer.
+- Added Hybrid WebGL.
+- Bug fixes in basic APIs.
+- Optimizations, huge improvement in WebGL texture swapping.
+- Added Greyscale to sprites.
+
+### 1.0.0.3
+
+- Fixed bug with replacing GL textures sometimes turning black.
+- Fixed bug with blend mode sometimes not properly update between frames.
+- Removed some dead code.
+- Added function to calculate point distance.
+
+### 1.0.0.4
+
+- Added some useful helper functions (Point.sub and more color formats).
+- Added validation that image is completed before loading texture, to prevent black texture bug if drawing while loading.
+- Fixed some bugs with WebGL text sprite + added better support in custom fonts.
+- Added style commands to WebGL text sprite.
 
 ## License
 

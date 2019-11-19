@@ -30,7 +30,7 @@ class Texture
 
             // if ready, call init and callback
             if (this.image.width) {
-                this._initTextureOnImageReady(this.image, onLoaded);
+                if (onLoaded) { onLoaded.call(this.image); }
             }
             // if not ready, set onload callback
             else {

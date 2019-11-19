@@ -10,4 +10,5 @@
 module.exports = {
     Canvas: require('./canvas'),
     WebGL: require('./webgl'),
+    WebGLHybrid: require('./webgl/webgl_hybrid'),
 };

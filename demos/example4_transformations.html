@@ -21,7 +21,7 @@
     //PintarJS.enableDebugMessages();
 
     // set default renderer
-    var mode = location.search.substr(1);
+    var mode = location.search.substr(1).split('?')[0];
     PintarJS.DefaultRenderers = PintarJS.Renderers[mode] || PintarJS.DefaultRenderers;
     
     // initialize pintar
@@ -117,10 +117,10 @@
       createDemoSprite(i++, j, "Skew X", {skew: new PintarJS.Point(0.75, 0), origin: PintarJS.Point.half(), extraPos: new PintarJS.Point(width / 2, height / 2)}, false);
       createDemoSprite(i++, j, "Skew Y", {skew: new PintarJS.Point(0, 0.75), origin: PintarJS.Point.half(), extraPos: new PintarJS.Point(width / 2, height / 2)}, false);
       createDemoSprite(i++, j, "Skew Both", {skew: new PintarJS.Point(0.75, 0.75), origin: PintarJS.Point.half(), extraPos: new PintarJS.Point(width / 2, height / 2)}, false);
-      createDemoSprite(i++, j, "Flip X", {_animateScaleY: true, origin: new PintarJS.Point.half(), extraPos: new PintarJS.Point(width / 2, height / 2)}, false);
-      createDemoSprite(i++, j, "Flip y", {_animateScaleX: true, origin: new PintarJS.Point.half(), extraPos: new PintarJS.Point(width / 2, height / 2)}, false);
-      createDemoSprite(i++, j, "Scaling", {_animateScaleYPosOnly: true, origin: new PintarJS.Point(0.5, 1), extraPos: new PintarJS.Point(width / 2, height)}, false);
-      
+      createDemoSprite(i++, j, "Flip / Scale X", {_animateScaleY: true, origin: new PintarJS.Point.half(), extraPos: new PintarJS.Point(width / 2, height / 2)}, false);
+      createDemoSprite(i++, j, "Flip / Scale Y", {_animateScaleX: true, origin: new PintarJS.Point.half(), extraPos: new PintarJS.Point(width / 2, height / 2)}, false);
+      createDemoSprite(i++, j, "Greyscale", {greyscale: true}, true);
+	  
       // for animations
       var animValue = 0;
 
@@ -152,18 +152,20 @@
           if (sprite._animateAlpha) { sprite.alpha = 1 + (Math.sin(animValue) + 1) * 10; }
           if (sprite._animateScaleYPosOnly) { sprite.scale.y = Math.abs(Math.sin(animValue)) * scale.y; }
 
-          // draw sprite and text
+          // draw sprite
           pintar.drawSprite(sprite);
-          pintar.drawText(_texts[i]);
+		  pintar.drawText(_texts[i]);
         }
 
         // end frame
         pintar.endFrame();
+		
+		// request next frame
+		requestAnimationFrame(drawSprites);
       }
 
-      // draw sprite and start interval to animate and redraw
+      // start drawing loop
       drawSprites();
-      setInterval(drawSprites, 1000 / 60);
     });
   </script>
 </html>

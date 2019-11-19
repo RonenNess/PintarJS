@@ -53,7 +53,16 @@ class Point
     {
         return new Point(this.x + other.x, this.y + other.y);
     }
-    
+         
+    /**
+     * Substract other point from this (does not affect self, return a copy).
+     * @param {PintarJS.Point} other Other point to substract.
+     */
+    sub(other) 
+    {
+        return new Point(this.x - other.x, this.y - other.y);
+    }
+	
     /**
      * Add this / other point (does not affect self, return a copy).
      * @param {PintarJS.Point} other Other point to add.
@@ -105,6 +114,17 @@ class Point
     equals(other)
     {
         return other && this.x == other.x && this.y == other.y;
+    }
+        
+    /**
+     * Calculate distance from another point.
+     * @param {PintarJS.Point} other Other point to calculate distance to.
+     */
+    distance(other)
+    {
+      var a = this.x - other.x;
+      var b = this.y - other.y;
+      return Math.sqrt(a*a + b*b);
     }
 }
 
