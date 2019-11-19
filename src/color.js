@@ -133,14 +133,14 @@ class Color
     /**
      * Get color from hex value.
      * @param {Number} val Number value (hex), as 0xrrggbb[aa].
-     * @param {Boolean} includeAlpha If true, will include alpha channel.
      */
-    fromHex(val, includeAlpha)
+    fromHex(val)
     {
-        if (includeAlpha) { this.a = (val & 0xff) / 255.0; val = val >> 8; }
-        this.b = (val & 0xff) / 255.0; val = val >> 8;
-        this.g = (val & 0xff) / 255.0; val = val >> 8;
-        this.r = (val & 0xff) / 255.0;
+        var val = Color.fromHex(val);
+        this.r = val.r;
+        this.g = val.g;
+        this.b = val.b;
+        this.a = val.a;
     }
 
     /**

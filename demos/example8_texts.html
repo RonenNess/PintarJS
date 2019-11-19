@@ -80,8 +80,18 @@
 	  textSprite.position = new PintarJS.Point(20, 350);
 	  textSprite.strokeWidth = 6;
       textSprite.strokeColor = PintarJS.Color.black();
-	  pintar.draw(textSprite);
-	  
+    pintar.draw(textSprite);
+    
+    // text with style commands
+    textSprite.text = "Text with {{fc:red}}style commands{{res}}.\nYou can also change {{sw:8}}{{sc:green}}stroke{{res}}.\n{{fc:blue}}Note: works only in webgl.{{res}}";
+    textSprite.useStyleCommands = true;
+	  textSprite.color = PintarJS.Color.white();
+	  textSprite.alignment = "left";
+	  textSprite.position = new PintarJS.Point(270, 350);
+	  textSprite.strokeWidth = 3;
+    textSprite.strokeColor = PintarJS.Color.black();
+    pintar.draw(textSprite);
+    
 	  // end frame
 	  pintar.endFrame();
 	  requestAnimationFrame(drawSprites);

@@ -1,4 +1,4 @@
-(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.PintarJS = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.PintarJS = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 /**
  * file: blend_modes.js
  * description: Define blend modes enum.
@@ -151,6 +151,35 @@ class Color
             this._asHex = "#" + this.componentToHex(this.r * 255) + this.componentToHex(this.g * 255) + this.componentToHex(this.b * 255) + this.componentToHex(this.a * 255);
         }
         return this._asHex;
+    }
+
+    /**
+     * Get color from hex value.
+     * @param {Number} val Number value (hex), as 0xrrggbb[aa].
+     */
+    fromHex(val)
+    {
+        var val = Color.fromHex(val);
+        this.r = val.r;
+        this.g = val.g;
+        this.b = val.b;
+        this.a = val.a;
+    }
+
+    /**
+     * Convert this color to decimal number.
+     */
+    asDecimalRGBA()
+    {
+      return ((Math.round(this.r * 255) << (8 * 3)) | (Math.round(this.g * 255) << (8 * 2)) | (Math.round(this.b * 255) << (8 * 1)) | (Math.round(this.a * 255)))>>>0;
+    }
+
+    /**
+     * Convert this color to decimal number.
+     */
+    asDecimalABGR()
+    {
+      return ((Math.round(this.a * 255) << (8 * 3)) | (Math.round(this.b * 255) << (8 * 2)) | (Math.round(this.g * 255) << (8 * 1)) | (Math.round(this.r * 255)))>>>0;
     }
 
     /**
@@ -367,7 +396,7 @@ const Viewport = require('./viewport');
 const PintarConsole = require('./console');
 
 // current version and author
-const __version__ = "1.0.0.3";
+const __version__ = "1.0.0.4";
 const __author__ = "Ronen Ness";
 
 /**
@@ -796,7 +825,16 @@ class Point
     {
         return new Point(this.x + other.x, this.y + other.y);
     }
-    
+         
+    /**
+     * Substract other point from this (does not affect self, return a copy).
+     * @param {PintarJS.Point} other Other point to substract.
+     */
+    sub(other) 
+    {
+        return new Point(this.x - other.x, this.y - other.y);
+    }
+	
     /**
      * Add this / other point (does not affect self, return a copy).
      * @param {PintarJS.Point} other Other point to add.
@@ -1070,6 +1108,7 @@ const Rectangle = require('./../../rectangle');
 const BlendModes = require('./../../blend_modes');
 const Point = require('./../../point');
 const Viewport = require('./../../viewport');
+const TextSprite = require('./../../text_sprite');
 
 /**
  * Implement the built-in canvas renderer.
@@ -1242,16 +1281,26 @@ class CanvasRenderer extends Renderer
         if (textSprite.strokeWidth) {
             this._ctx.strokeStyle = textSprite.strokeColor.asHex();
             this._ctx.lineWidth = textSprite.strokeWidth;
-            for (var i = 0; i < lines.length; ++i) {
-                this._ctx.strokeText(lines[i], posX, posY + i * lineHeight, textSprite.maxWidth || undefined);
+            for (var i = 0; i < lines.length; ++i) 
+            {
+                var line = lines[i];
+                if (textSprite.useStyleCommands) {
+                    line = TextSprite.getTextWithoutStyleCommands(line);
+                }
+                this._ctx.strokeText(line, posX, posY + i * lineHeight, textSprite.maxWidth || undefined);
             }
         }
 
         // draw text fill
         if (textSprite.color.a) {
             this._ctx.fillStyle  = textSprite.color.asHex();
-            for (var i = 0; i < lines.length; ++i) {
-                this._ctx.fillText(lines[i], posX, posY + i * lineHeight, textSprite.maxWidth || undefined);
+            for (var i = 0; i < lines.length; ++i) 
+            {
+                var line = lines[i];
+                if (textSprite.useStyleCommands) {
+                    line = TextSprite.getTextWithoutStyleCommands(line);
+                }
+                this._ctx.fillText(line, posX, posY + i * lineHeight, textSprite.maxWidth || undefined);
             }
         }
         
@@ -1323,7 +1372,7 @@ class CanvasRenderer extends Renderer
 
 // export CanvasRenderer
 module.exports = CanvasRenderer;
-},{"./../../blend_modes":1,"./../../console":3,"./../../point":5,"./../../rectangle":6,"./../../viewport":21,"./../renderer":11}],9:[function(require,module,exports){
+},{"./../../blend_modes":1,"./../../console":3,"./../../point":5,"./../../rectangle":6,"./../../text_sprite":19,"./../../viewport":21,"./../renderer":11}],9:[function(require,module,exports){
 /**
  * file: index.js
  * description: Index file for canvas renderer.
@@ -1455,6 +1504,35 @@ function makePowerTwo(val)
     return ret;
 }
 
+// measure font's actual height
+var measureTextHeight = function(fontFamily, fontSize) 
+{
+    var text = document.createElement('span');
+    text.style.fontFamily = fontFamily;
+    text.style.fontSize = fontSize + "px";
+    text.style.paddingBottom = text.style.paddingLeft = text.style.paddingTop = text.style.paddingRight = '0px';
+    text.style.marginBottom = text.style.marginLeft = text.style.marginTop = text.style.marginRight = '0px';
+    text.textContent = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ";
+    document.body.appendChild(text);
+    var result = text.getBoundingClientRect().height;
+    document.body.removeChild(text);
+    return result;
+};
+
+// measure font's actual width
+var measureTextWidth = function(fontFamily, fontSize) 
+{
+    var canvas = document.createElement("canvas");
+    var context = canvas.getContext("2d");
+    context.font = fontSize.toString() + 'px ' + fontFamily;
+    var result = 0;
+    var text = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ";
+    for (var i = 0; i < text.length; ++i) {
+        result = Math.max(result, context.measureText(text[i]).width);
+    }
+    return Math.ceil(result);
+};
+
 /**
  * Class to convert a font and a set of characters into a texture, so it can be later rendered as sprites.
  * This technique is often known as "bitmap font rendering".
@@ -1486,13 +1564,23 @@ class FontTexture
             charsSet += missingCharPlaceholder;
         }
 
+        // store font name and size
+        this.fontName = (fontName || 'Ariel');
+        this.fontSize = fontSize || 30;
+        var margin = {x: 10, y: 10};
+
+        // measure font height
+        var fontFullName = this.fontSize.toString() + 'px ' + (fontName || 'Ariel');
+        var fontHeight = measureTextHeight(this.fontName, this.fontSize);
+        var fontWidth = measureTextWidth(this.fontName, this.fontSize);
+
         // calc estimated size of a single character in texture
-        var estimatedCharSizeInTexture = new Point(Math.round(fontSize * 1.15), Math.round(fontSize * 1.25));
+        var estimatedCharSizeInTexture = new Point(fontWidth + margin.x * 2, fontHeight + margin.y * 2);
 
         // calc texture size
         var charsPerRow = Math.floor(maxTextureWidth / estimatedCharSizeInTexture.x);
         var textureWidth = Math.min(charsSet.length * estimatedCharSizeInTexture.x, maxTextureWidth);
-        var textureHeight = Math.ceil(charsSet.length / charsPerRow) * estimatedCharSizeInTexture.y;
+        var textureHeight = Math.ceil(charsSet.length / charsPerRow) * (estimatedCharSizeInTexture.y);
 
         // make width and height powers of two
         if (FontTexture.enforceValidTexureSize) {
@@ -1509,11 +1597,8 @@ class FontTexture
         canvas.height = textureHeight;
         var ctx = canvas.getContext('2d');
 
-        // store font size
-        this.fontSize = fontSize || 30;
-
         // set font and white color
-        ctx.font = this.fontSize.toString() + 'px ' + (fontName || 'Ariel');
+        ctx.font = fontFullName;
         ctx.fillStyle = '#ffffffff';
 
         PintarConsole.debug("Generate Font Texture:", ctx.font, "Chars set: ", charsSet, " Texture size: ", textureWidth, textureHeight);
@@ -1524,23 +1609,23 @@ class FontTexture
             
             // get actual width of current character
             var currChar = charsSet[i];
-            var currCharWidth = ctx.measureText(currChar).width;
+            var currCharWidth = Math.ceil(ctx.measureText(currChar).width);
 
             // check if need to break line down in texture
             if (x + currCharWidth > textureWidth) {
-                y += estimatedCharSizeInTexture.y + 6;
+                y += fontHeight + margin.y;
                 x = 0;
             }
 
             // calc source rect
-            var sourceRect = new Rectangle(x, y, currCharWidth, estimatedCharSizeInTexture.y);
+            var sourceRect = new Rectangle(x, y + fontHeight / 4, currCharWidth, fontHeight);
             this._sourceRects[currChar] = sourceRect;
 
             // draw character
-            ctx.fillText(currChar, x, y + fontSize);
+            ctx.fillText(currChar, x, y + fontHeight);
 
             // move to next spot in texture
-            x += currCharWidth + 6;
+            x += currCharWidth + margin.x;
         }
 
         // convert canvas to texture
@@ -1685,6 +1770,7 @@ const Renderer = require('./../renderer');
 const PintarConsole = require('./../../console');
 const Point = require('./../../point');
 const Sprite = require('./../../sprite');
+const Color = require('./../../color');
 const BlendModes = require('../../blend_modes');
 const Viewport = require('./../../viewport');
 const Rectangle = require('./../../rectangle');
@@ -1978,6 +2064,11 @@ class WebGlRenderer extends Renderer
 
         // get text lines
         var lines = textSprite.textLines;
+        
+        // starting properties
+        var fillColor = null;
+        var strokeWidth = null;
+        var strokeColor = null;
 
         // now draw text front
         for (var i = 0; i < lines.length; ++i) {
@@ -2023,8 +2114,75 @@ class WebGlRenderer extends Renderer
             // now actually draw characters
             for (var j = 0; j < line.length; ++j) {
 
+                // check if its a style command
+                if (textSprite.useStyleCommands) 
+                {
+                    while (line[j] == '{' && line[j + 1] == '{') 
+                    {
+                        // reset command
+                        if (line.substr(j, "{{res}}".length) === "{{res}}") {
+                            fillColor = strokeWidth = strokeColor = null;
+                            j += "{{res}}".length;
+                        }
+                        else
+                        {
+                            // get command part
+                            var command = line.substr(j, "{{xx:".length);
+
+                            // method to get value part of the command
+                            var getValuePart = () => 
+                            {
+                                var closingIndex = line.substr(j, 64).indexOf('}}');
+                                if (closingIndex === -1) { 
+                                    throw new Error("Invalid broken style command in line: '" + line + "'!");
+                                }
+                                return line.substring(j + 5, j + closingIndex);
+                            };
+
+                            // parse color value for style command
+                            var parseColor = (colorVal) => 
+                            {
+                                if (colorVal[0] === '#') {
+                                    return Color.fromHex(colorVal);
+                                }
+                                return Color[colorVal]();
+                            }
+
+                            // get style value part and advance index
+                            var styleVal = getValuePart();
+                            j += styleVal.length + 2 + 5;
+
+                            // is it front color?
+                            if (command == "{{fc:") {
+                                var val = parseColor(styleVal);
+                                fillColor = val;
+                            }
+                            // is it stroke color?
+                            else if (command == "{{sc:") {
+                                var val = parseColor(styleVal);
+                                strokeColor = val;
+                            }
+                            // is it stroke color?
+                            else if (command == "{{sw:") {
+                                var val = parseInt(styleVal);
+                                strokeWidth = val;
+                            }
+                        } 
+                    }
+                }
+
+                // special case - if end of ext was a style command for whatever reason, we now exceed line length..
+                if (j >= line.length) {
+                    continue;
+                }
+
                 // get current character
                 var char = line[j];
+
+                // set starting properties
+                if (fillColor === null) { fillColor = textSprite.color; }
+                if (strokeWidth === null) { strokeWidth = textSprite.strokeWidth; }
+                if (strokeColor === null) { strokeColor = textSprite.strokeColor; }
 
                 // get source rect and size
                 var srcRect = charsData[j].srcRect;
@@ -2038,17 +2196,17 @@ class WebGlRenderer extends Renderer
                 sprite.smoothingEnabled = this.smoothText;
 
                 // draw character stroke
-                if (textSprite.strokeWidth > 0 && textSprite.strokeColor.a > 0) {
-                    sprite.color = textSprite.strokeColor;
+                if (strokeWidth > 0 && strokeColor.a > 0) {
+                    sprite.color = strokeColor;
                     for (var sx = -1; sx <= 1; sx++) {
                         for (var sy = -1; sy <= 1; sy++) {      
                             var centerPart = sx == 0 && sy == 0;
-                            var extraWidth = (centerPart ? textSprite.strokeWidth : 0);
-                            var extraHeight = (centerPart ? textSprite.strokeWidth : 0);
+                            var extraWidth = (centerPart ? strokeWidth : 0);
+                            var extraHeight = (centerPart ? strokeWidth : 0);
                             sprite.width = size.x + extraWidth;
                             sprite.height = size.y + extraHeight;
-                            sprite.position.x = position.x + sx * (textSprite.strokeWidth / 2.5) - extraWidth / 2;
-                            sprite.position.y = position.y + sy * (textSprite.strokeWidth / 2.5) - extraHeight / 2;
+                            sprite.position.x = position.x + sx * (strokeWidth / 2.5) - extraWidth / 2;
+                            sprite.position.y = position.y + sy * (strokeWidth / 2.5) - extraHeight / 2;
                             this.drawSprite(sprite);
                         }   
                     }
@@ -2060,7 +2218,7 @@ class WebGlRenderer extends Renderer
 
                 // draw character fill
                 sprite.position = position;
-                sprite.color = textSprite.color;
+                sprite.color = fillColor;
                 this.drawSprite(sprite);
 
                 // update offset
@@ -2131,7 +2289,7 @@ class WebGlRenderer extends Renderer
             this._currTexture = texture;
             
             // create a gl texture, if needed (happens once per texture and mode).
-            if (!texture._glTextures[textureMode] && img.width && img.height) {
+            if (!texture._glTextures[textureMode] && img.width && img.height && img.complete) {
                 var gltexture = gl.createTexture();
                 if (!gltexture) {throw new Error("Invalid texture! Internal error?");}
                 gl.bindTexture(gl.TEXTURE_2D, gltexture);
@@ -2314,7 +2472,7 @@ class WebGlRenderer extends Renderer
 
 // export WebGlRenderer
 module.exports = WebGlRenderer;
-},{"../../blend_modes":1,"./../../console":3,"./../../point":5,"./../../rectangle":6,"./../../sprite":18,"./../../viewport":21,"./../renderer":11,"./font_texture":12,"./shaders":14,"./webgl_utils":17}],16:[function(require,module,exports){
+},{"../../blend_modes":1,"./../../color":2,"./../../console":3,"./../../point":5,"./../../rectangle":6,"./../../sprite":18,"./../../viewport":21,"./../renderer":11,"./font_texture":12,"./shaders":14,"./webgl_utils":17}],16:[function(require,module,exports){
 /**
  * file: webgl.js
  * description: Implement webgl renderer.
@@ -4007,6 +4165,7 @@ class TextSprite extends Renderable
         this.strokeWidth = options.strokeWidth || TextSprite.defaults.strokeWidth;
         this.maxWidth = null;
         this.strokeColor = (options.strokeColor || TextSprite.defaults.strokeColor).clone();
+        this.useStyleCommands = TextSprite.defaults.useStyleCommands;
 
         // reset version after init
         this._version = 0;
@@ -4232,14 +4391,38 @@ TextSprite._Alignments = {
 
 // default values
 TextSprite.defaults = {
-    font: "Arial",                              // default font to use when drawing text
-    fontSize: 30,                               // default font size
-    color: Color.black(),                       // default text color
-    alignment: TextSprite._Alignments.Left,     // default text alignment
-    strokeWidth: 0,                             // default text stroke width
-    strokeColor: Color.transparent(),           // default text stroke color
-    blendMode: BlendModes.AlphaBlend,           // default blending mode
+    font: "Arial",                              // default font to use when drawing text.
+    fontSize: 30,                               // default font size.
+    color: Color.black(),                       // default text color.
+    alignment: TextSprite._Alignments.Left,     // default text alignment.
+    strokeWidth: 0,                             // default text stroke width.
+    strokeColor: Color.transparent(),           // default text stroke color.
+    blendMode: BlendModes.AlphaBlend,           // default blending mode.
+    useStyleCommands: false,                    // default if sprite texts should use style commands.
 };
+
+/**
+ * Get all text without any style commands in it.
+ */
+TextSprite.getTextWithoutStyleCommands = function(text)
+{
+    var ret = "";
+    var parts = text.split("{{");
+    for (var i = 0; i < parts.length; ++i) 
+    {
+        var currPart = parts[i];
+        var currPartOrigin = i === 0 ? currPart : "{{" + currPart;
+        var startPart = currPart.substr(0, 3);
+        if (startPart !== "fc:" && startPart !== "sc:" && startPart !== "sw:" && startPart !== "res") {
+            ret += currPartOrigin;
+            continue;
+        }
+
+        var closing = currPart.indexOf("}}");
+        ret += closing === -1 ? (currPartOrigin) : (currPart.substr(closing + 2));
+    }
+    return ret;
+}
 
 // export TextSprite
 module.exports = TextSprite;

@@ -9,6 +9,7 @@ const Renderer = require('./../renderer');
 const PintarConsole = require('./../../console');
 const Point = require('./../../point');
 const Sprite = require('./../../sprite');
+const Color = require('./../../color');
 const BlendModes = require('../../blend_modes');
 const Viewport = require('./../../viewport');
 const Rectangle = require('./../../rectangle');
@@ -302,6 +303,11 @@ class WebGlRenderer extends Renderer
 
         // get text lines
         var lines = textSprite.textLines;
+        
+        // starting properties
+        var fillColor = null;
+        var strokeWidth = null;
+        var strokeColor = null;
 
         // now draw text front
         for (var i = 0; i < lines.length; ++i) {
@@ -347,8 +353,75 @@ class WebGlRenderer extends Renderer
             // now actually draw characters
             for (var j = 0; j < line.length; ++j) {
 
+                // check if its a style command
+                if (textSprite.useStyleCommands) 
+                {
+                    while (line[j] == '{' && line[j + 1] == '{') 
+                    {
+                        // reset command
+                        if (line.substr(j, "{{res}}".length) === "{{res}}") {
+                            fillColor = strokeWidth = strokeColor = null;
+                            j += "{{res}}".length;
+                        }
+                        else
+                        {
+                            // get command part
+                            var command = line.substr(j, "{{xx:".length);
+
+                            // method to get value part of the command
+                            var getValuePart = () => 
+                            {
+                                var closingIndex = line.substr(j, 64).indexOf('}}');
+                                if (closingIndex === -1) { 
+                                    throw new Error("Invalid broken style command in line: '" + line + "'!");
+                                }
+                                return line.substring(j + 5, j + closingIndex);
+                            };
+
+                            // parse color value for style command
+                            var parseColor = (colorVal) => 
+                            {
+                                if (colorVal[0] === '#') {
+                                    return Color.fromHex(colorVal);
+                                }
+                                return Color[colorVal]();
+                            }
+
+                            // get style value part and advance index
+                            var styleVal = getValuePart();
+                            j += styleVal.length + 2 + 5;
+
+                            // is it front color?
+                            if (command == "{{fc:") {
+                                var val = parseColor(styleVal);
+                                fillColor = val;
+                            }
+                            // is it stroke color?
+                            else if (command == "{{sc:") {
+                                var val = parseColor(styleVal);
+                                strokeColor = val;
+                            }
+                            // is it stroke color?
+                            else if (command == "{{sw:") {
+                                var val = parseInt(styleVal);
+                                strokeWidth = val;
+                            }
+                        } 
+                    }
+                }
+
+                // special case - if end of ext was a style command for whatever reason, we now exceed line length..
+                if (j >= line.length) {
+                    continue;
+                }
+
                 // get current character
                 var char = line[j];
+
+                // set starting properties
+                if (fillColor === null) { fillColor = textSprite.color; }
+                if (strokeWidth === null) { strokeWidth = textSprite.strokeWidth; }
+                if (strokeColor === null) { strokeColor = textSprite.strokeColor; }
 
                 // get source rect and size
                 var srcRect = charsData[j].srcRect;
@@ -362,17 +435,17 @@ class WebGlRenderer extends Renderer
                 sprite.smoothingEnabled = this.smoothText;
 
                 // draw character stroke
-                if (textSprite.strokeWidth > 0 && textSprite.strokeColor.a > 0) {
-                    sprite.color = textSprite.strokeColor;
+                if (strokeWidth > 0 && strokeColor.a > 0) {
+                    sprite.color = strokeColor;
                     for (var sx = -1; sx <= 1; sx++) {
                         for (var sy = -1; sy <= 1; sy++) {      
                             var centerPart = sx == 0 && sy == 0;
-                            var extraWidth = (centerPart ? textSprite.strokeWidth : 0);
-                            var extraHeight = (centerPart ? textSprite.strokeWidth : 0);
+                            var extraWidth = (centerPart ? strokeWidth : 0);
+                            var extraHeight = (centerPart ? strokeWidth : 0);
                             sprite.width = size.x + extraWidth;
                             sprite.height = size.y + extraHeight;
-                            sprite.position.x = position.x + sx * (textSprite.strokeWidth / 2.5) - extraWidth / 2;
-                            sprite.position.y = position.y + sy * (textSprite.strokeWidth / 2.5) - extraHeight / 2;
+                            sprite.position.x = position.x + sx * (strokeWidth / 2.5) - extraWidth / 2;
+                            sprite.position.y = position.y + sy * (strokeWidth / 2.5) - extraHeight / 2;
                             this.drawSprite(sprite);
                         }   
                     }
@@ -384,7 +457,7 @@ class WebGlRenderer extends Renderer
 
                 // draw character fill
                 sprite.position = position;
-                sprite.color = textSprite.color;
+                sprite.color = fillColor;
                 this.drawSprite(sprite);
 
                 // update offset

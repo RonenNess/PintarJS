@@ -230,29 +230,6 @@ class TextSprite extends Renderable
     {
         return this._textLines;
     }
-
-    /**
-     * Get all text without any style commands in it.
-     */
-    getTextWithoutStyleCommands()
-    {
-        var ret = "";
-        var parts = this.text.split("{{");
-        for (var i = 0; i < parts.length; ++i) 
-        {
-            var currPart = parts[i];
-            var currPartOrigin = i === 0 ? currPart : "{{" + currPart;
-            var startPart = currPart.substr(0, 3);
-            if (startPart !== "fc:" && startPart !== "sc:" && startPart !== "sw:") {
-                ret += currPartOrigin;
-                continue;
-            }
-
-            var closing = currPart.indexOf("}}");
-            ret += closing === -1 ? (currPartOrigin) : (currPart.substr(closing + 2));
-        }
-        return ret;
-    }
  
     /**
      * Return a clone of this text sprite.
@@ -293,6 +270,29 @@ TextSprite.defaults = {
     blendMode: BlendModes.AlphaBlend,           // default blending mode.
     useStyleCommands: false,                    // default if sprite texts should use style commands.
 };
+
+/**
+ * Get all text without any style commands in it.
+ */
+TextSprite.getTextWithoutStyleCommands = function(text)
+{
+    var ret = "";
+    var parts = text.split("{{");
+    for (var i = 0; i < parts.length; ++i) 
+    {
+        var currPart = parts[i];
+        var currPartOrigin = i === 0 ? currPart : "{{" + currPart;
+        var startPart = currPart.substr(0, 3);
+        if (startPart !== "fc:" && startPart !== "sc:" && startPart !== "sw:" && startPart !== "res") {
+            ret += currPartOrigin;
+            continue;
+        }
+
+        var closing = currPart.indexOf("}}");
+        ret += closing === -1 ? (currPartOrigin) : (currPart.substr(closing + 2));
+    }
+    return ret;
+}
 
 // export TextSprite
 module.exports = TextSprite;

@@ -368,6 +368,42 @@ Then draw it:
 pintar.drawText(text);
 ```
 
+### Style Commands
+
+Text Sprite support embedded style commands, but only for WebGL renderer.
+Style commands are special tags you can put in text to change colors and styles mid-text.
+
+For example, the following TextSprite:
+
+```js
+textSprite.useStyleCommands = true;
+textSprite.color = PintarJS.Color.black();
+textSprite.text = "Hello world, this is {{fc:red}}RED{{fc:black}}.";
+```
+
+Will draw the text "Hellow world, this is" in black, while "RED" part will be in red.
+
+The following commands are supported:
+
+#### {{fc:<color>}}
+
+Change the fill color of the text.
+`<color>` can either be one of the built-in color names (white, black, red, blue, green...) or a hex value (for example red is `#ff0000ff`).
+
+#### {{sc:<color>}}
+
+Change the stroke color of the text.
+`<color>` param is the same as with fill color.
+
+#### {{sw:<width>}}
+
+Change the stroke width of the text.
+`<width>` param is the new stroke width.
+
+#### {{res}}
+
+Reset style back to the Text Sprite properties.
+
 ### Text Sprite properties
 
 Text Sprites support the following properties:
@@ -385,8 +421,10 @@ text.position = new PintarJS.Point(100, 100);
 Set the text fill color:
 
 ```js
-// draw red text
-text.color = new PintarJS.Color(1, 0, 0, 1);
+text.color = new PintarJS.Color(1, 0, 0, 1);  // <-- red color
+
+// or, you can do this:
+text.color = PintarJS.Color.red();
 ```
 
 #### text.blendMode
@@ -408,6 +446,10 @@ Text font size (in pixels):
 ```js
 text.fontSize = 30;
 ```
+
+#### text.useStyleCommands
+
+Set to true to support style commands. If false, will draw text as-is.
 
 #### text.alignment
 
@@ -467,7 +509,7 @@ PintarJS works best if you follow these rules:
 
 ### Font Texture (WebGL Only)
 
-Drawing text in WebGL is a bit tricky. To tackle this, PintarJS uses a technique called 'bitmap font rendering' with its WebGL renderer. 
+Drawing text in WebGL is a bit tricky. To tackle this, PintarJS implements a technique called 'bitmap font rendering' with its WebGL renderer. 
 
 In this technique, PintarJS uses a texture containing all the characters of a given font, and draw the text by drawing the characters individually as if they were regular sprites. 
 
@@ -482,6 +524,32 @@ pintar._renderer.generateFontTexture(fontName, fontSize, charsSet, maxTextureWid
 
 Generating the font texture manually can help you solve some of the drawbacks of this technique, which will be listed next.
 
+#### Preload Custom Fonts
+
+If you want to use a custom font, it is recommended to preload it, to make sure its available for the time of first rendering (if not, it will fallback to default font). To do so, you can add the following tag before including your JS file:
+
+```<div style="font-family: my-font;">.</div>```
+
+You can remove it later once everything is up and ready. Note that it can't be invisible and it must have an actual text (in this case, '.') in it.
+
+#### Advantages
+
+Bitmap font rendering have the following advantages:
+
+##### Sort with Sprites
+
+Rendering order applies for texts that use this technique, which means you can render texts in front or behind sprites. 
+
+##### Support Style Commands
+
+With Bitmap font rendering PintarJS support style commands, that allow you to change colors and styles mid-text.
+Read more about it under `TextSprite` section.
+
+##### Fix Slowness Bug
+
+As mentioned before, mixing WebGL and canvas text cause unexplained slowness in some browsers. 
+Bitmap fonts fix this problem.
+
 #### Drawbacks
 
 Bitmap font rendering has some drawbacks you should be aware of, including:
@@ -491,14 +559,10 @@ Bitmap font rendering has some drawbacks you should be aware of, including:
 By default, PintarJS will only generate textures for ASCII character set.
 If you need other languages / symbols, you can generate font textures manually and provide your own characters set.
 
-##### Momentarily Slowness
-
-Generating the font texture itself may cause a one-time stuttering. If you don't want users to feel that, you should generate the font textures upfront during initialization, instead of letting PintarJS do it automatically. 
-
 ##### Font Scaling
 
 Since fonts are converted to textures (pixels), scaling them is no longer without artifacts.
-If you need to draw large texts, you'll need to generate larger Font Textures to make it look good.
+If you need to draw large texts, you'll need to generate larger Font Textures to make it look good, which cost more memory.
 
 ##### Memory Consumption
 

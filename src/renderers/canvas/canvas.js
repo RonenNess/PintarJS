@@ -11,6 +11,7 @@ const Rectangle = require('./../../rectangle');
 const BlendModes = require('./../../blend_modes');
 const Point = require('./../../point');
 const Viewport = require('./../../viewport');
+const TextSprite = require('./../../text_sprite');
 
 /**
  * Implement the built-in canvas renderer.
@@ -183,16 +184,26 @@ class CanvasRenderer extends Renderer
         if (textSprite.strokeWidth) {
             this._ctx.strokeStyle = textSprite.strokeColor.asHex();
             this._ctx.lineWidth = textSprite.strokeWidth;
-            for (var i = 0; i < lines.length; ++i) {
-                this._ctx.strokeText(lines[i], posX, posY + i * lineHeight, textSprite.maxWidth || undefined);
+            for (var i = 0; i < lines.length; ++i) 
+            {
+                var line = lines[i];
+                if (textSprite.useStyleCommands) {
+                    line = TextSprite.getTextWithoutStyleCommands(line);
+                }
+                this._ctx.strokeText(line, posX, posY + i * lineHeight, textSprite.maxWidth || undefined);
             }
         }
 
         // draw text fill
         if (textSprite.color.a) {
             this._ctx.fillStyle  = textSprite.color.asHex();
-            for (var i = 0; i < lines.length; ++i) {
-                this._ctx.fillText(lines[i], posX, posY + i * lineHeight, textSprite.maxWidth || undefined);
+            for (var i = 0; i < lines.length; ++i) 
+            {
+                var line = lines[i];
+                if (textSprite.useStyleCommands) {
+                    line = TextSprite.getTextWithoutStyleCommands(line);
+                }
+                this._ctx.fillText(line, posX, posY + i * lineHeight, textSprite.maxWidth || undefined);
             }
         }
         
