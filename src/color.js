@@ -132,7 +132,7 @@ class Color
 
     /**
      * Get color from hex value.
-     * @param {Number} val Number value (hex), as 0xrrggbb[aa].
+     * @param {Number} val Number value (hex), as 0xrrggbbaa.
      */
     fromHex(val)
     {
@@ -141,6 +141,19 @@ class Color
         this.g = val.g;
         this.b = val.b;
         this.a = val.a;
+    }
+
+    /**
+     * Get color from decimal value.
+     * @param {Number} val Number value (int).
+     * @param {Number} includeAlpha If true, will include alpha value.
+     */
+    fromDecimal(val, includeAlpha)
+    {
+        if (includeAlpha) { this.a = (val & 0xff) / 255.0; val = val >> 8; }
+        this.b = (val & 0xff) / 255.0; val = val >> 8;
+        this.g = (val & 0xff) / 255.0; val = val >> 8;
+        this.r = (val & 0xff) / 255.0;
     }
 
     /**
@@ -260,9 +273,22 @@ function hexToColor(hex)
  */
 Color.fromHex = function(colorHex)
 {
-    var parsed = hexToRgb(colorHex);
+	if (typeof colorHex !== 'string' && colorHex[0] != '#') {
+        throw new PintarJS.Error("Invalid color format!");
+    }
+    var parsed = hexToColor(colorHex);
     if (!parsed) { throw new PintarConsole.Error("Invalid hex value to parse!"); }
     return new Color(parsed.r / 255.0, parsed.g / 255.0, parsed.b / 255.0, 1);
+}
+
+/**
+ * Create and return color instance from decimal.
+ */
+Color.fromDecimal = function(val)
+{
+    var ret = new Color();
+    ret.fromDecimal(val);
+    return ret;
 }
 
 // export Color

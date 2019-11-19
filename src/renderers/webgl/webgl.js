@@ -373,7 +373,7 @@ class WebGlRenderer extends Renderer
                             {
                                 var closingIndex = line.substr(j, 64).indexOf('}}');
                                 if (closingIndex === -1) { 
-                                    throw new Error("Invalid broken style command in line: '" + line + "'!");
+                                    throw new PintarConsole.Error("Invalid broken style command in line: '" + line + "'!");
                                 }
                                 return line.substring(j + 5, j + closingIndex);
                             };
@@ -530,7 +530,7 @@ class WebGlRenderer extends Renderer
             // create a gl texture, if needed (happens once per texture and mode).
             if (!texture._glTextures[textureMode] && img.width && img.height && img.complete) {
                 var gltexture = gl.createTexture();
-                if (!gltexture) {throw new Error("Invalid texture! Internal error?");}
+                if (!gltexture) {throw new PintarConsole.Error("Invalid texture! Internal error?");}
                 gl.bindTexture(gl.TEXTURE_2D, gltexture);
                 gl.texImage2D(gl.TEXTURE_2D, 0, textureMode, img.width, img.height, 0, textureMode, gl.UNSIGNED_BYTE, img);
                 texture._glTextures[textureMode] = gltexture;

@@ -638,6 +638,8 @@ pintar.adjustToParentSize();
 
 - Added some useful helper functions (Point.sub and more color formats).
 - Added validation that image is completed before loading texture, to prevent black texture bug if drawing while loading.
+- Fixed some bugs with WebGL text sprite + added better support in custom fonts.
+- Added style commands to WebGL text sprite.
 
 ## License
 
