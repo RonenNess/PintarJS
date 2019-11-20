@@ -41,7 +41,8 @@ class Sprite extends Renderable
         options = options || {};
         super((position || Point.zero()), (options.color || Sprite.defaults.color), (options.blendMode || Sprite.defaults.blendMode));
         this.texture = texture;
-        this.size = options.size || Sprite.defaults.size;
+        var size = (options.size || Sprite.defaults.size);
+        this.size = new Point(size.x, size.y);
         this.scale = (options.scale || Sprite.defaults.scale).clone();
         this.sourceRectangle = (options.sourceRectangle || this.sourceRectangle).clone();
         this.smoothingEnabled = options.smoothingEnabled || Sprite.defaults.smoothingEnabled;
@@ -71,20 +72,35 @@ class Sprite extends Renderable
     }
 
     /**
-     * Set sprite size (set width and height properties).
+     * Set sprite width.
      */
-    set size(val)
+    set width(val)
     {
-        this.width = val.x;
-        this.height = val.y;
+        this.size.x = val;
     }
 
     /**
-     * Get sprite size (Point with width and height properties).
+     * Get sprite width.
      */
-    get size()
+    get width()
     {
-        return new Point(this.width, this.height);
+        return this.size.x;
+    }
+
+    /**
+     * Set sprite height.
+     */
+    set height(val)
+    {
+        this.size.y = val;
+    }
+
+    /**
+     * Get sprite height.
+     */
+    get height()
+    {
+        return this.size.y;
     }
 
     /**
