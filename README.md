@@ -125,8 +125,7 @@ Will just use the Canvas renderer, without trying anything else.
 
 ### UI
 
-PintarJS comes with a built-in UI plugin. [Note: STILL UNDER DEVELOPMENT]
-
+PintarJS comes with a built-in UI plugin. 
 For more information, see the plugin's [readme file](plugins/UI/README.md).
 
 ### Renderers
