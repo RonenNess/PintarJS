@@ -1,0 +1,1 @@
+browserify plugins/UI/src/index.js -s PintarJS.UI --outfile dist/pintar.ui.js & uglifyjs --keep-fnames -o dist/pintar.ui.min.js dist/pintar.ui.js

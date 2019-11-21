@@ -58,6 +58,14 @@ class Rectangle
     {
         return new Point(this.width, this.height);
     }
+	
+	/**
+     * Get center position.
+     */
+    getCenter()
+    {
+        return new Point(Math.round(this.x + this.width / 2), Math.round(this.y + this.height / 2));
+    }
 
     /**
      * Get left value.

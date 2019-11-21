@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>PintarJS - Demos</title>
+    <script src="../dist/pintar.js"></script>
+    <script src="../dist/pintar.ui.js"></script>
+    <link href="style.css" rel="stylesheet" type="text/css" media="all">
+  </head>
+  <body>
+    <div class="container container-int">
+      <br />
+      <h1>Example 9: UI plugin</h1>
+      <p>PintarJS comes with an optional UI plugin. <br />
+	       Here are some examples of built-in UI elements.</p> <br /><br />
+
+      <canvas></canvas>
+    </div>
+
+  </body>
+  <script>
+    // enable debug mode
+    //PintarJS.enableDebugMessages();
+
+    // set default renderer
+    var mode = location.search.substr(1).split('?')[0];
+    PintarJS.DefaultRenderers = PintarJS.Renderers[mode] || PintarJS.DefaultRenderers;
+    
+    // initialize pintar
+    var pintar = new PintarJS();
+    pintar.clearColor = PintarJS.Color.lavender();
+
+    // adjust size
+    pintar.adjustToParentSize();
+    window.onresize = () => {
+      pintar.adjustToParentSize();
+    };
+
+    // set pixelated by default
+    PintarJS.Sprite.defaults.smoothingEnabled = false;
+
+    // load ui texture
+    var uiTexture = new PintarJS.Texture("imgs/ui.png");
+
+    // create progressbar element
+    const progressBarBackground = new PintarJS.Rectangle(0, 0, 64, 10);
+    const progressBarFill = new PintarJS.Rectangle(0, 10, 64, 10);
+    var progressbar = new PintarJS.UI.ProgressBar(uiTexture, progressBarBackground, progressBarFill, 256);
+    progressbar.value = 0.75;
+
+    // draw everything
+    function drawUI()
+    {
+      // start frame
+      pintar.startFrame();
+
+      // draw ui elements
+      progressbar.draw(pintar);
+
+      // end frame
+      pintar.endFrame();
+      requestAnimationFrame(drawUI);
+    }
+
+    // draw uis
+    drawUI();
+  </script>
+</html>

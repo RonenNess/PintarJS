@@ -1,10 +1,12 @@
 # PintarJS
 
-Micro JS lib (52KB minified) for direct WebGL and canvas rendering.
+Micro JS lib (65KB minified) for direct WebGL and canvas rendering.
 
-[PintarJS Live Demo](https://ronenness.github.io/PintarJS/demos/index.html)
+- [PintarJS Live Demo](https://ronenness.github.io/PintarJS/demos/index.html)
 
-![PintarJS example](https://github.com/RonenNess/PintarJS/raw/master/demos/example.png "PintarJS transformations example")
+- ![PintarJS example](https://github.com/RonenNess/PintarJS/raw/master/demos/example.png "PintarJS transformations example")
+
+- [PintarJS.UI](plugins/UI/)
 
 ## Why
 
@@ -59,7 +61,8 @@ Or you can download `dist/pinter.js` and include in your HTML file.
     - Alignment
     - Stroke
     - Multiline
-	- Bitmap font rendering
+	- Bitmap Font Rendering
+	- In-text style commands
 - Sprites
     - Color Effects
         - Tint (reduce color compontents)
@@ -83,6 +86,7 @@ Or you can download `dist/pinter.js` and include in your HTML file.
         - Flip
         - Skew
     - Source rectangle from spritesheet
+- Built-in UI plugin
 - Fixed resolution
 
 
@@ -113,6 +117,12 @@ var canvasPintar = new PintarJS(null, PintarJS.Renderers.Canvas);
 ```
 
 Will just use the Canvas renderer, without trying anything else.
+
+### UI
+
+PintarJS comes with a built-in UI plugin. [Note: STILL UNDER DEVELOPMENT]
+
+For more information, see the plugin's [readme file](plugins/UI/README.md).
 
 ### Renderers
 
@@ -644,6 +654,7 @@ pintar.adjustToParentSize();
 ### 1.0.0.5 [NOT RELEASED YET]
 
 - Changed sprite size / width / height API so you can use `sprite.size.set()` properly.
+- Added UI plugin.
 
 ## License
 
