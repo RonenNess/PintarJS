@@ -51,6 +51,8 @@ class Sprite extends Renderable
         this.brightness = options.brightness || 1;
         this.colorBoost = (options.colorBoost || Sprite.defaults.colorBoost).clone();
         this.greyscale = Boolean(options.greyscale);
+        this.cacheRelativeSourceRectangle = true;
+        this.applyAntiBleeding = Sprite.defaults.applyAntiBleeding;
         this.skew = options.skew ? options.skew.clone() : Point.zero();
     }
 
@@ -109,8 +111,8 @@ class Sprite extends Renderable
     get sourceRectangleRelative()
     {
         // if source rect was changed, recalc the relative source rect
-        if (!this._sourceRectangleRelative || !this._lastSrcRect.equals(this.sourceRectangle)) {
-            
+        if (!this.cacheRelativeSourceRectangle || !this._sourceRectangleRelative || !this._lastSrcRect.equals(this.sourceRectangle)) 
+        {    
             // get texture size
             var twidth = this.texture.width;
             var theight = this.texture.height;
@@ -121,12 +123,13 @@ class Sprite extends Renderable
             }
 
             // store last source rect and recalc relative rect
-            this._lastSrcRect = this.sourceRectangle.clone();
+            if (this.cacheRelativeSourceRectangle) { this._lastSrcRect = this.sourceRectangle.clone(); }
+            var antiBleedFactor = this.applyAntiBleeding ? 0.5 : 0;
             this._sourceRectangleRelative = new Rectangle(
-                (this.sourceRectangle.x + 0.5) / twidth, 
-                (this.sourceRectangle.y + 0.5) / theight, 
-                ((this.sourceRectangle.width || this.texture.width) - 0.5) / twidth, 
-                ((this.sourceRectangle.height || this.texture.height) - 0.5) / theight);
+                ((this.sourceRectangle.x + antiBleedFactor) / twidth), 
+                ((this.sourceRectangle.y + antiBleedFactor) / theight), 
+                (((this.sourceRectangle.width || this.texture.width) - antiBleedFactor) / twidth), 
+                (((this.sourceRectangle.height || this.texture.height) - antiBleedFactor) / theight));
                 // note: the + 0.5 and -1 is to sample the pixel's center to avoid bleeding in texture atlases.
         }
         return this._sourceRectangleRelative;
@@ -228,6 +231,8 @@ class Sprite extends Renderable
         ret.colorBoost = this.colorBoost.clone();
         ret.greyscale = this.greyscale;
         ret.skew = this.skew.clone();
+        ret.cacheRelativeSourceRectangle = this.cacheRelativeSourceRectangle;
+        ret.applyAntiBleeding = this.applyAntiBleeding;
         this._copyBasics(ret);
         return ret;
     }
@@ -242,6 +247,7 @@ Sprite.defaults = {
     color: Color.white(),
     origin: Point.zero(),
     colorBoost: Color.transparent(),
+    applyAntiBleeding: false,
     size: new Point(64, 64),
 }
 

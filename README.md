@@ -658,6 +658,7 @@ pintar.adjustToParentSize();
 ### 1.0.0.5 [NOT RELEASED YET]
 
 - Changed sprite size / width / height API so you can use `sprite.size.set()` properly.
+- Added anti-bleeding flag for sprites (used to always be true, now can be modified).
 - Added UI plugin.
 
 ## License

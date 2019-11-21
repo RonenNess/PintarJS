@@ -117,6 +117,9 @@ class Container extends UIElement
      */
     update(input)
     {
+        // call base class update
+        super.update(input);
+
         // update children
         var lastElement = null;
         for (var i = 0; i < this._children.length; ++i) 
@@ -158,19 +161,20 @@ class Container extends UIElement
 }
 
 module.exports = Container; 
-},{"./anchors":1,"./pintar":5,"./sides":7,"./size_modes":8,"./ui_element":9}],3:[function(require,module,exports){
+},{"./anchors":1,"./pintar":5,"./sides":7,"./size_modes":8,"./ui_element":10}],3:[function(require,module,exports){
 var UI = {
     UIElement: require('./ui_element'),
     ProgressBar: require('./progress_bar'),
     InputManager: require('./input_manager'),
     Container: require('./container'),
     Anchors: require('./anchors'),
+    SlicedSprite: require('./sliced_sprite'),
     SizeModes: require('./size_modes'),
 };
 const pintar = require('./pintar');
 pintar.UI = UI;
 module.exports = UI;
-},{"./anchors":1,"./container":2,"./input_manager":4,"./pintar":5,"./progress_bar":6,"./size_modes":8,"./ui_element":9}],4:[function(require,module,exports){
+},{"./anchors":1,"./container":2,"./input_manager":4,"./pintar":5,"./progress_bar":6,"./size_modes":8,"./sliced_sprite":9,"./ui_element":10}],4:[function(require,module,exports){
 /**
  * file: input_data.js
  * description: Define the input manager API.
@@ -292,6 +296,38 @@ class ProgressBar extends UIElement
     }
 
     /**
+     * Get progressbar fill color.
+     */
+    get fillColor()
+    {
+        return this.barFill.color;
+    }
+
+    /**
+     * Set progressbar fill color.
+     */
+    set fillColor(color)
+    {
+        this.barFill.color = color;
+    }
+
+    /**
+     * Get progressbar fill blend mode.
+     */
+    get fillBlendMode()
+    {
+        return this.barFill.blendMode;
+    }
+
+    /**
+     * Set progressbar fill blend mode.
+     */
+    set fillBlendMode(blendMode)
+    {
+        this.barFill.blendMode = blendMode;
+    }
+
+    /**
      * Draw the UI element.
      */
     draw(pintar)
@@ -322,17 +358,10 @@ class ProgressBar extends UIElement
             pintar.drawSprite(this.barFill); 
         }
     }
-
-    /**
-     * Update the UI element.
-     */
-    update(input)
-    {
-    }
 }
 
 module.exports = ProgressBar; 
-},{"./pintar":5,"./ui_element":9}],7:[function(require,module,exports){
+},{"./pintar":5,"./ui_element":10}],7:[function(require,module,exports){
 /**
  * file: sides.js
  * description: Implement a data structure for sides.
@@ -385,6 +414,99 @@ module.exports = {
 };
 },{}],9:[function(require,module,exports){
 /**
+ * file: sliced_sprite.js
+ * description: A sliced sprite.
+ * author: Ronen Ness.
+ * since: 2019.
+ */
+"use strict";
+const PintarJS = require('./pintar');
+const UIElement = require('./ui_element');
+
+
+/**
+ * A drawable sprite that is sliced into 9-slices.
+ * For more info, read about 9-slice scaling / 9-slice grid.
+ */
+class SlicedSprite extends UIElement
+{
+    /**
+     * Create a sliced sprite element.
+     * @param {*} texture Texture to use (either instance, or URL as string).
+     * @param {PintarJS.Rectangle} wholeSourceRect The entire source rect, including frame and fill.
+     * @param {PintarJS.Rectangle} fillSourceRect The internal source rect, must be contained inside the whole source rect.
+     * @param {Number} frameScale frame scale.
+     * @param {SlicedSprite.FillModes} fillMode How to handle fill part.
+     */
+    constructor(texture, wholeSourceRect, fillSourceRect, frameScale, fillMode)
+    {
+        super();
+
+        // set texture from string
+        if (typeof texture == "string") {
+            texture = new PintarJS.Texture(texture);
+        }
+
+        // store source rectangles
+        this.wholeSourceRect = wholeSourceRect;
+        this.fillSourceRect = fillSourceRect;
+       
+        // calculate frame source rects
+        this.leftFrameSourceRect = new PintarJS.Rectangle(wholeSourceRect.x, fillSourceRect.y, fillSourceRect.x - wholeSourceRect.x, fillSourceRect.height);
+        this.rightFrameSourceRect = new PintarJS.Rectangle(fillSourceRect.right, fillSourceRect.y, wholeSourceRect.right - fillSourceRect.right, fillSourceRect.height);
+        this.topFrameSourceRect = new PintarJS.Rectangle(fillSourceRect.x, wholeSourceRect.y, fillSourceRect.width, fillSourceRect.y - wholeSourceRect.y);
+        this.bottomFrameSourceRect = new PintarJS.Rectangle(fillSourceRect.x, fillSourceRect.bottom, fillSourceRect.width, wholeSourceRect.bottom - fillSourceRect.bottom);
+
+        // create sprites
+        this.topFrameSprite = new PintarJS.Sprite(texture);
+        this.topFrameSprite.sourceRectangle = this.topFrameSourceRect;
+        this.topFrameSprite.origin = PintarJS.Point.zero();
+
+        // store frame scale
+        this.frameScale = frameScale || 1;
+
+        // store fill mode
+        this.fillMode = fillMode || SlicedSprite.FillModes.Stretch;
+    }
+
+    /**
+     * Draw the UI element.
+     * @param {*} pintar Pintar instance to draw this element on.
+     */
+    draw(pintar)
+    {
+        // get drawing position and size
+        var position = this.getDestTopLeftPosition();
+        var size = this.getSizeInPixels();
+        var scaleFactor = this.absoluteScale;
+        var frameScale = scaleFactor * this.frameScale;
+
+        // draw top frame
+        this.topFrameSprite.position = position;
+        this.topFrameSprite.width = this.topFrameSprite.sourceRectangle.width * frameScale;
+        this.topFrameSprite.height = this.topFrameSprite.sourceRectangle.height * frameScale;
+        while (this.topFrameSprite.position.x + this.topFrameSprite.width < position.x + size.x)
+        {
+            pintar.drawSprite(this.topFrameSprite);
+            this.topFrameSprite.position.x += this.topFrameSprite.width;    
+        }
+
+        // draw parts
+        pintar.drawSprite(this.topFrameSprite);
+    }
+}
+
+// set fill modes
+SlicedSprite.FillModes = 
+{
+    Stretch: 0,
+    Tiled: 1,
+};
+
+// export SlicedSprite
+module.exports = SlicedSprite;
+},{"./pintar":5,"./ui_element":10}],10:[function(require,module,exports){
+/**
  * file: ui_element.js
  * description: Base UI element class.
  * author: Ronen Ness.
@@ -412,6 +534,7 @@ class UIElement
         this.size = new PintarJS.Point(100, 100);
         this.sizeMode = SizeModes.Pixels;
         this.anchor = Anchors.TopLeft;
+        this.scale = 1;
         this.__parent = null;
     }
 
@@ -425,6 +548,14 @@ class UIElement
     }
 
     /**
+     * Get absolute scale.
+     */
+    get absoluteScale()
+    {
+        return this.scale * UIElement.globalScale;
+    }
+
+    /**
      * Convert size value to absolute pixels. 
      */
     _convertSize(val, mode)
@@ -432,7 +563,11 @@ class UIElement
         switch (mode)
         {
             case SizeModes.Pixels:
-                return val.clone();
+                var ret = val.clone();
+                var scale = this.absoluteScale;
+                ret.x *= scale;
+                ret.y *= scale;
+                return ret;
 
             case SizeModes.Percents:
                 var parentSize = this.getParentBoundingBox().size;
@@ -451,7 +586,13 @@ class UIElement
         switch (mode)
         {
             case SizeModes.Pixels:
-                return val.clone();
+                var ret = val.clone();
+                var scale = this.absoluteScale;
+                ret.left *= scale;
+                ret.right *= scale;
+                ret.top *= scale;
+                ret.bottom *= scale;
+                return ret;
 
             case SizeModes.Percents:
                 var parentSize = this.getParentBoundingBox().size;
@@ -630,6 +771,10 @@ class UIElement
     } 
 }
 
+// set global scale
+UIElement.globalScale = 1;
+
+// export the base UI element object
 module.exports = UIElement; 
 },{"./anchors":1,"./pintar":5,"./sides":7,"./size_modes":8}]},{},[3])(3)
 });

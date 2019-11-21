@@ -4,6 +4,7 @@ var UI = {
     InputManager: require('./input_manager'),
     Container: require('./container'),
     Anchors: require('./anchors'),
+    SlicedSprite: require('./sliced_sprite'),
     SizeModes: require('./size_modes'),
 };
 const pintar = require('./pintar');

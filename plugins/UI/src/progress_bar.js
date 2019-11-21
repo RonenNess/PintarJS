@@ -63,6 +63,38 @@ class ProgressBar extends UIElement
     }
 
     /**
+     * Get progressbar fill color.
+     */
+    get fillColor()
+    {
+        return this.barFill.color;
+    }
+
+    /**
+     * Set progressbar fill color.
+     */
+    set fillColor(color)
+    {
+        this.barFill.color = color;
+    }
+
+    /**
+     * Get progressbar fill blend mode.
+     */
+    get fillBlendMode()
+    {
+        return this.barFill.blendMode;
+    }
+
+    /**
+     * Set progressbar fill blend mode.
+     */
+    set fillBlendMode(blendMode)
+    {
+        this.barFill.blendMode = blendMode;
+    }
+
+    /**
      * Draw the UI element.
      */
     draw(pintar)
@@ -92,13 +124,6 @@ class ProgressBar extends UIElement
             this.barFill.sourceRectangle.width *= this.value;
             pintar.drawSprite(this.barFill); 
         }
-    }
-
-    /**
-     * Update the UI element.
-     */
-    update(input)
-    {
     }
 }
 

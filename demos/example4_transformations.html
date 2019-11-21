@@ -28,6 +28,7 @@
     var pintar = new PintarJS();
     pintar.clearColor = PintarJS.Color.lavender();
     PintarJS.Sprite.defaults.smoothingEnabled = false;
+    PintarJS.Sprite.defaults.applyAntiBleeding = true;
 
     // not supported message for canvas
     var isCanvas = pintar.rendererName === "CanvasRenderer";

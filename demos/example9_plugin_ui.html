@@ -42,6 +42,12 @@
     // load ui texture
     var uiTexture = new PintarJS.Texture("imgs/ui.png");
 
+    // create sliced sprite
+    const panelWholeRect = new PintarJS.Rectangle(0, 32, 64, 64);
+    const panelInternalRect = new PintarJS.Rectangle(5, 37, 54, 54);
+    var slicedSprite = new PintarJS.UI.SlicedSprite(uiTexture, panelWholeRect, panelInternalRect, 5);
+    slicedSprite.offset = new PintarJS.Point(100, 120);
+
     // create progressbar element
     const progressBarBackground = new PintarJS.Rectangle(0, 0, 64, 10);
     const progressBarFill = new PintarJS.Rectangle(0, 10, 64, 10);
@@ -56,6 +62,7 @@
 
       // draw ui elements
       progressbar.draw(pintar);
+      slicedSprite.draw(pintar);
 
       // end frame
       pintar.endFrame();

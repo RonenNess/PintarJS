@@ -94,6 +94,9 @@ class Container extends UIElement
      */
     update(input)
     {
+        // call base class update
+        super.update(input);
+
         // update children
         var lastElement = null;
         for (var i = 0; i < this._children.length; ++i) 

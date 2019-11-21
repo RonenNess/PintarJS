@@ -26,6 +26,7 @@ class UIElement
         this.size = new PintarJS.Point(100, 100);
         this.sizeMode = SizeModes.Pixels;
         this.anchor = Anchors.TopLeft;
+        this.scale = 1;
         this.__parent = null;
     }
 
@@ -39,6 +40,14 @@ class UIElement
     }
 
     /**
+     * Get absolute scale.
+     */
+    get absoluteScale()
+    {
+        return this.scale * UIElement.globalScale;
+    }
+
+    /**
      * Convert size value to absolute pixels. 
      */
     _convertSize(val, mode)
@@ -46,7 +55,11 @@ class UIElement
         switch (mode)
         {
             case SizeModes.Pixels:
-                return val.clone();
+                var ret = val.clone();
+                var scale = this.absoluteScale;
+                ret.x *= scale;
+                ret.y *= scale;
+                return ret;
 
             case SizeModes.Percents:
                 var parentSize = this.getParentBoundingBox().size;
@@ -65,7 +78,13 @@ class UIElement
         switch (mode)
         {
             case SizeModes.Pixels:
-                return val.clone();
+                var ret = val.clone();
+                var scale = this.absoluteScale;
+                ret.left *= scale;
+                ret.right *= scale;
+                ret.top *= scale;
+                ret.bottom *= scale;
+                return ret;
 
             case SizeModes.Percents:
                 var parentSize = this.getParentBoundingBox().size;
@@ -244,4 +263,8 @@ class UIElement
     } 
 }
 
+// set global scale
+UIElement.globalScale = 1;
+
+// export the base UI element object
 module.exports = UIElement; 
