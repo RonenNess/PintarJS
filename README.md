@@ -2,9 +2,14 @@
 
 Micro JS lib (65KB minified) for direct WebGL and canvas rendering.
 
-- [PintarJS Live Demo](https://ronenness.github.io/PintarJS/demos/index.html)
+## Demo
 
-- ![PintarJS example](https://github.com/RonenNess/PintarJS/raw/master/demos/example.png "PintarJS transformations example")
+[PintarJS Live Demo](https://ronenness.github.io/PintarJS/demos/index.html)
+![PintarJS example](https://github.com/RonenNess/PintarJS/raw/master/demos/example.png "PintarJS transformations example")
+
+## Plugins
+
+Additional PintarJS plugins:
 
 - [PintarJS.UI](plugins/UI/)
 
