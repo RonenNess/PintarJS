@@ -28,7 +28,7 @@
     var pintar = new PintarJS();
     pintar.clearColor = PintarJS.Color.lavender();
     PintarJS.Sprite.defaults.smoothingEnabled = false;
-    PintarJS.Sprite.defaults.applyAntiBleeding = true;
+    PintarJS.Sprite.defaults.applyAntiBleeding = false;
 
     // not supported message for canvas
     var isCanvas = pintar.rendererName === "CanvasRenderer";
@@ -51,8 +51,8 @@
       var _spritesInstance = [];
       var _texts = [];
       var scale = new PintarJS.Point(4, 4);
-      var width = texture.width * scale.x;
-      var height = texture.height * scale.y;
+      var width = 24 * scale.x;
+      var height = 24 * scale.y;
       var paddedWidth = width * 1.25;
       var paddedHeight = height * 1.25;
 
@@ -62,10 +62,10 @@
         // create the sprite and add to sprites list
         options.scale = options.scale || scale;
         options.extraPos = options.extraPos || PintarJS.Point.zero();
-        var x = 20 + paddedWidth * i * 1.15;
+        var x = 20 + paddedWidth * i;
         var y = 20 + paddedHeight * j * 1.25;
         var newSprite = new PintarJS.Sprite(texture, new PintarJS.Point(x + options.extraPos.x, y + options.extraPos.y), options);
-        newSprite.size = new PintarJS.Point(texture.width, texture.height);
+        newSprite.size = new PintarJS.Point(24, 24);
         _spritesInstance.push(newSprite);
 
         // add display text
@@ -106,7 +106,7 @@
       createDemoSprite(i++, j, "Brightness", {_animateBrightness: true}, false);
       createDemoSprite(i++, j, "Glowing", {colorBoost: new PintarJS.Color(1, 0, 0, 0), blendMode: PintarJS.BlendModes.Additive, smoothingEnabled: true}, true);
       createDemoSprite(i++, j, "Amplify Alpha", {_animateAlpha: true}, true);      
-      createDemoSprite(i, j, "Shadow Trick", {skew: new PintarJS.Point(-1.5, 0), brightness: -10, color: new PintarJS.Color(0, 0, 0, 0.25), blendMode: PintarJS.BlendModes.Multiply, origin: new PintarJS.Point(0.5, 1), extraPos: new PintarJS.Point(width / 2, height), scale: new PintarJS.Point(scale.x, scale.y / 2)}, false);
+      createDemoSprite(i, j, "Shadow", {skew: new PintarJS.Point(-1.5, 0), brightness: -10, color: new PintarJS.Color(0, 0, 0, 0.25), blendMode: PintarJS.BlendModes.Multiply, origin: new PintarJS.Point(0.5, 1), extraPos: new PintarJS.Point(width / 2, height), scale: new PintarJS.Point(scale.x, scale.y / 2)}, false);
       createDemoSprite(i++, j, "", {}, false);
 
       // sprites to show transformations
@@ -150,7 +150,7 @@
           if (sprite._animateScaleX) { sprite.scale.x = Math.sin(animValue) * scale.x; }
           if (sprite._animateScaleY) { sprite.scale.y = Math.sin(animValue) * scale.y; }
           if (sprite._animateBrightness) { sprite.brightness = (Math.sin(animValue) + 1) * 2; }
-          if (sprite._animateAlpha) { sprite.alpha = 1 + (Math.sin(animValue) + 1) * 10; }
+          if (sprite._animateAlpha) { sprite.alpha = 1 + (Math.sin(animValue) + 1) * 2.5; }
           if (sprite._animateScaleYPosOnly) { sprite.scale.y = Math.abs(Math.sin(animValue)) * scale.y; }
 
           // draw sprite
