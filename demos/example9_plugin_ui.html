@@ -46,7 +46,8 @@
     const panelWholeRect = new PintarJS.Rectangle(0, 32, 64, 64);
     const panelInternalRect = new PintarJS.Rectangle(5, 37, 54, 54);
     var slicedSprite = new PintarJS.UI.SlicedSprite(uiTexture, panelWholeRect, panelInternalRect, 5);
-    slicedSprite.offset = new PintarJS.Point(100, 120);
+    slicedSprite.offset = new PintarJS.Point(120, 120);
+    slicedSprite.size.set(300, 400);
 
     // create progressbar element
     const progressBarBackground = new PintarJS.Rectangle(0, 0, 64, 10);

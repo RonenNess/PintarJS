@@ -148,7 +148,7 @@ class UIElement
     getBoundingBox()
     {
         var position = this.getDestTopLeftPosition();
-        var size = this.size;
+        var size = this.getSizeInPixels();
         return new PintarJS.Rectangle(position.x, position.y, size.x, size.y);
     }
 
