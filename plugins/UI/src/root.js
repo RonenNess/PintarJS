@@ -7,6 +7,7 @@
 "use strict";
 const Container = require('./container');
 const PintarJS = require('./pintar');
+const InputManager = require('./input_manager');
 
 
 /**
@@ -17,14 +18,22 @@ class UIRoot extends Container
     /**
      * Create the UI root element.
      * @param {PintarJS} pintar PintarJS instance.
-     * @param {InputManager} inputManager Input manager instance.
+     * @param {InputManager} inputManager Optional input manager instance. If not provided, will create a default Input Manager.
      */
     constructor(pintar, inputManager)
     {
         super({UIRoot: { default: { }}});
         this.pintar = pintar;
-        this.inputManager = inputManager;
+        this.inputManager = inputManager || new InputManager(pintar);
         this.padding.set(0, 0, 0, 0);
+    }
+
+    /**
+     * Cleanup the root UI element stuff.
+     */
+    cleanup()
+    {
+        this.inputManager.cleanup();
     }
 
     /**
@@ -49,7 +58,9 @@ class UIRoot extends Container
      */
     update(input)
     {
+        this.inputManager.startUpdate();
         super.update(this.inputManager);
+        this.inputManager.endUpdate()
     }
 }
 

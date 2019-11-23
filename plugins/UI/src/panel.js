@@ -25,10 +25,12 @@ class Panel extends SlicedSprite
      * @param {SlicedSprite.FillModes} theme.Panel[skin].fillMode (Optional) How to handle fill part.
      * @param {PintarJS.Color} theme.Panel[skin].fillColor (Optional) Fill color.
      * @param {PintarJS.Color} theme.Panel[skin].frameColor (Optional) Frame color.
+     * @param {String} skin Element skin to use from theme.
+     * @param {Object} override Optional override options (can override any of the theme properties listed above).
      */
-    constructor(theme, skin)
+    constructor(theme, skin, override)
     {
-        super(theme, skin || 'default');
+        super(theme, skin || 'default', override);
     }
     
     /**

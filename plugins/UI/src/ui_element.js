@@ -35,8 +35,9 @@ class UIElement
      * Get options for object type and skin from theme.
      * @param {Object} theme Theme object.
      * @param {String} skin Skin to use for this specific element (or 'default' if not defined).
+     * @param {Object} override Optional dictionary of values to override theme's defaults.
      */
-    getOptionsFromTheme(theme, skin)
+    getOptionsFromTheme(theme, skin, override)
     {
         // get class name
         var elementName = this.constructor.name;
@@ -52,6 +53,21 @@ class UIElement
         options = options[skin];
         if (!options) {
             throw new Error("Missing definition for object type '" + elementName + "' and skin '" + skin + "' in UI theme!");
+        }
+
+        // apply override values
+        if (override) {
+            var temp = {};
+            for (var key in options)
+            {
+                if (key in override) {
+                    temp[key] = override[key];
+                }
+                else {
+                    temp[key] = options[key];
+                }
+            }
+            options = temp;
         }
 
         // validate required options

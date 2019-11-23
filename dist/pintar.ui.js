@@ -228,57 +228,167 @@ pintar.UI = UI;
 module.exports = UI;
 },{"./anchors":1,"./container":2,"./input_manager":4,"./panel":5,"./pintar":6,"./progress_bar":7,"./root":8,"./sides_properties":9,"./size_modes":10,"./sliced_sprite":11,"./ui_element":12}],4:[function(require,module,exports){
 /**
- * file: input_data.js
- * description: Define the input manager API.
+ * file: input_manager.js
+ * description: Define a basic input manager class.
  * author: Ronen Ness.
  * since: 2019.
  */
 "use strict";
+const PintarJS = require('./pintar');
+
 
 /**
- * An API for an object that provide input for the UI.
+ * Provides input for the UI.
  */
 class InputManager
 {
+    /**
+     * Create the input manager.
+     * @param {PintarJS} pintar PintarJS instance.
+     */
+    constructor(pintar)
+    {
+        // store canvas and init callbacks
+        var canvas = this._canvas = pintar._canvas;
+
+        // mouse buttons states
+        this._mouseButtons = {
+            0: false,
+            1: false, 
+            2: false,
+        };
+
+        // mouse click states
+        this._mouseClicks = {
+            0: false,
+            1: false, 
+            2: false,
+        };
+
+        // mouse wheel change
+        this._mouseWheel = 0;
+
+        // mouse down
+        canvas.addEventListener("mousedown", (e) => {
+            this._mouseButtons[e.button] = true;
+        });
+        
+        // mouse up
+        canvas.addEventListener("mouseup", (e) => {
+            if (this._mouseButtons[e.button]) { this._mouseClicks[e.button] = true; }
+            this._mouseButtons[e.button] = false;
+        });
+
+        // mouse leave
+        canvas.addEventListener("mouseleave", (e) => {
+            this._mouseButtons[0] = this._mouseButtons[1] = this._mouseButtons[2] = false;
+        });
+
+        // mouse wheel
+        canvas.addEventListener("mousewheel", (e) => {
+            this._mouseWheel = e.deltaY;
+        });
+        
+        // mouse move
+        canvas.addEventListener("mousemove", (e) => {
+            this._mousePosition = new PintarJS.Point(e.offsetX, e.offsetY);
+        });
+    }
+
+    /**
+     * Cleanup the input manager (remove callbacks).
+     */
+    cleanup()
+    {
+
+    }
+
+    /**
+     * Called at the begining of every update frame.
+     */
+    startUpdate()
+    {
+        // calculate delta time
+        var timeNow = (new Date()).getTime();
+        this._deltaTime = this._prevTime ? ((timeNow - this._prevTime) / 1000.0) : 0.1;
+        this._prevTime = timeNow;
+    }
+
+    /**
+     * Called at the end of every update frame.
+     */
+    endUpdate()
+    {
+        this._mouseWheel = 0;
+        this._mouseClicks[0] = this._mouseClicks[1] = this._mouseClicks[2] = false;
+    }
+
     /**
      * Return mouse position.
      * @returns {PintarJS.Point} Point with {x,y} position.
      */
     get mousePosition()
     {
-        throw new Error("Not Implemented!");
+        return this._mousePosition.clone();
     }
 
     /**
      * Return if left mouse button is down.
      * @returns {Boolean} left mouse button status.
      */
-    get isLeftMouseDown()
+    get leftMouseDown()
     {
-        throw new Error("Not Implemented!");
+        return this._mouseButtons[0];
     }
     
     /**
      * Return if right mouse button is down.
      * @returns {Boolean} right mouse button status.
      */
-    get isRightMouseDown()
+    get rightMouseDown()
     {
-        throw new Error("Not Implemented!");
+        return this._mouseButtons[2];
     }
     
+    /**
+     * Return if left mouse button was released this frame.
+     * @returns {Boolean} if left mouse button was released this frame.
+     */
+    get leftMouseClick()
+    {
+        return this._mouseClick[0];
+    }
+    
+    /**
+     * Return if right mouse button was released this frame.
+     * @returns {Boolean} if right mouse button was released this frame.
+     */
+    get rightMouseClick()
+    {
+        return this._mouseClick[2];
+    }
+
     /**
      * Return mouse wheel change.
      * @returns {Number} mouse wheel change, or 0 if not scrolling.
      */
     get mouseWheelChange()
     {
-        throw new Error("Not Implemented!");
+        return this._mouseWheel;
+    }
+
+    /**
+     * Return delta time between previous frame and current frame.
+     * @returns {Number} delta time, in seconds.
+     */
+    get deltaTime()
+    {
+        return this._deltaTime;
     }
 }
 
 module.exports = InputManager; 
-},{}],5:[function(require,module,exports){
+},{"./pintar":6}],5:[function(require,module,exports){
 /**
  * file: panel.js
  * description: A graphical panel object.
@@ -306,10 +416,12 @@ class Panel extends SlicedSprite
      * @param {SlicedSprite.FillModes} theme.Panel[skin].fillMode (Optional) How to handle fill part.
      * @param {PintarJS.Color} theme.Panel[skin].fillColor (Optional) Fill color.
      * @param {PintarJS.Color} theme.Panel[skin].frameColor (Optional) Frame color.
+     * @param {String} skin Element skin to use from theme.
+     * @param {Object} override Optional override options (can override any of the theme properties listed above).
      */
-    constructor(theme, skin)
+    constructor(theme, skin, override)
     {
-        super(theme, skin || 'default');
+        super(theme, skin || 'default', override);
     }
     
     /**
@@ -341,6 +453,7 @@ const PintarJS = require('./pintar');
 const SlicedSprite = require('./sliced_sprite');
 const Anchors = require('./anchors');
 const SizeModes = require('./size_modes');
+const Utils = require('./utils');
 
 /**
  * Implement a progressbar element.
@@ -363,13 +476,18 @@ class ProgressBar extends UIElement
      * @param {Number} theme.ProgressBar[skin].textureScale (Optional) frame and fill texture scale for both background and progressbar fill.
      * @param {PintarJS.Point} theme.ProgressBar[skin].fillOffset (Optional) Fill part offset from its base position. By default, with offset 0,0, fill part will start from the background's top-left corner.
      * @param {Number} theme.ProgressBar[skin].height (Optional) Progressbar height (if not defined, will base on texture source rectangle).
+     * @param {Number} theme.ProgressBar[skin].animationSpeed (Optional) Animation speed when value changes (if 0, will show new value immediately).
+     * @param {Boolean} theme.ProgressBar[skin].valueSetWidth (Optional) If true (default), progressbar value will set the fill width.
+     * @param {Boolean} theme.ProgressBar[skin].valueSetHeight (Optional) If true (not default), progressbar value will set the fill height.
+     * @param {String} skin Element skin to use from theme.
+     * @param {Object} override Optional override options (can override any of the theme properties listed above).
      */
-    constructor(theme, skin)
+    constructor(theme, skin, override)
     {
         super();
 
         // get options from theme and skin type
-        var options = this.getOptionsFromTheme(theme, skin);
+        var options = this.getOptionsFromTheme(theme, skin, override);
 
         // store fill offset
         this.fillOffset = options.fillOffset || PintarJS.Point.zero();
@@ -411,8 +529,16 @@ class ProgressBar extends UIElement
         // calculate progressbar default height
         this.size.y = options.height || (options.backgroundExternalSourceRect.height * textureScale);
 
+        // store animation speed
+        this.animationSpeed = options.animationSpeed || 0;
+
+        // store if set width and height
+        if (options.valueSetWidth === undefined) { options.valueSetWidth = true; }
+        this.setWidth = Boolean(options.valueSetWidth);
+        this.setHeight = Boolean(options.valueSetHeight);
+
         // set starting value
-        this.value = 1;
+        this._displayValue = this.value = 0;
     }
 
     /**
@@ -469,11 +595,12 @@ class ProgressBar extends UIElement
         this.backgroundSprite.draw(pintar);
 
         // draw fill
-        if (this.value > 0)
+        var value = this._displayValue;
+        if (value > 0)
         {
             this.fillSprite.offset = dest.getPosition().add(this.fillOffset);
-            this.fillSprite.size.x = this.backgroundSprite.size.x - this.fillWidthToRemove;
-            this.fillSprite.size.y = this.backgroundSprite.size.y - this.fillHeightToRemove;
+            this.fillSprite.size.x = (this.backgroundSprite.size.x - this.fillWidthToRemove) * (this.setWidth ? value : 1);
+            this.fillSprite.size.y = (this.backgroundSprite.size.y - this.fillHeightToRemove) * (this.setHeight ? value : 1);;
             this.fillSprite.draw(pintar);
         }
 
@@ -485,10 +612,35 @@ class ProgressBar extends UIElement
             this.foregroundSprite.draw(pintar);
          }
     }
+ 
+    /**
+     * Update the UI element.
+     * @param {InputManager} input A class that implements the 'InputManager' API.
+     */
+    update(input)
+    {
+        // call base update
+        super.update(input);
+
+        // update display value
+        if (this._displayValue != this.value)
+        {
+            if (!this.animationSpeed) { 
+                this._displayValue = this.value;
+            }
+            else {
+                this._displayValue = Utils.MoveTowards(this._displayValue, this.value, input.deltaTime * this.animationSpeed);
+            }
+        }
+        
+        // make sure display value is in range
+        if (this._displayValue < 0) this._displayValue = 0;
+        if (this._displayValue > 1) this._displayValue = 1;
+    }
 }
 
 module.exports = ProgressBar; 
-},{"./anchors":1,"./pintar":6,"./size_modes":10,"./sliced_sprite":11,"./ui_element":12}],8:[function(require,module,exports){
+},{"./anchors":1,"./pintar":6,"./size_modes":10,"./sliced_sprite":11,"./ui_element":12,"./utils":13}],8:[function(require,module,exports){
 /**
  * file: root.js
  * description: Implement a UI root element.
@@ -498,6 +650,7 @@ module.exports = ProgressBar;
 "use strict";
 const Container = require('./container');
 const PintarJS = require('./pintar');
+const InputManager = require('./input_manager');
 
 
 /**
@@ -508,14 +661,22 @@ class UIRoot extends Container
     /**
      * Create the UI root element.
      * @param {PintarJS} pintar PintarJS instance.
-     * @param {InputManager} inputManager Input manager instance.
+     * @param {InputManager} inputManager Optional input manager instance. If not provided, will create a default Input Manager.
      */
     constructor(pintar, inputManager)
     {
         super({UIRoot: { default: { }}});
         this.pintar = pintar;
-        this.inputManager = inputManager;
+        this.inputManager = inputManager || new InputManager(pintar);
         this.padding.set(0, 0, 0, 0);
+    }
+
+    /**
+     * Cleanup the root UI element stuff.
+     */
+    cleanup()
+    {
+        this.inputManager.cleanup();
     }
 
     /**
@@ -540,12 +701,14 @@ class UIRoot extends Container
      */
     update(input)
     {
+        this.inputManager.startUpdate();
         super.update(this.inputManager);
+        this.inputManager.endUpdate()
     }
 }
 
 module.exports = UIRoot; 
-},{"./container":2,"./pintar":6}],9:[function(require,module,exports){
+},{"./container":2,"./input_manager":4,"./pintar":6}],9:[function(require,module,exports){
 /**
  * file: sides.js
  * description: Implement a data structure for sides.
@@ -633,15 +796,16 @@ class SlicedSprite extends UIElement
      * @param {SlicedSprite.FillModes} options.fillMode (Optional) How to handle fill part.
      * @param {PintarJS.Color} options.fillColor (Optional) Fill color.
      * @param {PintarJS.Color} options.frameColor (Optional) Frame color.
-     * 
+     * @param {String} skin Element skin to use from theme.
+     * @param {Object} override Optional override options (can override any of the theme properties listed above).
      */
-    constructor(options, skin)
+    constructor(options, skin, override)
     {
         super();
 
         // if we got skin, we assume 'options' is actually a theme - used when other elements inherit from us, like in 'panel' case
         if (skin) {
-            options = this.getOptionsFromTheme(options, skin);
+            options = this.getOptionsFromTheme(options, skin, override);
         }
 
         // extract params
@@ -989,8 +1153,9 @@ class UIElement
      * Get options for object type and skin from theme.
      * @param {Object} theme Theme object.
      * @param {String} skin Skin to use for this specific element (or 'default' if not defined).
+     * @param {Object} override Optional dictionary of values to override theme's defaults.
      */
-    getOptionsFromTheme(theme, skin)
+    getOptionsFromTheme(theme, skin, override)
     {
         // get class name
         var elementName = this.constructor.name;
@@ -1006,6 +1171,21 @@ class UIElement
         options = options[skin];
         if (!options) {
             throw new Error("Missing definition for object type '" + elementName + "' and skin '" + skin + "' in UI theme!");
+        }
+
+        // apply override values
+        if (override) {
+            var temp = {};
+            for (var key in options)
+            {
+                if (key in override) {
+                    temp[key] = override[key];
+                }
+                else {
+                    temp[key] = options[key];
+                }
+            }
+            options = temp;
         }
 
         // validate required options
@@ -1274,5 +1454,39 @@ UIElement.globalScale = 1;
 
 // export the base UI element object
 module.exports = UIElement; 
-},{"./anchors":1,"./pintar":6,"./sides_properties":9,"./size_modes":10}]},{},[3])(3)
+},{"./anchors":1,"./pintar":6,"./sides_properties":9,"./size_modes":10}],13:[function(require,module,exports){
+/**
+ * file: utils.js
+ * description: Mixed utility methods.
+ * author: Ronen Ness.
+ * since: 2019.
+ */
+"use strict";
+
+
+module.exports = {
+
+    /**
+     * Lerp between two numbers.
+     */
+    lerp: function(start, end, a) 
+    {
+        return ((1 - a) * start) + (a * end);
+    },
+
+
+    /**
+     * Move from start to end at constant speed.
+     */
+    MoveTowards: function(start, end, a)
+    {
+        if (start === end) { return end; }
+        var sign = Math.sign(end - start);
+        var ret = start + sign * a;
+        if (sign > 0 && ret > end) { ret = end; }
+        else if (sign < 0 && ret < end) { ret = end; }
+        return ret;
+    },
+}
+},{}]},{},[3])(3)
 });

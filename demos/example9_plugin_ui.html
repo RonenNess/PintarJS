@@ -81,6 +81,8 @@
 
       // define progressbars
       ProgressBar: {
+
+        // default progressbar
         default: {
           texture: uiTexture,
           fillExternalSourceRect: new PintarJS.Rectangle(3, 13, 58, 4),
@@ -93,6 +95,9 @@
           textureScale: textureScale,
           fillColor: PintarJS.Color.red(),
           backgroundColor: PintarJS.Color.white(),
+          valueSetWidth: true,
+          valueSetHeight: false,
+          animationSpeed: 1,
         }
       },
 

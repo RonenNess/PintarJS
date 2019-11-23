@@ -10,6 +10,7 @@ const PintarJS = require('./pintar');
 const SlicedSprite = require('./sliced_sprite');
 const Anchors = require('./anchors');
 const SizeModes = require('./size_modes');
+const Utils = require('./utils');
 
 /**
  * Implement a progressbar element.
@@ -32,13 +33,18 @@ class ProgressBar extends UIElement
      * @param {Number} theme.ProgressBar[skin].textureScale (Optional) frame and fill texture scale for both background and progressbar fill.
      * @param {PintarJS.Point} theme.ProgressBar[skin].fillOffset (Optional) Fill part offset from its base position. By default, with offset 0,0, fill part will start from the background's top-left corner.
      * @param {Number} theme.ProgressBar[skin].height (Optional) Progressbar height (if not defined, will base on texture source rectangle).
+     * @param {Number} theme.ProgressBar[skin].animationSpeed (Optional) Animation speed when value changes (if 0, will show new value immediately).
+     * @param {Boolean} theme.ProgressBar[skin].valueSetWidth (Optional) If true (default), progressbar value will set the fill width.
+     * @param {Boolean} theme.ProgressBar[skin].valueSetHeight (Optional) If true (not default), progressbar value will set the fill height.
+     * @param {String} skin Element skin to use from theme.
+     * @param {Object} override Optional override options (can override any of the theme properties listed above).
      */
-    constructor(theme, skin)
+    constructor(theme, skin, override)
     {
         super();
 
         // get options from theme and skin type
-        var options = this.getOptionsFromTheme(theme, skin);
+        var options = this.getOptionsFromTheme(theme, skin, override);
 
         // store fill offset
         this.fillOffset = options.fillOffset || PintarJS.Point.zero();
@@ -80,8 +86,16 @@ class ProgressBar extends UIElement
         // calculate progressbar default height
         this.size.y = options.height || (options.backgroundExternalSourceRect.height * textureScale);
 
+        // store animation speed
+        this.animationSpeed = options.animationSpeed || 0;
+
+        // store if set width and height
+        if (options.valueSetWidth === undefined) { options.valueSetWidth = true; }
+        this.setWidth = Boolean(options.valueSetWidth);
+        this.setHeight = Boolean(options.valueSetHeight);
+
         // set starting value
-        this.value = 1;
+        this._displayValue = this.value = 0;
     }
 
     /**
@@ -138,11 +152,12 @@ class ProgressBar extends UIElement
         this.backgroundSprite.draw(pintar);
 
         // draw fill
-        if (this.value > 0)
+        var value = this._displayValue;
+        if (value > 0)
         {
             this.fillSprite.offset = dest.getPosition().add(this.fillOffset);
-            this.fillSprite.size.x = this.backgroundSprite.size.x - this.fillWidthToRemove;
-            this.fillSprite.size.y = this.backgroundSprite.size.y - this.fillHeightToRemove;
+            this.fillSprite.size.x = (this.backgroundSprite.size.x - this.fillWidthToRemove) * (this.setWidth ? value : 1);
+            this.fillSprite.size.y = (this.backgroundSprite.size.y - this.fillHeightToRemove) * (this.setHeight ? value : 1);;
             this.fillSprite.draw(pintar);
         }
 
@@ -153,6 +168,31 @@ class ProgressBar extends UIElement
             this.foregroundSprite.size = dest.getSize();
             this.foregroundSprite.draw(pintar);
          }
+    }
+ 
+    /**
+     * Update the UI element.
+     * @param {InputManager} input A class that implements the 'InputManager' API.
+     */
+    update(input)
+    {
+        // call base update
+        super.update(input);
+
+        // update display value
+        if (this._displayValue != this.value)
+        {
+            if (!this.animationSpeed) { 
+                this._displayValue = this.value;
+            }
+            else {
+                this._displayValue = Utils.MoveTowards(this._displayValue, this.value, input.deltaTime * this.animationSpeed);
+            }
+        }
+        
+        // make sure display value is in range
+        if (this._displayValue < 0) this._displayValue = 0;
+        if (this._displayValue > 1) this._displayValue = 1;
     }
 }
 

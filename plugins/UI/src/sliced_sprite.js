@@ -25,15 +25,16 @@ class SlicedSprite extends UIElement
      * @param {SlicedSprite.FillModes} options.fillMode (Optional) How to handle fill part.
      * @param {PintarJS.Color} options.fillColor (Optional) Fill color.
      * @param {PintarJS.Color} options.frameColor (Optional) Frame color.
-     * 
+     * @param {String} skin Element skin to use from theme.
+     * @param {Object} override Optional override options (can override any of the theme properties listed above).
      */
-    constructor(options, skin)
+    constructor(options, skin, override)
     {
         super();
 
         // if we got skin, we assume 'options' is actually a theme - used when other elements inherit from us, like in 'panel' case
         if (skin) {
-            options = this.getOptionsFromTheme(options, skin);
+            options = this.getOptionsFromTheme(options, skin, override);
         }
 
         // extract params
