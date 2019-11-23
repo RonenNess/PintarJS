@@ -8,7 +8,7 @@
 const PintarJS = require('./pintar');
 const Anchors = require('./anchors');
 const SizeModes = require('./size_modes');
-const Sides = require('./sides');
+const Sides = require('./sides_properties');
 
 
 /**
@@ -29,6 +29,49 @@ class UIElement
         this.scale = 1;
         this.ignoreParentPadding = false;
         this.__parent = null;
+    }
+
+    /**
+     * Get options for object type and skin from theme.
+     * @param {Object} theme Theme object.
+     * @param {String} skin Skin to use for this specific element (or 'default' if not defined).
+     */
+    getOptionsFromTheme(theme, skin)
+    {
+        // get class name
+        var elementName = this.constructor.name;
+
+        // get element definition from theme
+        var options = theme[elementName];
+        if (!options) {
+            throw new Error("Missing definition for object type '" + elementName + "' in UI theme!");
+        }
+
+        // get skin type (or default)
+        skin = skin || 'default';
+        options = options[skin];
+        if (!options) {
+            throw new Error("Missing definition for object type '" + elementName + "' and skin '" + skin + "' in UI theme!");
+        }
+
+        // validate required options
+        var required = this.requiredOptions;
+        for (var i = 0; i < required.length; ++i) {
+            if (!(required[i] in options)) {
+                throw new Error("Missing mandatory option '" + required[i] + "' in element type '" + elementName + "' options!");
+            }
+        }
+
+        // success - return element options
+        return options;
+    }
+
+    /**
+     * Get required options for this element type.
+     */
+    get requiredOptions()
+    {
+        return [];
     }
 
     /**
@@ -180,6 +223,12 @@ class UIElement
      */
     getDestTopLeftPosition()
     {
+        // special case - absolute
+        if (this.anchor === Anchors.Fixed)
+        {
+            return this.offset.clone();
+        }
+
         // get parent bounding box
         var parentRect = this.getParentInternalBoundingBox();
         var selfSize = this.getSizeInPixels();

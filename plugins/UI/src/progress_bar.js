@@ -7,59 +7,89 @@
 "use strict";
 const UIElement = require('./ui_element');
 const PintarJS = require('./pintar');
+const SlicedSprite = require('./sliced_sprite');
+const Anchors = require('./anchors');
+const SizeModes = require('./size_modes');
 
 /**
- * Implement a progress bar.
+ * Implement a progressbar element.
  */
 class ProgressBar extends UIElement
 {
     /**
-     * Create a progress bar element.
-     * @param {*} texture Texture to use (either instance, or URL as string).
-     * @param {PintarJS.Rectangle} backgroundSourceRect Progressbar background source rect in texture.
-     * @param {PintarJS.Rectangle} fillSourceRect Progressbar fill source rect in texture.
-     * @param {Number} widthInPixels Progressbar desired width in pixels (will scale based on source rect accordingly).
-     * @param {PintarJS.Point} fillOffset Optional offset, in pixels (in texture), of the fill part from the background part.
+     * Create a progressbar element.
+     * @param {Object} theme
+     * @param {PintarJS.Texture} theme.ProgressBar[skin].texture Texture to use.
+     * @param {PintarJS.Rectangle} theme.ProgressBar[skin].fillExternalSourceRect The entire source rect, including frame and fill, of the fill sprite.
+     * @param {PintarJS.Rectangle} theme.ProgressBar[skin].fillInternalSourceRect The internal source rect of the fill sprite (must be contained inside the whole source rect).
+     * @param {PintarJS.Color} theme.ProgressBar[skin].fillColor (Optional) Progressbar fill color.
+     * @param {PintarJS.Rectangle} theme.ProgressBar[skin].backgroundExternalSourceRect The entire source rect, including frame and fill, of the background sprite.
+     * @param {PintarJS.Rectangle} theme.ProgressBar[skin].backgroundInternalSourceRect The internal source rect of the background sprite (must be contained inside the whole source rect).
+     * @param {PintarJS.Color} theme.ProgressBar[skin].backgroundColor (Optional) Progressbar background color.
+     * @param {PintarJS.Rectangle} theme.ProgressBar[skin].foregroundExternalSourceRect The entire source rect, including frame and fill, of an optional foreground sprite.
+     * @param {PintarJS.Rectangle} theme.ProgressBar[skin].foregroundInternalSourceRect The internal source rect of the foreground sprite (must be contained inside the whole source rect).
+     * @param {PintarJS.Color} theme.ProgressBar[skin].foregroundColor (Optional) Progressbar foreground color.
+     * @param {Number} theme.ProgressBar[skin].textureScale (Optional) frame and fill texture scale for both background and progressbar fill.
+     * @param {PintarJS.Point} theme.ProgressBar[skin].fillOffset (Optional) Fill part offset from its base position. By default, with offset 0,0, fill part will start from the background's top-left corner.
+     * @param {Number} theme.ProgressBar[skin].height (Optional) Progressbar height (if not defined, will base on texture source rectangle).
      */
-    constructor(texture, backgroundSourceRect, fillSourceRect, widthInPixels, fillOffset)
+    constructor(theme, skin)
     {
         super();
 
-        // set texture from string
-        if (typeof texture == "string") {
-            texture = new PintarJS.Texture(texture);
-        }
+        // get options from theme and skin type
+        var options = this.getOptionsFromTheme(theme, skin);
 
         // store fill offset
-        this.fillOffset = fillOffset || PintarJS.Point.zero();
+        this.fillOffset = options.fillOffset || PintarJS.Point.zero();
 
-        // store source rectangles
-        this.backgroundSourceRect = backgroundSourceRect;
-        this.fillSourceRect = fillSourceRect;
+        // get texture scale
+        var textureScale = options.textureScale || 1;
 
-        // bar background sprite
-        this.barBackground = new PintarJS.Sprite(texture);
-        this.barBackground.origin.x = 0;
-        this.barBackground.sourceRectangle = this.backgroundSourceRect;
+        // create background sprite
+        this.backgroundSprite = new SlicedSprite({texture: options.texture, 
+            externalSourceRect: options.backgroundExternalSourceRect, 
+            internalSourceRect: options.backgroundInternalSourceRect, 
+            textureScale: textureScale});
+        this.backgroundSprite.color = options.backgroundColor || PintarJS.Color.white();
+        this.backgroundSprite.anchor = Anchors.Fixed;
+        this.backgroundSprite.sizeMode = SizeModes.Pixels;
 
-        // bar fill sprite
-        this.barFill = new PintarJS.Sprite(texture);
-        this.barFill.origin.x = 0;
+        // create fill sprite
+        this.fillSprite = new SlicedSprite({texture: options.texture, 
+            externalSourceRect: options.fillExternalSourceRect, 
+            internalSourceRect: options.fillInternalSourceRect, 
+            textureScale: textureScale});
+        this.fillSprite.color = options.fillColor || PintarJS.Color.white();
+        this.fillSprite.anchor = Anchors.Fixed;
+        this.fillSprite.sizeMode = SizeModes.Pixels;
+        this.fillWidthToRemove = Math.round(options.backgroundExternalSourceRect.width - options.fillExternalSourceRect.width) * textureScale;
+        this.fillHeightToRemove = Math.round(options.backgroundExternalSourceRect.height - options.fillExternalSourceRect.height) * textureScale;
 
-        // set width in pixels
-        this.widthInPixels = widthInPixels;
+        // create optional foreground sprite
+        if (options.foregroundExternalSourceRect) {
+            this.foregroundSprite = new SlicedSprite({texture: options.texture, 
+                externalSourceRect: options.foregroundExternalSourceRect, 
+                internalSourceRect: options.foregroundInternalSourceRect, 
+                textureScale: textureScale});
+            this.foregroundSprite.color = options.foregroundColor || PintarJS.Color.white();
+            this.foregroundSprite.anchor = Anchors.Fixed;
+            this.foregroundSprite.sizeMode = SizeModes.Pixels;
+        }
+
+        // calculate progressbar default height
+        this.size.y = options.height || (options.backgroundExternalSourceRect.height * textureScale);
 
         // set starting value
         this.value = 1;
     }
 
     /**
-     * Set progressbar width in pixels, and scale everything accordingly.
+     * Get required options for this element type.
      */
-    set widthInPixels(widthInPixels)
+    get requiredOptions()
     {
-        this.scaleFactor = widthInPixels ? widthInPixels / this.backgroundSourceRect.width : this.backgroundSourceRect.width;
-        this.size.set(this.backgroundSourceRect.width * this.scaleFactor, this.backgroundSourceRect.height * this.scaleFactor);
+        return ['texture', 'fillExternalSourceRect', 'fillInternalSourceRect', 'backgroundExternalSourceRect', 'backgroundInternalSourceRect'];
     }
 
     /**
@@ -67,7 +97,7 @@ class ProgressBar extends UIElement
      */
     get fillColor()
     {
-        return this.barFill.color;
+        return this.fillSprite.color;
     }
 
     /**
@@ -75,7 +105,7 @@ class ProgressBar extends UIElement
      */
     set fillColor(color)
     {
-        this.barFill.color = color;
+        this.fillSprite.color = color;
     }
 
     /**
@@ -83,7 +113,7 @@ class ProgressBar extends UIElement
      */
     get fillBlendMode()
     {
-        return this.barFill.blendMode;
+        return this.fillSprite.blendMode;
     }
 
     /**
@@ -91,7 +121,7 @@ class ProgressBar extends UIElement
      */
     set fillBlendMode(blendMode)
     {
-        this.barFill.blendMode = blendMode;
+        this.fillSprite.blendMode = blendMode;
     }
 
     /**
@@ -99,31 +129,30 @@ class ProgressBar extends UIElement
      */
     draw(pintar)
     {
-        // get absolute scale
-        this.widthInPixels = this.getSizeInPixels().x;
-        var scale = this.scaleFactor;
-
-        // get drawing position
-        var position = this.getDestTopLeftPosition();
-
-        // update elements position
-        this.barBackground.position.set(position.x, position.y);
-        this.barFill.position.set(position.x + this.fillOffset.x * scale, position.y + this.fillOffset.y * scale);
-
-        // set size
-        this.barBackground.size.set(this.size.x, this.size.y);
+        // get dest rect
+        var dest = this.getBoundingBox();
 
         // draw background
-        pintar.drawSprite(this.barBackground);
+        this.backgroundSprite.offset = dest.getPosition();
+        this.backgroundSprite.size = dest.getSize();
+        this.backgroundSprite.draw(pintar);
 
-        // update and draw fill
-        if (this.barFill.width > 0) 
-        { 
-            this.barFill.size.set(this.fillSourceRect.width * scale * this.value, this.fillSourceRect.height * scale);
-            this.barFill.sourceRectangle = this.fillSourceRect.clone();
-            this.barFill.sourceRectangle.width *= this.value;
-            pintar.drawSprite(this.barFill); 
+        // draw fill
+        if (this.value > 0)
+        {
+            this.fillSprite.offset = dest.getPosition().add(this.fillOffset);
+            this.fillSprite.size.x = this.backgroundSprite.size.x - this.fillWidthToRemove;
+            this.fillSprite.size.y = this.backgroundSprite.size.y - this.fillHeightToRemove;
+            this.fillSprite.draw(pintar);
         }
+
+         // draw foreground
+         if (this.foregroundSprite) 
+         {
+            this.foregroundSprite.offset = dest.getPosition();
+            this.foregroundSprite.size = dest.getSize();
+            this.foregroundSprite.draw(pintar);
+         }
     }
 }
 

@@ -11,30 +11,37 @@ const UIElement = require('./ui_element');
 
 /**
  * A drawable sprite that is sliced into 9-slices.
- * For more info, read about 9-slice scaling / 9-slice grid.
+ * For more info, read about 9-slice scaling / 9-slice grid in general.
  */
 class SlicedSprite extends UIElement
 {
     /**
      * Create a sliced sprite element.
-     * @param {*} texture Texture to use (either instance, or URL as string).
-     * @param {PintarJS.Rectangle} wholeSourceRect The entire source rect, including frame and fill.
-     * @param {PintarJS.Rectangle} fillSourceRect The internal source rect, must be contained inside the whole source rect.
-     * @param {Number} textureScale frame and fill texture scale.
-     * @param {SlicedSprite.FillModes} fillMode How to handle fill part.
+     * @param {Object} options
+     * @param {PintarJS.Texture} options.texture Texture to use.
+     * @param {PintarJS.Rectangle} options.externalSourceRect The entire source rect, including frame and fill.
+     * @param {PintarJS.Rectangle} options.internalSourceRect The internal source rect, must be contained inside the whole source rect.
+     * @param {Number} options.textureScale (Optional) frame and fill texture scale.
+     * @param {SlicedSprite.FillModes} options.fillMode (Optional) How to handle fill part.
+     * @param {PintarJS.Color} options.fillColor (Optional) Fill color.
+     * @param {PintarJS.Color} options.frameColor (Optional) Frame color.
+     * 
      */
-    constructor(texture, wholeSourceRect, fillSourceRect, textureScale, fillMode)
+    constructor(options, skin)
     {
         super();
 
-        // set texture from string
-        if (typeof texture == "string") {
-            texture = new PintarJS.Texture(texture);
+        // if we got skin, we assume 'options' is actually a theme - used when other elements inherit from us, like in 'panel' case
+        if (skin) {
+            options = this.getOptionsFromTheme(options, skin);
         }
 
-        // store source rectangles
-        this.wholeSourceRect = wholeSourceRect;
-        this.fillSourceRect = fillSourceRect;
+        // extract params
+        var texture = options.texture;
+        var textureScale = options.textureScale || 1;
+        var wholeSourceRect = this.externalSourceRect = options.externalSourceRect;
+        var fillSourceRect = this.internalSourceRect = options.internalSourceRect;
+        var fillMode = options.fillMode || SlicedSprite.FillModes.Tiled;
        
         // calculate frame source rects
         this.leftFrameSourceRect = new PintarJS.Rectangle(wholeSourceRect.x, fillSourceRect.y, fillSourceRect.x - wholeSourceRect.x, fillSourceRect.height);
@@ -60,15 +67,27 @@ class SlicedSprite extends UIElement
         this.fillSprite = new PintarJS.Sprite(texture);
 
         // set default colors
-        this.fillColor = PintarJS.Color.white();
-        this.frameColor = PintarJS.Color.white();
+        this.fillColor = options.fillColor || PintarJS.Color.white();
+        this.frameColor = options.frameColor || PintarJS.Color.white();
 
         // store frame scale
-        this.frameScale = textureScale || 1;
-        this.fillScale = textureScale || 1;
+        this.frameScale = textureScale;
+        this.fillScale = textureScale;
+
+        // set default blend mode
+        this.blendMode = PintarJS.BlendModes.AlphaBlend;
 
         // store fill mode
         this.fillMode = fillMode || SlicedSprite.FillModes.Tiled;
+    }
+
+    /**
+     * Set color for both fill and frame.
+     */
+    set color(color)
+    {
+        this.fillColor = color.clone();
+        this.frameColor = color.clone();
     }
 
     /**
@@ -101,6 +120,7 @@ class SlicedSprite extends UIElement
             sprite.sourceRectangle = sourceRect.clone();
             sprite.origin = PintarJS.Point.zero();
             sprite.position = position.clone();
+            sprite.blendMode = this.blendMode;
             sprite.position.y += extraY;
             sprite.position.x += this.topLeftFrameCornerSourceRect.width * frameScale;
             sprite.width = sprite.sourceRectangle.width * frameScale;
@@ -145,6 +165,7 @@ class SlicedSprite extends UIElement
             sprite.sourceRectangle = sourceRect.clone();
             sprite.origin = PintarJS.Point.zero();
             sprite.position = position.clone();
+            sprite.blendMode = this.blendMode;
             sprite.position.x += extraX;
             sprite.position.y += this.topLeftFrameCornerSourceRect.height * frameScale;
             sprite.width = sprite.sourceRectangle.width * frameScale;
@@ -189,6 +210,7 @@ class SlicedSprite extends UIElement
             sprite.sourceRectangle = sourceRect.clone();
             sprite.origin = PintarJS.Point.zero();
             sprite.position = position.clone();
+            sprite.blendMode = this.blendMode;
             sprite.position.x += posx;
             sprite.position.y += posy;
             sprite.width = sprite.sourceRectangle.width * frameScale;
@@ -205,100 +227,108 @@ class SlicedSprite extends UIElement
         drawFramesCorner(this.bottomLeftCornerFrameSprite, this.bottomLeftFrameCornerSourceRect, 0, destRect.height);
         drawFramesCorner(this.bottomRightCornerFrameSprite, this.bottomRightFrameCornerSourceRect, destRect.width, destRect.height);
 
-        // prepare fill sprite properties
-        var sprite = this.fillSprite;     
-        sprite.origin = PintarJS.Point.zero();
-        sprite.position = position.clone();
-        sprite.position.x += this.topLeftCornerFrameSprite.width;
-        sprite.position.y += this.topLeftCornerFrameSprite.height;
-        sprite.width = destRect.width - this.bottomLeftCornerFrameSprite.width;
-        sprite.height = destRect.height - this.bottomLeftCornerFrameSprite.height;
-        sprite.color = this.fillColor;
-
-        // draw fill - stretch mode
-        if (this.fillMode === SlicedSprite.FillModes.Stretch) 
+        // draw fill
+        if (this.internalSourceRect.width && this.internalSourceRect.height)
         {
-            sprite.sourceRectangle = this.fillSourceRect.clone();
-            pintar.drawSprite(sprite);
-        }
-        else if (this.fillMode === SlicedSprite.FillModes.Tiled) 
-        {
-            // setup starting params
-            var fillScale = scaleFactor * this.fillScale; 
-            var fillSize = new PintarJS.Point(this.fillSourceRect.width * fillScale, this.fillSourceRect.height * fillScale);
-            sprite.size = fillSize.clone();
-            var startPosition = sprite.position.clone();
+            // prepare fill sprite properties
+            var sprite = this.fillSprite;     
+            sprite.origin = PintarJS.Point.zero();
+            sprite.position = position.clone();
+            sprite.blendMode = this.blendMode;
+            sprite.position.x += this.topLeftCornerFrameSprite.width;
+            sprite.position.y += this.topLeftCornerFrameSprite.height;
+            sprite.width = destRect.width - this.bottomLeftCornerFrameSprite.width;
+            sprite.height = destRect.height - this.bottomLeftCornerFrameSprite.height;
+            sprite.color = this.fillColor;
 
-            // iterate columns
-            for (var i = 0; i < destRect.width / fillSize.x; ++i)
+            // draw fill - stretch mode
+            if (this.fillMode === SlicedSprite.FillModes.Stretch) 
             {
-                // reset source rect
-                sprite.sourceRectangle = this.fillSourceRect.clone();
+                sprite.sourceRectangle = this.internalSourceRect.clone();
+                pintar.drawSprite(sprite);
+            }
+            // draw fill - tiling
+            else if (this.fillMode === SlicedSprite.FillModes.Tiled) 
+            {
+                // setup starting params
+                var fillScale = scaleFactor * this.fillScale; 
+                var fillSize = new PintarJS.Point(this.internalSourceRect.width * fillScale, this.internalSourceRect.height * fillScale);
+                sprite.size = fillSize.clone();
+                var startPosition = sprite.position.clone();
 
-                // set width and position x
-                sprite.size.x = fillSize.x;
-                sprite.position.x = startPosition.x + sprite.width * i;
-
-                // check if should finish
-                if (sprite.position.x >= this.rightFrameSprite.position.x) {
-                    break;
-                }
-
-                // check if need to trim width
-                var spriteRight = sprite.position.x + sprite.size.x;
-                if (spriteRight > this.rightFrameSprite.position.x)
+                // iterate columns
+                for (var i = 0; i < destRect.width / fillSize.x; ++i)
                 {
-                    var toCut = spriteRight - this.rightFrameSprite.position.x;
-                    if (toCut > 0) {
-                        sprite.sourceRectangle.width -= Math.round(toCut * (sprite.sourceRectangle.width / sprite.width));
-                        sprite.width -= toCut;
-                    }
-                }
+                    // reset source rect
+                    sprite.sourceRectangle = this.internalSourceRect.clone();
 
-                // check if should stop here
-                if (sprite.width == 0) {
-                    break;
-                }
-
-                // iterate rows
-                for (var j = 0; j < destRect.height / fillSize.y; ++j)
-                {
-                    // set height and position y
-                    sprite.size.y = fillSize.y;
-                    sprite.position.y = startPosition.y + sprite.height * j;
+                    // set width and position x
+                    sprite.size.x = fillSize.x;
+                    sprite.position.x = startPosition.x + sprite.width * i;
 
                     // check if should finish
-                    if (sprite.position.y >= this.bottomFrameSprite.position.y) {
+                    if (sprite.position.x >= this.rightFrameSprite.position.x) {
                         break;
                     }
 
-                    // check if need to trim height
-                    var spriteBottom = sprite.position.y + sprite.size.y;
-                    if (spriteBottom > this.bottomFrameSprite.position.y)
+                    // check if need to trim width
+                    var spriteRight = sprite.position.x + sprite.size.x;
+                    if (spriteRight > this.rightFrameSprite.position.x)
                     {
-                        var toCut = spriteBottom - this.bottomFrameSprite.position.y;
+                        var toCut = spriteRight - this.rightFrameSprite.position.x;
                         if (toCut > 0) {
-                            sprite.sourceRectangle.height -= Math.round(toCut * (sprite.sourceRectangle.height / sprite.height));
-                            sprite.height -= toCut;
+                            sprite.sourceRectangle.width -= Math.round(toCut * (sprite.sourceRectangle.width / sprite.width));
+                            sprite.width -= toCut;
                         }
                     }
 
                     // check if should stop here
-                    if (sprite.height == 0) {
+                    if (sprite.width == 0) {
                         break;
                     }
 
-                    // draw sprite
-                    pintar.drawSprite(sprite);
+                    // iterate rows
+                    for (var j = 0; j < destRect.height / fillSize.y; ++j)
+                    {
+                        // set height and position y
+                        sprite.size.y = fillSize.y;
+                        sprite.position.y = startPosition.y + sprite.height * j;
+
+                        // check if should finish
+                        if (sprite.position.y >= this.bottomFrameSprite.position.y) {
+                            break;
+                        }
+
+                        // check if need to trim height
+                        var spriteBottom = sprite.position.y + sprite.size.y;
+                        if (spriteBottom > this.bottomFrameSprite.position.y)
+                        {
+                            var toCut = spriteBottom - this.bottomFrameSprite.position.y;
+                            if (toCut > 0) {
+                                sprite.sourceRectangle.height -= Math.round(toCut * (sprite.sourceRectangle.height / sprite.height));
+                                sprite.height -= toCut;
+                            }
+                        }
+
+                        // check if should stop here
+                        if (sprite.height == 0) {
+                            break;
+                        }
+
+                        // draw sprite
+                        pintar.drawSprite(sprite);
+                    }
                 }
             }
-        }
-        else if (this.fillMode === SlicedSprite.FillModes.None) 
-        {
-        }
-        else
-        {
-            throw new Error("Invalid fill mode!");
+            // draw fill - no fill
+            else if (this.fillMode === SlicedSprite.FillModes.None) 
+            {
+            }
+            // unknown mode.
+            else
+            {
+                throw new Error("Invalid fill mode!");
+            }
         }
     }
 }
@@ -306,9 +336,9 @@ class SlicedSprite extends UIElement
 // set fill modes
 SlicedSprite.FillModes = 
 {
-    Tiled: 0,
-    Stretch: 1,
-    None: 2,
+    Tiled: 1,
+    Stretch: 2,
+    None: 3,
 };
 
 // export SlicedSprite

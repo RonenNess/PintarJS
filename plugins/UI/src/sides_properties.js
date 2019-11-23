@@ -9,7 +9,7 @@
 /**
  * Implement a simple data structure to hold value for all sides - top, left, bottom, right.
  */
-class Sides
+class SidesProperties
 {
     /**
      * Create the sides data.
@@ -38,9 +38,9 @@ class Sides
      */
     clone()
     {
-        return new Sides(this.left, this.right, this.top, this.bottom);
+        return new SidesProperties(this.left, this.right, this.top, this.bottom);
     }
 }
 
 
-module.exports = Sides;
+module.exports = SidesProperties;

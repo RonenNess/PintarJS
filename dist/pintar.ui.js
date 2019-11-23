@@ -19,6 +19,7 @@ module.exports = {
     BottomCenterRight: 'BottomCenterRight',
     Auto: 'Auto',
     AutoInline: 'AutoInline',
+    Fixed: 'Fixed',
 };
 },{}],2:[function(require,module,exports){
 /**
@@ -30,9 +31,10 @@ module.exports = {
 "use strict";
 const UIElement = require('./ui_element');
 const PintarJS = require('./pintar');
-const Sides = require('./sides');
+const SidesProperties = require('./sides_properties');
 const SizeModes = require('./size_modes');
 const Anchors = require('./anchors');
+const Panel = require('./panel');
 
 
 /**
@@ -42,14 +44,28 @@ class Container extends UIElement
 {
     /**
      * Create a container element.
+     * @param {Object} theme
+     * @param {PintarJS.UI.SidesProperties} theme.Container[skin].padding (Optional) Container padding (distance between internal elements and container sides).
+     * @param {PintarJS.UI.SizeModes} theme.Container[skin].paddingMode (Optional) Container padding mode.
+     * @param {String} theme.Container[skin].background (Optional) If defined, will create a panel as background with this skin.
      */
-    constructor()
+    constructor(theme, skin)
     {
         super();
+
+        // get options and create children list
+        var options = this.getOptionsFromTheme(theme, skin);
         this._children = [];
-        this.padding = Container.defaults.padding;
-        this.paddingMode = SizeModes.Pixels;
+        
+        // set padding
+        this.padding = options.padding || new SidesProperties(10, 10, 10, 10);
+        this.paddingMode = options.paddingMode || SizeModes.Pixels;
+
+        // set background
         this.__background = null;
+        if (options.background) {
+            this.background = new Panel(theme, options.background);
+        }
     }
 
     /**
@@ -192,13 +208,9 @@ class Container extends UIElement
     }
 }
 
-// set defaults
-Container.defaults = {
-    padding: new Sides(10, 10, 10, 10)
-}
-
+// export the container
 module.exports = Container; 
-},{"./anchors":1,"./pintar":5,"./sides":8,"./size_modes":9,"./ui_element":11}],3:[function(require,module,exports){
+},{"./anchors":1,"./panel":5,"./pintar":6,"./sides_properties":9,"./size_modes":10,"./ui_element":12}],3:[function(require,module,exports){
 var UI = {
     UIRoot: require('./root'),
     UIElement: require('./ui_element'),
@@ -208,11 +220,13 @@ var UI = {
     Anchors: require('./anchors'),
     SlicedSprite: require('./sliced_sprite'),
     SizeModes: require('./size_modes'),
+    SidesProperties: require('./sides_properties'),
+    Panel: require('./panel'),
 };
 const pintar = require('./pintar');
 pintar.UI = UI;
 module.exports = UI;
-},{"./anchors":1,"./container":2,"./input_manager":4,"./pintar":5,"./progress_bar":6,"./root":7,"./size_modes":9,"./sliced_sprite":10,"./ui_element":11}],4:[function(require,module,exports){
+},{"./anchors":1,"./container":2,"./input_manager":4,"./panel":5,"./pintar":6,"./progress_bar":7,"./root":8,"./sides_properties":9,"./size_modes":10,"./sliced_sprite":11,"./ui_element":12}],4:[function(require,module,exports){
 /**
  * file: input_data.js
  * description: Define the input manager API.
@@ -265,10 +279,56 @@ class InputManager
 
 module.exports = InputManager; 
 },{}],5:[function(require,module,exports){
+/**
+ * file: panel.js
+ * description: A graphical panel object.
+ * author: Ronen Ness.
+ * since: 2019.
+ */
+"use strict";
+const PintarJS = require('./pintar');
+const SlicedSprite = require('./sliced_sprite');
+
+
+/**
+ * A drawable sprite that is sliced into 9-slices.
+ * For more info, read about 9-slice scaling / 9-slice grid in general.
+ */
+class Panel extends SlicedSprite
+{
+    /**
+     * Create a panel sprite element.
+     * @param {Object} theme
+     * @param {PintarJS.Texture} theme.Panel[skin].texture Texture to use.
+     * @param {PintarJS.Rectangle} theme.Panel[skin].externalSourceRect The entire source rect, including frame and fill.
+     * @param {PintarJS.Rectangle} theme.Panel[skin].internalSourceRect The internal source rect, must be contained inside the whole source rect.
+     * @param {Number} theme.Panel[skin].textureScale (Optional) frame and fill texture scale.
+     * @param {SlicedSprite.FillModes} theme.Panel[skin].fillMode (Optional) How to handle fill part.
+     * @param {PintarJS.Color} theme.Panel[skin].fillColor (Optional) Fill color.
+     * @param {PintarJS.Color} theme.Panel[skin].frameColor (Optional) Frame color.
+     */
+    constructor(theme, skin)
+    {
+        super(theme, skin || 'default');
+    }
+    
+    /**
+     * Get required options for this element type.
+     */
+    get requiredOptions()
+    {
+        return ['texture', 'externalSourceRect', 'internalSourceRect'];
+    }
+}
+
+
+// export the panel class
+module.exports = Panel;
+},{"./pintar":6,"./sliced_sprite":11}],6:[function(require,module,exports){
 var pintar = window.PintarJS || window.pintar;
 if (!pintar) { throw new Error("Missing PintarJS main object."); }
 module.exports = pintar;
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 /**
  * file: progress_bar.js
  * description: Implement a progress bar element.
@@ -278,59 +338,89 @@ module.exports = pintar;
 "use strict";
 const UIElement = require('./ui_element');
 const PintarJS = require('./pintar');
+const SlicedSprite = require('./sliced_sprite');
+const Anchors = require('./anchors');
+const SizeModes = require('./size_modes');
 
 /**
- * Implement a progress bar.
+ * Implement a progressbar element.
  */
 class ProgressBar extends UIElement
 {
     /**
-     * Create a progress bar element.
-     * @param {*} texture Texture to use (either instance, or URL as string).
-     * @param {PintarJS.Rectangle} backgroundSourceRect Progressbar background source rect in texture.
-     * @param {PintarJS.Rectangle} fillSourceRect Progressbar fill source rect in texture.
-     * @param {Number} widthInPixels Progressbar desired width in pixels (will scale based on source rect accordingly).
-     * @param {PintarJS.Point} fillOffset Optional offset, in pixels (in texture), of the fill part from the background part.
+     * Create a progressbar element.
+     * @param {Object} theme
+     * @param {PintarJS.Texture} theme.ProgressBar[skin].texture Texture to use.
+     * @param {PintarJS.Rectangle} theme.ProgressBar[skin].fillExternalSourceRect The entire source rect, including frame and fill, of the fill sprite.
+     * @param {PintarJS.Rectangle} theme.ProgressBar[skin].fillInternalSourceRect The internal source rect of the fill sprite (must be contained inside the whole source rect).
+     * @param {PintarJS.Color} theme.ProgressBar[skin].fillColor (Optional) Progressbar fill color.
+     * @param {PintarJS.Rectangle} theme.ProgressBar[skin].backgroundExternalSourceRect The entire source rect, including frame and fill, of the background sprite.
+     * @param {PintarJS.Rectangle} theme.ProgressBar[skin].backgroundInternalSourceRect The internal source rect of the background sprite (must be contained inside the whole source rect).
+     * @param {PintarJS.Color} theme.ProgressBar[skin].backgroundColor (Optional) Progressbar background color.
+     * @param {PintarJS.Rectangle} theme.ProgressBar[skin].foregroundExternalSourceRect The entire source rect, including frame and fill, of an optional foreground sprite.
+     * @param {PintarJS.Rectangle} theme.ProgressBar[skin].foregroundInternalSourceRect The internal source rect of the foreground sprite (must be contained inside the whole source rect).
+     * @param {PintarJS.Color} theme.ProgressBar[skin].foregroundColor (Optional) Progressbar foreground color.
+     * @param {Number} theme.ProgressBar[skin].textureScale (Optional) frame and fill texture scale for both background and progressbar fill.
+     * @param {PintarJS.Point} theme.ProgressBar[skin].fillOffset (Optional) Fill part offset from its base position. By default, with offset 0,0, fill part will start from the background's top-left corner.
+     * @param {Number} theme.ProgressBar[skin].height (Optional) Progressbar height (if not defined, will base on texture source rectangle).
      */
-    constructor(texture, backgroundSourceRect, fillSourceRect, widthInPixels, fillOffset)
+    constructor(theme, skin)
     {
         super();
 
-        // set texture from string
-        if (typeof texture == "string") {
-            texture = new PintarJS.Texture(texture);
-        }
+        // get options from theme and skin type
+        var options = this.getOptionsFromTheme(theme, skin);
 
         // store fill offset
-        this.fillOffset = fillOffset || PintarJS.Point.zero();
+        this.fillOffset = options.fillOffset || PintarJS.Point.zero();
 
-        // store source rectangles
-        this.backgroundSourceRect = backgroundSourceRect;
-        this.fillSourceRect = fillSourceRect;
+        // get texture scale
+        var textureScale = options.textureScale || 1;
 
-        // bar background sprite
-        this.barBackground = new PintarJS.Sprite(texture);
-        this.barBackground.origin.x = 0;
-        this.barBackground.sourceRectangle = this.backgroundSourceRect;
+        // create background sprite
+        this.backgroundSprite = new SlicedSprite({texture: options.texture, 
+            externalSourceRect: options.backgroundExternalSourceRect, 
+            internalSourceRect: options.backgroundInternalSourceRect, 
+            textureScale: textureScale});
+        this.backgroundSprite.color = options.backgroundColor || PintarJS.Color.white();
+        this.backgroundSprite.anchor = Anchors.Fixed;
+        this.backgroundSprite.sizeMode = SizeModes.Pixels;
 
-        // bar fill sprite
-        this.barFill = new PintarJS.Sprite(texture);
-        this.barFill.origin.x = 0;
+        // create fill sprite
+        this.fillSprite = new SlicedSprite({texture: options.texture, 
+            externalSourceRect: options.fillExternalSourceRect, 
+            internalSourceRect: options.fillInternalSourceRect, 
+            textureScale: textureScale});
+        this.fillSprite.color = options.fillColor || PintarJS.Color.white();
+        this.fillSprite.anchor = Anchors.Fixed;
+        this.fillSprite.sizeMode = SizeModes.Pixels;
+        this.fillWidthToRemove = Math.round(options.backgroundExternalSourceRect.width - options.fillExternalSourceRect.width) * textureScale;
+        this.fillHeightToRemove = Math.round(options.backgroundExternalSourceRect.height - options.fillExternalSourceRect.height) * textureScale;
 
-        // set width in pixels
-        this.widthInPixels = widthInPixels;
+        // create optional foreground sprite
+        if (options.foregroundExternalSourceRect) {
+            this.foregroundSprite = new SlicedSprite({texture: options.texture, 
+                externalSourceRect: options.foregroundExternalSourceRect, 
+                internalSourceRect: options.foregroundInternalSourceRect, 
+                textureScale: textureScale});
+            this.foregroundSprite.color = options.foregroundColor || PintarJS.Color.white();
+            this.foregroundSprite.anchor = Anchors.Fixed;
+            this.foregroundSprite.sizeMode = SizeModes.Pixels;
+        }
+
+        // calculate progressbar default height
+        this.size.y = options.height || (options.backgroundExternalSourceRect.height * textureScale);
 
         // set starting value
         this.value = 1;
     }
 
     /**
-     * Set progressbar width in pixels, and scale everything accordingly.
+     * Get required options for this element type.
      */
-    set widthInPixels(widthInPixels)
+    get requiredOptions()
     {
-        this.scaleFactor = widthInPixels ? widthInPixels / this.backgroundSourceRect.width : this.backgroundSourceRect.width;
-        this.size.set(this.backgroundSourceRect.width * this.scaleFactor, this.backgroundSourceRect.height * this.scaleFactor);
+        return ['texture', 'fillExternalSourceRect', 'fillInternalSourceRect', 'backgroundExternalSourceRect', 'backgroundInternalSourceRect'];
     }
 
     /**
@@ -338,7 +428,7 @@ class ProgressBar extends UIElement
      */
     get fillColor()
     {
-        return this.barFill.color;
+        return this.fillSprite.color;
     }
 
     /**
@@ -346,7 +436,7 @@ class ProgressBar extends UIElement
      */
     set fillColor(color)
     {
-        this.barFill.color = color;
+        this.fillSprite.color = color;
     }
 
     /**
@@ -354,7 +444,7 @@ class ProgressBar extends UIElement
      */
     get fillBlendMode()
     {
-        return this.barFill.blendMode;
+        return this.fillSprite.blendMode;
     }
 
     /**
@@ -362,7 +452,7 @@ class ProgressBar extends UIElement
      */
     set fillBlendMode(blendMode)
     {
-        this.barFill.blendMode = blendMode;
+        this.fillSprite.blendMode = blendMode;
     }
 
     /**
@@ -370,36 +460,35 @@ class ProgressBar extends UIElement
      */
     draw(pintar)
     {
-        // get absolute scale
-        this.widthInPixels = this.getSizeInPixels().x;
-        var scale = this.scaleFactor;
-
-        // get drawing position
-        var position = this.getDestTopLeftPosition();
-
-        // update elements position
-        this.barBackground.position.set(position.x, position.y);
-        this.barFill.position.set(position.x + this.fillOffset.x * scale, position.y + this.fillOffset.y * scale);
-
-        // set size
-        this.barBackground.size.set(this.size.x, this.size.y);
+        // get dest rect
+        var dest = this.getBoundingBox();
 
         // draw background
-        pintar.drawSprite(this.barBackground);
+        this.backgroundSprite.offset = dest.getPosition();
+        this.backgroundSprite.size = dest.getSize();
+        this.backgroundSprite.draw(pintar);
 
-        // update and draw fill
-        if (this.barFill.width > 0) 
-        { 
-            this.barFill.size.set(this.fillSourceRect.width * scale * this.value, this.fillSourceRect.height * scale);
-            this.barFill.sourceRectangle = this.fillSourceRect.clone();
-            this.barFill.sourceRectangle.width *= this.value;
-            pintar.drawSprite(this.barFill); 
+        // draw fill
+        if (this.value > 0)
+        {
+            this.fillSprite.offset = dest.getPosition().add(this.fillOffset);
+            this.fillSprite.size.x = this.backgroundSprite.size.x - this.fillWidthToRemove;
+            this.fillSprite.size.y = this.backgroundSprite.size.y - this.fillHeightToRemove;
+            this.fillSprite.draw(pintar);
         }
+
+         // draw foreground
+         if (this.foregroundSprite) 
+         {
+            this.foregroundSprite.offset = dest.getPosition();
+            this.foregroundSprite.size = dest.getSize();
+            this.foregroundSprite.draw(pintar);
+         }
     }
 }
 
 module.exports = ProgressBar; 
-},{"./pintar":5,"./ui_element":11}],7:[function(require,module,exports){
+},{"./anchors":1,"./pintar":6,"./size_modes":10,"./sliced_sprite":11,"./ui_element":12}],8:[function(require,module,exports){
 /**
  * file: root.js
  * description: Implement a UI root element.
@@ -423,7 +512,7 @@ class UIRoot extends Container
      */
     constructor(pintar, inputManager)
     {
-        super();
+        super({UIRoot: { default: { }}});
         this.pintar = pintar;
         this.inputManager = inputManager;
         this.padding.set(0, 0, 0, 0);
@@ -456,7 +545,7 @@ class UIRoot extends Container
 }
 
 module.exports = UIRoot; 
-},{"./container":2,"./pintar":5}],8:[function(require,module,exports){
+},{"./container":2,"./pintar":6}],9:[function(require,module,exports){
 /**
  * file: sides.js
  * description: Implement a data structure for sides.
@@ -468,7 +557,7 @@ module.exports = UIRoot;
 /**
  * Implement a simple data structure to hold value for all sides - top, left, bottom, right.
  */
-class Sides
+class SidesProperties
 {
     /**
      * Create the sides data.
@@ -497,13 +586,13 @@ class Sides
      */
     clone()
     {
-        return new Sides(this.left, this.right, this.top, this.bottom);
+        return new SidesProperties(this.left, this.right, this.top, this.bottom);
     }
 }
 
 
-module.exports = Sides;
-},{}],9:[function(require,module,exports){
+module.exports = SidesProperties;
+},{}],10:[function(require,module,exports){
 /**
  * file: size_modes.js
  * description: Define size modes we can set.
@@ -516,7 +605,7 @@ module.exports = {
     Pixels: 'px',
     Percents: '%'
 };
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 /**
  * file: sliced_sprite.js
  * description: A sliced sprite.
@@ -530,30 +619,37 @@ const UIElement = require('./ui_element');
 
 /**
  * A drawable sprite that is sliced into 9-slices.
- * For more info, read about 9-slice scaling / 9-slice grid.
+ * For more info, read about 9-slice scaling / 9-slice grid in general.
  */
 class SlicedSprite extends UIElement
 {
     /**
      * Create a sliced sprite element.
-     * @param {*} texture Texture to use (either instance, or URL as string).
-     * @param {PintarJS.Rectangle} wholeSourceRect The entire source rect, including frame and fill.
-     * @param {PintarJS.Rectangle} fillSourceRect The internal source rect, must be contained inside the whole source rect.
-     * @param {Number} textureScale frame and fill texture scale.
-     * @param {SlicedSprite.FillModes} fillMode How to handle fill part.
+     * @param {Object} options
+     * @param {PintarJS.Texture} options.texture Texture to use.
+     * @param {PintarJS.Rectangle} options.externalSourceRect The entire source rect, including frame and fill.
+     * @param {PintarJS.Rectangle} options.internalSourceRect The internal source rect, must be contained inside the whole source rect.
+     * @param {Number} options.textureScale (Optional) frame and fill texture scale.
+     * @param {SlicedSprite.FillModes} options.fillMode (Optional) How to handle fill part.
+     * @param {PintarJS.Color} options.fillColor (Optional) Fill color.
+     * @param {PintarJS.Color} options.frameColor (Optional) Frame color.
+     * 
      */
-    constructor(texture, wholeSourceRect, fillSourceRect, textureScale, fillMode)
+    constructor(options, skin)
     {
         super();
 
-        // set texture from string
-        if (typeof texture == "string") {
-            texture = new PintarJS.Texture(texture);
+        // if we got skin, we assume 'options' is actually a theme - used when other elements inherit from us, like in 'panel' case
+        if (skin) {
+            options = this.getOptionsFromTheme(options, skin);
         }
 
-        // store source rectangles
-        this.wholeSourceRect = wholeSourceRect;
-        this.fillSourceRect = fillSourceRect;
+        // extract params
+        var texture = options.texture;
+        var textureScale = options.textureScale || 1;
+        var wholeSourceRect = this.externalSourceRect = options.externalSourceRect;
+        var fillSourceRect = this.internalSourceRect = options.internalSourceRect;
+        var fillMode = options.fillMode || SlicedSprite.FillModes.Tiled;
        
         // calculate frame source rects
         this.leftFrameSourceRect = new PintarJS.Rectangle(wholeSourceRect.x, fillSourceRect.y, fillSourceRect.x - wholeSourceRect.x, fillSourceRect.height);
@@ -579,15 +675,27 @@ class SlicedSprite extends UIElement
         this.fillSprite = new PintarJS.Sprite(texture);
 
         // set default colors
-        this.fillColor = PintarJS.Color.white();
-        this.frameColor = PintarJS.Color.white();
+        this.fillColor = options.fillColor || PintarJS.Color.white();
+        this.frameColor = options.frameColor || PintarJS.Color.white();
 
         // store frame scale
-        this.frameScale = textureScale || 1;
-        this.fillScale = textureScale || 1;
+        this.frameScale = textureScale;
+        this.fillScale = textureScale;
+
+        // set default blend mode
+        this.blendMode = PintarJS.BlendModes.AlphaBlend;
 
         // store fill mode
         this.fillMode = fillMode || SlicedSprite.FillModes.Tiled;
+    }
+
+    /**
+     * Set color for both fill and frame.
+     */
+    set color(color)
+    {
+        this.fillColor = color.clone();
+        this.frameColor = color.clone();
     }
 
     /**
@@ -620,6 +728,7 @@ class SlicedSprite extends UIElement
             sprite.sourceRectangle = sourceRect.clone();
             sprite.origin = PintarJS.Point.zero();
             sprite.position = position.clone();
+            sprite.blendMode = this.blendMode;
             sprite.position.y += extraY;
             sprite.position.x += this.topLeftFrameCornerSourceRect.width * frameScale;
             sprite.width = sprite.sourceRectangle.width * frameScale;
@@ -664,6 +773,7 @@ class SlicedSprite extends UIElement
             sprite.sourceRectangle = sourceRect.clone();
             sprite.origin = PintarJS.Point.zero();
             sprite.position = position.clone();
+            sprite.blendMode = this.blendMode;
             sprite.position.x += extraX;
             sprite.position.y += this.topLeftFrameCornerSourceRect.height * frameScale;
             sprite.width = sprite.sourceRectangle.width * frameScale;
@@ -708,6 +818,7 @@ class SlicedSprite extends UIElement
             sprite.sourceRectangle = sourceRect.clone();
             sprite.origin = PintarJS.Point.zero();
             sprite.position = position.clone();
+            sprite.blendMode = this.blendMode;
             sprite.position.x += posx;
             sprite.position.y += posy;
             sprite.width = sprite.sourceRectangle.width * frameScale;
@@ -724,100 +835,108 @@ class SlicedSprite extends UIElement
         drawFramesCorner(this.bottomLeftCornerFrameSprite, this.bottomLeftFrameCornerSourceRect, 0, destRect.height);
         drawFramesCorner(this.bottomRightCornerFrameSprite, this.bottomRightFrameCornerSourceRect, destRect.width, destRect.height);
 
-        // prepare fill sprite properties
-        var sprite = this.fillSprite;     
-        sprite.origin = PintarJS.Point.zero();
-        sprite.position = position.clone();
-        sprite.position.x += this.topLeftCornerFrameSprite.width;
-        sprite.position.y += this.topLeftCornerFrameSprite.height;
-        sprite.width = destRect.width - this.bottomLeftCornerFrameSprite.width;
-        sprite.height = destRect.height - this.bottomLeftCornerFrameSprite.height;
-        sprite.color = this.fillColor;
-
-        // draw fill - stretch mode
-        if (this.fillMode === SlicedSprite.FillModes.Stretch) 
+        // draw fill
+        if (this.internalSourceRect.width && this.internalSourceRect.height)
         {
-            sprite.sourceRectangle = this.fillSourceRect.clone();
-            pintar.drawSprite(sprite);
-        }
-        else if (this.fillMode === SlicedSprite.FillModes.Tiled) 
-        {
-            // setup starting params
-            var fillScale = scaleFactor * this.fillScale; 
-            var fillSize = new PintarJS.Point(this.fillSourceRect.width * fillScale, this.fillSourceRect.height * fillScale);
-            sprite.size = fillSize.clone();
-            var startPosition = sprite.position.clone();
+            // prepare fill sprite properties
+            var sprite = this.fillSprite;     
+            sprite.origin = PintarJS.Point.zero();
+            sprite.position = position.clone();
+            sprite.blendMode = this.blendMode;
+            sprite.position.x += this.topLeftCornerFrameSprite.width;
+            sprite.position.y += this.topLeftCornerFrameSprite.height;
+            sprite.width = destRect.width - this.bottomLeftCornerFrameSprite.width;
+            sprite.height = destRect.height - this.bottomLeftCornerFrameSprite.height;
+            sprite.color = this.fillColor;
 
-            // iterate columns
-            for (var i = 0; i < destRect.width / fillSize.x; ++i)
+            // draw fill - stretch mode
+            if (this.fillMode === SlicedSprite.FillModes.Stretch) 
             {
-                // reset source rect
-                sprite.sourceRectangle = this.fillSourceRect.clone();
+                sprite.sourceRectangle = this.internalSourceRect.clone();
+                pintar.drawSprite(sprite);
+            }
+            // draw fill - tiling
+            else if (this.fillMode === SlicedSprite.FillModes.Tiled) 
+            {
+                // setup starting params
+                var fillScale = scaleFactor * this.fillScale; 
+                var fillSize = new PintarJS.Point(this.internalSourceRect.width * fillScale, this.internalSourceRect.height * fillScale);
+                sprite.size = fillSize.clone();
+                var startPosition = sprite.position.clone();
 
-                // set width and position x
-                sprite.size.x = fillSize.x;
-                sprite.position.x = startPosition.x + sprite.width * i;
-
-                // check if should finish
-                if (sprite.position.x >= this.rightFrameSprite.position.x) {
-                    break;
-                }
-
-                // check if need to trim width
-                var spriteRight = sprite.position.x + sprite.size.x;
-                if (spriteRight > this.rightFrameSprite.position.x)
+                // iterate columns
+                for (var i = 0; i < destRect.width / fillSize.x; ++i)
                 {
-                    var toCut = spriteRight - this.rightFrameSprite.position.x;
-                    if (toCut > 0) {
-                        sprite.sourceRectangle.width -= Math.round(toCut * (sprite.sourceRectangle.width / sprite.width));
-                        sprite.width -= toCut;
-                    }
-                }
+                    // reset source rect
+                    sprite.sourceRectangle = this.internalSourceRect.clone();
 
-                // check if should stop here
-                if (sprite.width == 0) {
-                    break;
-                }
-
-                // iterate rows
-                for (var j = 0; j < destRect.height / fillSize.y; ++j)
-                {
-                    // set height and position y
-                    sprite.size.y = fillSize.y;
-                    sprite.position.y = startPosition.y + sprite.height * j;
+                    // set width and position x
+                    sprite.size.x = fillSize.x;
+                    sprite.position.x = startPosition.x + sprite.width * i;
 
                     // check if should finish
-                    if (sprite.position.y >= this.bottomFrameSprite.position.y) {
+                    if (sprite.position.x >= this.rightFrameSprite.position.x) {
                         break;
                     }
 
-                    // check if need to trim height
-                    var spriteBottom = sprite.position.y + sprite.size.y;
-                    if (spriteBottom > this.bottomFrameSprite.position.y)
+                    // check if need to trim width
+                    var spriteRight = sprite.position.x + sprite.size.x;
+                    if (spriteRight > this.rightFrameSprite.position.x)
                     {
-                        var toCut = spriteBottom - this.bottomFrameSprite.position.y;
+                        var toCut = spriteRight - this.rightFrameSprite.position.x;
                         if (toCut > 0) {
-                            sprite.sourceRectangle.height -= Math.round(toCut * (sprite.sourceRectangle.height / sprite.height));
-                            sprite.height -= toCut;
+                            sprite.sourceRectangle.width -= Math.round(toCut * (sprite.sourceRectangle.width / sprite.width));
+                            sprite.width -= toCut;
                         }
                     }
 
                     // check if should stop here
-                    if (sprite.height == 0) {
+                    if (sprite.width == 0) {
                         break;
                     }
 
-                    // draw sprite
-                    pintar.drawSprite(sprite);
+                    // iterate rows
+                    for (var j = 0; j < destRect.height / fillSize.y; ++j)
+                    {
+                        // set height and position y
+                        sprite.size.y = fillSize.y;
+                        sprite.position.y = startPosition.y + sprite.height * j;
+
+                        // check if should finish
+                        if (sprite.position.y >= this.bottomFrameSprite.position.y) {
+                            break;
+                        }
+
+                        // check if need to trim height
+                        var spriteBottom = sprite.position.y + sprite.size.y;
+                        if (spriteBottom > this.bottomFrameSprite.position.y)
+                        {
+                            var toCut = spriteBottom - this.bottomFrameSprite.position.y;
+                            if (toCut > 0) {
+                                sprite.sourceRectangle.height -= Math.round(toCut * (sprite.sourceRectangle.height / sprite.height));
+                                sprite.height -= toCut;
+                            }
+                        }
+
+                        // check if should stop here
+                        if (sprite.height == 0) {
+                            break;
+                        }
+
+                        // draw sprite
+                        pintar.drawSprite(sprite);
+                    }
                 }
             }
-        }
-        else if (this.fillMode === SlicedSprite.FillModes.None) 
-        {
-        }
-        else
-        {
-            throw new Error("Invalid fill mode!");
+            // draw fill - no fill
+            else if (this.fillMode === SlicedSprite.FillModes.None) 
+            {
+            }
+            // unknown mode.
+            else
+            {
+                throw new Error("Invalid fill mode!");
+            }
         }
     }
 }
@@ -825,14 +944,14 @@ class SlicedSprite extends UIElement
 // set fill modes
 SlicedSprite.FillModes = 
 {
-    Tiled: 0,
-    Stretch: 1,
-    None: 2,
+    Tiled: 1,
+    Stretch: 2,
+    None: 3,
 };
 
 // export SlicedSprite
 module.exports = SlicedSprite;
-},{"./pintar":5,"./ui_element":11}],11:[function(require,module,exports){
+},{"./pintar":6,"./ui_element":12}],12:[function(require,module,exports){
 /**
  * file: ui_element.js
  * description: Base UI element class.
@@ -843,7 +962,7 @@ module.exports = SlicedSprite;
 const PintarJS = require('./pintar');
 const Anchors = require('./anchors');
 const SizeModes = require('./size_modes');
-const Sides = require('./sides');
+const Sides = require('./sides_properties');
 
 
 /**
@@ -864,6 +983,49 @@ class UIElement
         this.scale = 1;
         this.ignoreParentPadding = false;
         this.__parent = null;
+    }
+
+    /**
+     * Get options for object type and skin from theme.
+     * @param {Object} theme Theme object.
+     * @param {String} skin Skin to use for this specific element (or 'default' if not defined).
+     */
+    getOptionsFromTheme(theme, skin)
+    {
+        // get class name
+        var elementName = this.constructor.name;
+
+        // get element definition from theme
+        var options = theme[elementName];
+        if (!options) {
+            throw new Error("Missing definition for object type '" + elementName + "' in UI theme!");
+        }
+
+        // get skin type (or default)
+        skin = skin || 'default';
+        options = options[skin];
+        if (!options) {
+            throw new Error("Missing definition for object type '" + elementName + "' and skin '" + skin + "' in UI theme!");
+        }
+
+        // validate required options
+        var required = this.requiredOptions;
+        for (var i = 0; i < required.length; ++i) {
+            if (!(required[i] in options)) {
+                throw new Error("Missing mandatory option '" + required[i] + "' in element type '" + elementName + "' options!");
+            }
+        }
+
+        // success - return element options
+        return options;
+    }
+
+    /**
+     * Get required options for this element type.
+     */
+    get requiredOptions()
+    {
+        return [];
     }
 
     /**
@@ -1015,6 +1177,12 @@ class UIElement
      */
     getDestTopLeftPosition()
     {
+        // special case - absolute
+        if (this.anchor === Anchors.Fixed)
+        {
+            return this.offset.clone();
+        }
+
         // get parent bounding box
         var parentRect = this.getParentInternalBoundingBox();
         var selfSize = this.getSizeInPixels();
@@ -1106,5 +1274,5 @@ UIElement.globalScale = 1;
 
 // export the base UI element object
 module.exports = UIElement; 
-},{"./anchors":1,"./pintar":5,"./sides":8,"./size_modes":9}]},{},[3])(3)
+},{"./anchors":1,"./pintar":6,"./sides_properties":9,"./size_modes":10}]},{},[3])(3)
 });

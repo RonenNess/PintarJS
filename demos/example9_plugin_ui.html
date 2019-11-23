@@ -42,26 +42,75 @@
     // load ui texture
     var uiTexture = new PintarJS.Texture("imgs/ui.png");
 
+    // global texture scale
+    const textureScale = 5;
+
+    // define the UI theme
+    var UI_THEME = 
+    {
+      // define panel types
+      Panel: 
+      {
+        // default panel
+        default: {
+          texture: uiTexture,
+          externalSourceRect: new PintarJS.Rectangle(0, 32, 64, 64),
+          internalSourceRect: new PintarJS.Rectangle(5, 37, 54, 54),
+          textureScale: textureScale,
+          fillMode: PintarJS.UI.SlicedSprite.FillModes.Tiled,
+          fillColor: PintarJS.Color.white(),
+          frameColor: PintarJS.Color.white(),
+        }
+      },
+
+      // define containers
+      Container: 
+      {
+        // default container - with default panel as background
+        default: {
+          background: "default",
+          padding: new PintarJS.UI.SidesProperties(25, 25, 25, 25),
+        },
+
+        // alternative container without background
+        no_ackground: {
+          background: null,
+          padding: new PintarJS.UI.SidesProperties(15, 15, 15, 15),
+        }
+      },
+
+      // define progressbars
+      ProgressBar: {
+        default: {
+          texture: uiTexture,
+          fillExternalSourceRect: new PintarJS.Rectangle(3, 13, 58, 4),
+          fillInternalSourceRect: new PintarJS.Rectangle(5, 14, 54, 2),
+          backgroundExternalSourceRect: new PintarJS.Rectangle(0, 0, 64, 10),
+          backgroundInternalSourceRect: new PintarJS.Rectangle(4, 4, 56, 2),
+          foregroundExternalSourceRect: new PintarJS.Rectangle(0, 20, 64, 10),
+          foregroundInternalSourceRect: new PintarJS.Rectangle(4, 24, 56, 2),
+          fillOffset: new PintarJS.Point(3 * textureScale, 3 * textureScale),
+          textureScale: textureScale,
+          fillColor: PintarJS.Color.red(),
+          backgroundColor: PintarJS.Color.white(),
+        }
+      },
+
+    };
+
     // create root
     var root = new PintarJS.UI.UIRoot(pintar, null);
 
     // create a container
-    PintarJS.UI.Container.defaults.padding.set(25, 25, 25, 25);
-    var container = new PintarJS.UI.Container()
+    var container = new PintarJS.UI.Container(UI_THEME);
     container.anchor = PintarJS.UI.Anchors.Center;
     container.size.set(300, 400);
     root.addChild(container);
 
-    // set contaner's background
-    const panelWholeRect = new PintarJS.Rectangle(0, 32, 64, 64);
-    const panelInternalRect = new PintarJS.Rectangle(5, 37, 54, 54);
-    container.background = new PintarJS.UI.SlicedSprite(uiTexture, panelWholeRect, panelInternalRect, 5);
-
     // create progressbar element
-    const progressBarBackground = new PintarJS.Rectangle(0, 0, 64, 10);
-    const progressBarFill = new PintarJS.Rectangle(0, 10, 64, 10);
-    var progressbar = new PintarJS.UI.ProgressBar(uiTexture, progressBarBackground, progressBarFill, 256);
+    var progressbar = new PintarJS.UI.ProgressBar(UI_THEME);
     progressbar.anchor = PintarJS.UI.Anchors.TopCenter;
+    progressbar.size.x = 250;
     progressbar.value = 0.75;
     container.addChild(progressbar);
 

@@ -21,7 +21,7 @@ class UIRoot extends Container
      */
     constructor(pintar, inputManager)
     {
-        super();
+        super({UIRoot: { default: { }}});
         this.pintar = pintar;
         this.inputManager = inputManager;
         this.padding.set(0, 0, 0, 0);

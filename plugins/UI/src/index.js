@@ -7,6 +7,8 @@ var UI = {
     Anchors: require('./anchors'),
     SlicedSprite: require('./sliced_sprite'),
     SizeModes: require('./size_modes'),
+    SidesProperties: require('./sides_properties'),
+    Panel: require('./panel'),
 };
 const pintar = require('./pintar');
 pintar.UI = UI;
