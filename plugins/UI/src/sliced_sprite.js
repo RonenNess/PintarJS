@@ -86,6 +86,8 @@ class SlicedSprite extends UIElement
 
         // get position
         var position = destRect.getPosition();
+        destRect.width -= this.bottomRightFrameCornerSourceRect.width * frameScale;
+        destRect.height -= this.bottomRightFrameCornerSourceRect.height * frameScale;
 
         // function to draw top / bottom frames
         var drawTopAndBottomFrames = (sprite, sourceRect, extraY) => 
@@ -115,7 +117,7 @@ class SlicedSprite extends UIElement
                 if (exceededRightSide) 
                 {
                     var toCut = spriteRight - destRect.right;
-                    if (toCut) {
+                    if (toCut > 0) {
                         sprite.sourceRectangle.width -= Math.round(toCut * (sprite.sourceRectangle.width / sprite.width));
                         sprite.width -= toCut;
                     }
@@ -159,7 +161,7 @@ class SlicedSprite extends UIElement
                 if (exceededBottomSide) 
                 {
                     var toCut = spriteBottom - destRect.bottom;
-                    if (toCut) {
+                    if (toCut > 0) {
                         sprite.sourceRectangle.height -= Math.round(toCut * (sprite.sourceRectangle.height / sprite.height));
                         sprite.height -= toCut;
                     }
@@ -237,11 +239,16 @@ class SlicedSprite extends UIElement
                 sprite.size.x = fillSize.x;
                 sprite.position.x = startPosition.x + sprite.width * i;
 
+                // check if should finish
+                if (sprite.position.x >= this.rightFrameSprite.position.x) {
+                    break;
+                }
+
                 // check if need to trim width
                 var spriteRight = sprite.position.x + sprite.size.x;
-                if (spriteRight > destRect.right)
+                if (spriteRight > this.rightFrameSprite.position.x)
                 {
-                    var toCut = spriteRight - destRect.right - 2;
+                    var toCut = spriteRight - this.rightFrameSprite.position.x;
                     if (toCut > 0) {
                         sprite.sourceRectangle.width -= Math.round(toCut * (sprite.sourceRectangle.width / sprite.width));
                         sprite.width -= toCut;
@@ -260,11 +267,16 @@ class SlicedSprite extends UIElement
                     sprite.size.y = fillSize.y;
                     sprite.position.y = startPosition.y + sprite.height * j;
 
+                    // check if should finish
+                    if (sprite.position.y >= this.bottomFrameSprite.position.y) {
+                        break;
+                    }
+
                     // check if need to trim height
                     var spriteBottom = sprite.position.y + sprite.size.y;
-                    if (spriteBottom > destRect.bottom)
+                    if (spriteBottom > this.bottomFrameSprite.position.y)
                     {
-                        var toCut = spriteBottom - destRect.bottom - 2;
+                        var toCut = spriteBottom - this.bottomFrameSprite.position.y;
                         if (toCut > 0) {
                             sprite.sourceRectangle.height -= Math.round(toCut * (sprite.sourceRectangle.height / sprite.height));
                             sprite.height -= toCut;
@@ -281,6 +293,9 @@ class SlicedSprite extends UIElement
                 }
             }
         }
+        else if (this.fillMode === SlicedSprite.FillModes.None) 
+        {
+        }
         else
         {
             throw new Error("Invalid fill mode!");
@@ -293,6 +308,7 @@ SlicedSprite.FillModes =
 {
     Tiled: 0,
     Stretch: 1,
+    None: 2,
 };
 
 // export SlicedSprite

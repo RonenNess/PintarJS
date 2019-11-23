@@ -46,6 +46,7 @@
     var root = new PintarJS.UI.UIRoot(pintar, null);
 
     // create a container
+    PintarJS.UI.Container.defaults.padding.set(25, 25, 25, 25);
     var container = new PintarJS.UI.Container()
     container.anchor = PintarJS.UI.Anchors.Center;
     container.size.set(300, 400);
@@ -54,15 +55,15 @@
     // set contaner's background
     const panelWholeRect = new PintarJS.Rectangle(0, 32, 64, 64);
     const panelInternalRect = new PintarJS.Rectangle(5, 37, 54, 54);
-    var background = new PintarJS.UI.SlicedSprite(uiTexture, panelWholeRect, panelInternalRect, 5);
-    container.background = background;
+    container.background = new PintarJS.UI.SlicedSprite(uiTexture, panelWholeRect, panelInternalRect, 5);
 
     // create progressbar element
     const progressBarBackground = new PintarJS.Rectangle(0, 0, 64, 10);
     const progressBarFill = new PintarJS.Rectangle(0, 10, 64, 10);
     var progressbar = new PintarJS.UI.ProgressBar(uiTexture, progressBarBackground, progressBarFill, 256);
+    progressbar.anchor = PintarJS.UI.Anchors.TopCenter;
     progressbar.value = 0.75;
-    root.addChild(progressbar);
+    container.addChild(progressbar);
 
     // draw everything
     function drawUI()

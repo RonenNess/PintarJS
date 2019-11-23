@@ -24,7 +24,7 @@ class Container extends UIElement
     {
         super();
         this._children = [];
-        this.padding = new Sides(10, 10, 10, 10);
+        this.padding = Container.defaults.padding;
         this.paddingMode = SizeModes.Pixels;
         this.__background = null;
     }
@@ -44,6 +44,7 @@ class Container extends UIElement
     {
         if (this.__background) { this.__background._setParent(null); }
         backgroundElement._setParent(this);
+        backgroundElement.ignoreParentPadding = true;
         this.__background = backgroundElement;
     }
 
@@ -166,6 +167,11 @@ class Container extends UIElement
             lastElement = element;
         }
     }
+}
+
+// set defaults
+Container.defaults = {
+    padding: new Sides(10, 10, 10, 10)
 }
 
 module.exports = Container; 

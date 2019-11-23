@@ -27,6 +27,7 @@ class UIElement
         this.sizeMode = SizeModes.Pixels;
         this.anchor = Anchors.TopLeft;
         this.scale = 1;
+        this.ignoreParentPadding = false;
         this.__parent = null;
     }
 
@@ -62,7 +63,7 @@ class UIElement
                 return ret;
 
             case SizeModes.Percents:
-                var parentSize = this.getParentBoundingBox().size;
+                var parentSize = this.getParentInternalBoundingBox().size;
                 return new PintarJS.Point((val.x / 100.0) * parentSize.x, (val.y / 100.0) * parentSize.y);
 
             default:
@@ -87,7 +88,7 @@ class UIElement
                 return ret;
 
             case SizeModes.Percents:
-                var parentSize = this.getParentBoundingBox().size;
+                var parentSize = this.getParentInternalBoundingBox().size;
                 return new Sides(
                     (val.left / 100.0) * parentSize.x, 
                     (val.right / 100.0) * parentSize.x,
@@ -165,12 +166,12 @@ class UIElement
      * Get parent bounding box.
      * @returns {PintarJS.Rectangle} Bounding box, in pixels.
      */
-    getParentBoundingBox()
+    getParentInternalBoundingBox()
     {
         if (!this.parent) {
             throw new Error("Missing parent element! Did you forget to create a UI root and add elements to it?");
         }
-        return this.parent.getInternalBoundingBox();
+        return this.ignoreParentPadding ? this.parent.getBoundingBox() : this.parent.getInternalBoundingBox();
     } 
 
     /**
@@ -180,7 +181,7 @@ class UIElement
     getDestTopLeftPosition()
     {
         // get parent bounding box
-        var parentRect = this.getParentBoundingBox();
+        var parentRect = this.getParentInternalBoundingBox();
         var selfSize = this.getSizeInPixels();
         var offset = this.getOffsetInPixels();
         var ret = new PintarJS.Point();
