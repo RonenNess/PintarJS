@@ -40,30 +40,35 @@ class InputManager
         this._mouseWheel = 0;
 
         // mouse down
-        canvas.addEventListener("mousedown", (e) => {
+        this._mouseDownEventListener = (e) => {
             this._mouseButtons[e.button] = true;
-        });
+        };
+        canvas.addEventListener("mousedown", this._mouseDownEventListener);
         
         // mouse up
-        canvas.addEventListener("mouseup", (e) => {
+        this._mouseUpEventListener = (e) => {
             if (this._mouseButtons[e.button]) { this._mouseClicks[e.button] = true; }
             this._mouseButtons[e.button] = false;
-        });
+        };
+        canvas.addEventListener("mouseup", this._mouseUpEventListener);
 
         // mouse leave
-        canvas.addEventListener("mouseleave", (e) => {
+        this._mouseLeaveEventListener = (e) => {
             this._mouseButtons[0] = this._mouseButtons[1] = this._mouseButtons[2] = false;
-        });
+        };
+        canvas.addEventListener("mouseleave", this._mouseLeaveEventListener);
 
         // mouse wheel
-        canvas.addEventListener("mousewheel", (e) => {
+        this._mouseWheelEventListener = (e) => {
             this._mouseWheel = e.deltaY;
-        });
+        };
+        canvas.addEventListener("mousewheel", this._mouseWheelEventListener);
         
         // mouse move
-        canvas.addEventListener("mousemove", (e) => {
+        this._mouseMoveEventListener = (e) => {
             this._mousePosition = new PintarJS.Point(e.offsetX, e.offsetY);
-        });
+        };
+        canvas.addEventListener("mousemove", this._mouseMoveEventListener);
     }
 
     /**
@@ -71,7 +76,11 @@ class InputManager
      */
     cleanup()
     {
-
+        canvas.removeEventListener("mousedown", this._mouseDownEventListener);
+        canvas.removeEventListener("mouseup", this._mouseUpEventListener);
+        canvas.removeEventListener("mouseleave", this._mouseLeaveEventListener);
+        canvas.removeEventListener("mousewheel", this._mouseWheelEventListener);
+        canvas.removeEventListener("mousemove", this._mouseMoveEventListener);
     }
 
     /**
