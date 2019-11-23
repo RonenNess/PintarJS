@@ -9,6 +9,7 @@ var UI = {
     SizeModes: require('./size_modes'),
     SidesProperties: require('./sides_properties'),
     Panel: require('./panel'),
+    Paragraph: require('./paragraph'),
     UIPoint: require('./ui_point'),
 };
 const pintar = require('./pintar');

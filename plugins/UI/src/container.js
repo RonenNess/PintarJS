@@ -165,7 +165,7 @@ class Container extends UIElement
                     }
                 }
                 else {
-                    element.offset.set(0, 0);
+                    element.offset.set(element.margin.left, element.margin.top);
                 }
             }
 
@@ -177,7 +177,7 @@ class Container extends UIElement
                     element.offset.set(0, lastElement.offset.y + lastElement.size.y + marginY);
                 }
                 else {
-                    element.offset.set(0, 0);
+                    element.offset.set(element.margin.left, element.margin.top);
                 }
             }
 

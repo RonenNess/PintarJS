@@ -189,7 +189,7 @@ class Container extends UIElement
                     }
                 }
                 else {
-                    element.offset.set(0, 0);
+                    element.offset.set(element.margin.left, element.margin.top);
                 }
             }
 
@@ -201,7 +201,7 @@ class Container extends UIElement
                     element.offset.set(0, lastElement.offset.y + lastElement.size.y + marginY);
                 }
                 else {
-                    element.offset.set(0, 0);
+                    element.offset.set(element.margin.left, element.margin.top);
                 }
             }
 
@@ -214,7 +214,7 @@ class Container extends UIElement
 
 // export the container
 module.exports = Container; 
-},{"./anchors":1,"./panel":5,"./pintar":6,"./sides_properties":9,"./size_modes":10,"./ui_element":12}],3:[function(require,module,exports){
+},{"./anchors":1,"./panel":5,"./pintar":7,"./sides_properties":10,"./size_modes":11,"./ui_element":13}],3:[function(require,module,exports){
 var UI = {
     UIRoot: require('./root'),
     UIElement: require('./ui_element'),
@@ -226,12 +226,13 @@ var UI = {
     SizeModes: require('./size_modes'),
     SidesProperties: require('./sides_properties'),
     Panel: require('./panel'),
+    Paragraph: require('./paragraph'),
     UIPoint: require('./ui_point'),
 };
 const pintar = require('./pintar');
 pintar.UI = UI;
 module.exports = UI;
-},{"./anchors":1,"./container":2,"./input_manager":4,"./panel":5,"./pintar":6,"./progress_bar":7,"./root":8,"./sides_properties":9,"./size_modes":10,"./sliced_sprite":11,"./ui_element":12,"./ui_point":13}],4:[function(require,module,exports){
+},{"./anchors":1,"./container":2,"./input_manager":4,"./panel":5,"./paragraph":6,"./pintar":7,"./progress_bar":8,"./root":9,"./sides_properties":10,"./size_modes":11,"./sliced_sprite":12,"./ui_element":13,"./ui_point":14}],4:[function(require,module,exports){
 /**
  * file: input_manager.js
  * description: Define a basic input manager class.
@@ -402,7 +403,7 @@ class InputManager
 }
 
 module.exports = InputManager; 
-},{"./pintar":6}],5:[function(require,module,exports){
+},{"./pintar":7}],5:[function(require,module,exports){
 /**
  * file: panel.js
  * description: A graphical panel object.
@@ -450,11 +451,111 @@ class Panel extends SlicedSprite
 
 // export the panel class
 module.exports = Panel;
-},{"./pintar":6,"./sliced_sprite":11}],6:[function(require,module,exports){
+},{"./pintar":7,"./sliced_sprite":12}],6:[function(require,module,exports){
+/**
+ * file: paragraph.js
+ * description: Implement a paragraph element.
+ * author: Ronen Ness.
+ * since: 2019.
+ */
+"use strict";
+const UIElement = require('./ui_element');
+const PintarJS = require('./pintar');
+const SizeModes = require('./size_modes');
+
+
+/**
+ * Implement a paragraph element.
+ */
+class Paragraph extends UIElement
+{
+    /**
+     * Create a progressbar element.
+     * @param {String} text Paragraph text.
+     * @param {Object} theme
+     * @param {PintarJS.Texture} theme.Paragraph[skin].font (Optional) Font to use.
+     * @param {Number} theme.Paragraph[skin].fontSize (Optional) Font size to use.
+     * @param {PintarJS.Color} theme.Paragraph[skin].fillColor (Optional) Text fill color.
+     * @param {PintarJS.Color} theme.Paragraph[skin].strokeColor (Optional) Text stroke color.
+     * @param {Number} theme.Paragraph[skin].strokeWidth (Optional) Text stroke width.
+     * @param {PintarJS.TextAlignment} theme.Paragraph[skin].alignment (Optional) Text alignment.
+     * @param {Boolean} theme.Paragraph[skin].useStyleCommands (Optional) Should we enable style commands?
+     *  
+     */
+    constructor(theme, skin, override)
+    {
+        super();
+
+        // get options from theme and skin type
+        var options = this.getOptionsFromTheme(theme, skin, override);
+        this.setBaseOptions(options);
+
+        // create text
+        this.textSprite = new PintarJS.TextSprite("");
+        this.textSprite.useStyleCommands = Boolean(options.useStyleCommands);
+        if (options.font !== undefined) { this.textSprite.font = options.font; }
+        if (options.fontSize !== undefined) { this.textSprite.fontSize = options.fontSize; }
+        if (options.alignment !== undefined) { this.textSprite.alignment = options.alignment; }
+        if (options.fillColor !== undefined) { this.textSprite.color = options.fillColor; }
+        if (options.strokeColor !== undefined) { this.textSprite.strokeColor = options.strokeColor; }
+        if (options.strokeWidth !== undefined) { this.textSprite.strokeWidth = options.strokeWidth; }
+
+        // if true, set element height automatically from text
+        this.autoSetHeight = true;
+    }
+
+    /**
+     * Get text.
+     */
+    get text()
+    {
+        return this.textSprite.text;
+    }
+
+    /**
+     * Set text.
+     */
+    set text(text)
+    {
+        this.textSprite.text = text;
+    }
+
+    /**
+     * Get required options for this element type.
+     */
+    get requiredOptions()
+    {
+        return [];
+    }
+
+    /**
+     * Draw the UI element.
+     */
+    draw(pintar)
+    {
+        // set position
+        var position = this.getDestTopLeftPosition().clone();
+        position.y += this.textSprite.fontSize;
+        this.textSprite.position = position;
+
+        // draw text
+        pintar.drawText(this.textSprite);
+
+        // set auto height
+        if (this.autoSetHeight) 
+        {
+            this.size.yMode = SizeModes.Pixels;
+            this.size.y = this.textSprite.textLines.length * this.textSprite.lineHeight;
+        }
+    }
+}
+
+module.exports = Paragraph; 
+},{"./pintar":7,"./size_modes":11,"./ui_element":13}],7:[function(require,module,exports){
 var pintar = window.PintarJS || window.pintar;
 if (!pintar) { throw new Error("Missing PintarJS main object."); }
 module.exports = pintar;
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 /**
  * file: progress_bar.js
  * description: Implement a progress bar element.
@@ -661,7 +762,7 @@ class ProgressBar extends UIElement
 }
 
 module.exports = ProgressBar; 
-},{"./anchors":1,"./pintar":6,"./size_modes":10,"./sliced_sprite":11,"./ui_element":12,"./utils":14}],8:[function(require,module,exports){
+},{"./anchors":1,"./pintar":7,"./size_modes":11,"./sliced_sprite":12,"./ui_element":13,"./utils":15}],9:[function(require,module,exports){
 /**
  * file: root.js
  * description: Implement a UI root element.
@@ -737,7 +838,7 @@ class UIRoot extends Container
 }
 
 module.exports = UIRoot; 
-},{"./container":2,"./input_manager":4,"./pintar":6}],9:[function(require,module,exports){
+},{"./container":2,"./input_manager":4,"./pintar":7}],10:[function(require,module,exports){
 /**
  * file: sides.js
  * description: Implement a data structure for sides.
@@ -790,7 +891,7 @@ class SidesProperties
 
 
 module.exports = SidesProperties;
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 /**
  * file: size_modes.js
  * description: Define size modes we can set.
@@ -803,7 +904,7 @@ module.exports = {
     Pixels: 'px',
     Percents: '%'
 };
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 /**
  * file: sliced_sprite.js
  * description: A sliced sprite.
@@ -1152,7 +1253,7 @@ SlicedSprite.FillModes =
 
 // export SlicedSprite
 module.exports = SlicedSprite;
-},{"./pintar":6,"./ui_element":12}],12:[function(require,module,exports){
+},{"./pintar":7,"./ui_element":13}],13:[function(require,module,exports){
 /**
  * file: ui_element.js
  * description: Base UI element class.
@@ -1179,7 +1280,7 @@ class UIElement
     {
         this.offset = UIPoint.zero();
         this.size = new UIPoint(100, 'px', 100, 'px');
-        this.anchor = Anchors.TopLeft;
+        this.anchor = Anchors.Auto;
         this.scale = 1;
         this.margin = new Sides(5, 5, 5, 5);
         this.ignoreParentPadding = false;
@@ -1518,7 +1619,7 @@ UIElement.globalScale = 1;
 
 // export the base UI element object
 module.exports = UIElement; 
-},{"./anchors":1,"./pintar":6,"./sides_properties":9,"./size_modes":10,"./ui_point":13}],13:[function(require,module,exports){
+},{"./anchors":1,"./pintar":7,"./sides_properties":10,"./size_modes":11,"./ui_point":14}],14:[function(require,module,exports){
 /**
  * file: ui_point.js
  * description: A Point for UI elements position and size.
@@ -1588,7 +1689,7 @@ UIPoint.half = function()
 
 // export the UI point
 module.exports = UIPoint;
-},{"./pintar":6,"./size_modes":10}],14:[function(require,module,exports){
+},{"./pintar":7,"./size_modes":11}],15:[function(require,module,exports){
 /**
  * file: utils.js
  * description: Mixed utility methods.

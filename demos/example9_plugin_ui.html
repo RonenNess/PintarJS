@@ -6,8 +6,19 @@
     <script src="../dist/pintar.js"></script>
     <script src="../dist/pintar.ui.js"></script>
     <link href="style.css" rel="stylesheet" type="text/css" media="all">
+    <style>
+        @font-face {
+          font-family: "ui-font";
+          src: url("imgs/FFFFORWA.TTF");
+        }
+    </style>
   </head>
   <body>
+
+    <!-- to make sure our font is preloaded when we create the font texture -->
+    <div style="font-family: ui-font; position:fixed; top: -1000px;">.</div>
+
+    <!-- container and canvas -->
     <div class="container container-int">
       <br />
       <h1>Example 9: UI plugin</h1>
@@ -17,135 +28,156 @@
       <canvas></canvas>
     </div>
 
-  </body>
-  <script>
-    // enable debug mode
-    //PintarJS.enableDebugMessages();
+    <script>
+      // enable debug mode
+      //PintarJS.enableDebugMessages();
 
-    // set default renderer
-    var mode = location.search.substr(1).split('?')[0];
-    PintarJS.DefaultRenderers = PintarJS.Renderers[mode] || PintarJS.DefaultRenderers;
-    
-    // initialize pintar
-    var pintar = new PintarJS();
-    pintar.clearColor = PintarJS.Color.lavender();
+      // set default renderer
+      var mode = location.search.substr(1).split('?')[0];
+      PintarJS.DefaultRenderers = PintarJS.Renderers[mode] || PintarJS.DefaultRenderers;
+      
+      // initialize pintar
+      var pintar = new PintarJS();
+      pintar.clearColor = PintarJS.Color.lavender();
 
-    // adjust size
-    pintar.adjustToParentSize();
-    window.onresize = () => {
+      // adjust size
       pintar.adjustToParentSize();
-    };
+      window.onresize = () => {
+        pintar.adjustToParentSize();
+      };
 
-    // set pixelated by default
-    PintarJS.Sprite.defaults.smoothingEnabled = false;
+      // set pixelated by default
+      PintarJS.Sprite.defaults.smoothingEnabled = false;
 
-    // load ui texture
-    var uiTexture = new PintarJS.Texture("imgs/ui.png");
+      // load ui texture
+      var uiTexture = new PintarJS.Texture("imgs/ui.png");
 
-    // global texture scale
-    const textureScale = 5;
+      // global texture scale
+      const textureScale = 5;
 
-    // define the UI theme
-    var UI_THEME = 
-    {
-      // define panel types
-      Panel: 
+      // define the UI theme
+      var UI_THEME = 
       {
-        // default panel
-        default: {
-          texture: uiTexture,
-          externalSourceRect: new PintarJS.Rectangle(0, 32, 64, 64),
-          internalSourceRect: new PintarJS.Rectangle(5, 37, 54, 54),
-          textureScale: textureScale,
-          fillMode: PintarJS.UI.SlicedSprite.FillModes.Tiled,
-          fillColor: PintarJS.Color.white(),
-          frameColor: PintarJS.Color.white(),
-        }
-      },
-
-      // define containers
-      Container: 
-      {
-        // default container - with default panel as background
-        default: {
-          background: "default",
-          padding: new PintarJS.UI.SidesProperties(25, 25, 25, 25),
+        // define panel types
+        Panel: 
+        {
+          // default panel
+          default: {
+            texture: uiTexture,
+            externalSourceRect: new PintarJS.Rectangle(0, 32, 64, 64),
+            internalSourceRect: new PintarJS.Rectangle(5, 37, 54, 54),
+            textureScale: textureScale,
+            fillMode: PintarJS.UI.SlicedSprite.FillModes.Tiled,
+            fillColor: PintarJS.Color.white(),
+            frameColor: PintarJS.Color.white(),
+          }
         },
 
-        // alternative container without background
-        no_ackground: {
-          background: null,
-          padding: new PintarJS.UI.SidesProperties(15, 15, 15, 15),
-        }
-      },
+        // define containers
+        Container: 
+        {
+          // default container - with default panel as background
+          default: {
+            background: "default",
+            padding: new PintarJS.UI.SidesProperties(25, 25, 25, 25),
+          },
 
-      // define progressbars
-      ProgressBar: {
+          // alternative container without background
+          no_ackground: {
+            background: null,
+            padding: new PintarJS.UI.SidesProperties(15, 15, 15, 15),
+          }
+        },
 
-        // default progressbar
-        default: {
-          texture: uiTexture,
-          fillExternalSourceRect: new PintarJS.Rectangle(2, 13, 60, 4),
-          fillInternalSourceRect: new PintarJS.Rectangle(4, 14, 56, 2),
-          backgroundExternalSourceRect: new PintarJS.Rectangle(0, 0, 64, 10),
-          backgroundInternalSourceRect: new PintarJS.Rectangle(4, 4, 56, 2),
-          foregroundExternalSourceRect: new PintarJS.Rectangle(0, 20, 64, 10),
-          foregroundInternalSourceRect: new PintarJS.Rectangle(4, 24, 56, 2),
-          fillOffset: new PintarJS.Point(2 * textureScale, 3 * textureScale),
-          textureScale: textureScale,
-          fillColor: PintarJS.Color.red(),
-          backgroundColor: PintarJS.Color.white(),
-          valueSetWidth: true,
-          valueSetHeight: false,
-          animationSpeed: 1,
-        }
-      },
+        // define progressbars
+        ProgressBar: 
+        {
+          // default progressbar
+          default: {
+            texture: uiTexture,
+            fillExternalSourceRect: new PintarJS.Rectangle(2, 13, 60, 4),
+            fillInternalSourceRect: new PintarJS.Rectangle(4, 14, 56, 2),
+            backgroundExternalSourceRect: new PintarJS.Rectangle(0, 0, 64, 10),
+            backgroundInternalSourceRect: new PintarJS.Rectangle(4, 4, 56, 2),
+            foregroundExternalSourceRect: new PintarJS.Rectangle(0, 20, 64, 10),
+            foregroundInternalSourceRect: new PintarJS.Rectangle(4, 24, 56, 2),
+            fillOffset: new PintarJS.Point(2 * textureScale, 3 * textureScale),
+            textureScale: textureScale,
+            fillColor: PintarJS.Color.red(),
+            backgroundColor: PintarJS.Color.white(),
+            valueSetWidth: true,
+            valueSetHeight: false,
+            animationSpeed: 1,
+          }
+        },
 
-    };
+        // define paragraphs
+        Paragraph: 
+        {
+          // default paragraph
+          default: {
+            font: "ui-font",
+            fontSize: 20,
+            fillColor: PintarJS.Color.white(),
+            strokeColor: PintarJS.Color.black(),
+            strokeWidth: 4,
+            margin: new PintarJS.UI.SidesProperties(8, 8, 12, 12),
+          }
+        },
 
-    // create root
-    var root = new PintarJS.UI.UIRoot(pintar, null);
+      };
 
-    // create a container
-    var container = new PintarJS.UI.Container(UI_THEME);
-    container.anchor = PintarJS.UI.Anchors.Center;
-    container.size.set(300, 400);
-    root.addChild(container);
+      // create root
+      var root = new PintarJS.UI.UIRoot(pintar, null);
 
-    // create progressbar element
-    var progressbar = new PintarJS.UI.ProgressBar(UI_THEME);
-    progressbar.anchor = PintarJS.UI.Anchors.Auto;
-    progressbar.value = 0.75;
-    container.addChild(progressbar);
+      // create a container
+      var container = new PintarJS.UI.Container(UI_THEME);
+      container.anchor = PintarJS.UI.Anchors.Center;
+      container.size.set(300, 400);
+      root.addChild(container);
 
-    // create additional progressbar, but align to right and set green color
-    progressbar = new PintarJS.UI.ProgressBar(UI_THEME, null, {fillAnchor: "TopRight", fillColor: PintarJS.Color.green()});
-    progressbar.anchor = PintarJS.UI.Anchors.Auto;
-    progressbar.value = 0.75;
-    container.addChild(progressbar);
+      // create header paragraph
+      var paragraph = new PintarJS.UI.Paragraph(UI_THEME);
+      paragraph.text = "Progress Bars:";
+      container.addChild(paragraph);
 
-    // create additional progressbar, but align to center and set yellow color
-    progressbar = new PintarJS.UI.ProgressBar(UI_THEME, null, {fillAnchor: "Center", fillColor: PintarJS.Color.yellow(), fillOffset: null});
-    progressbar.anchor = PintarJS.UI.Anchors.Auto;
-    progressbar.value = 0.75;
-    container.addChild(progressbar);
+      // create progressbar element
+      var progressbar = new PintarJS.UI.ProgressBar(UI_THEME);
+      progressbar.anchor = PintarJS.UI.Anchors.Auto;
+      progressbar.value = 0.75;
+      container.addChild(progressbar);
 
-    // draw everything
-    function drawUI()
-    {
-      // start frame
-      pintar.startFrame();
+      // create additional progressbar, but align to right and set green color
+      progressbar = new PintarJS.UI.ProgressBar(UI_THEME, null, {fillAnchor: "TopRight", fillColor: PintarJS.Color.green()});
+      progressbar.anchor = PintarJS.UI.Anchors.Auto;
+      progressbar.value = 0.75;
+      container.addChild(progressbar);
 
-      // update & draw ui elements
-      root.update();
-      root.draw();
+      // create additional progressbar, but align to center and set yellow color
+      progressbar = new PintarJS.UI.ProgressBar(UI_THEME, null, {fillAnchor: "Center", fillColor: PintarJS.Color.yellow(), fillOffset: null});
+      progressbar.anchor = PintarJS.UI.Anchors.Auto;
+      progressbar.value = 0.75;
+      container.addChild(progressbar);
 
-      // end frame
-      pintar.endFrame();
-      requestAnimationFrame(drawUI);
-    }
+      // draw everything
+      function drawUI()
+      {
+        // start frame
+        pintar.startFrame();
 
-    // draw uis
-    drawUI();
-  </script>
+        // update & draw ui elements
+        root.update();
+        root.draw();
+
+        // end frame
+        pintar.endFrame();
+        requestAnimationFrame(drawUI);
+      }
+
+      // start drawing UIs, but only when fonts are ready
+      document.fonts.onloadingdone = function (fontFaceSetEvent) {
+        drawUI();
+      };
+    </script>
+  </body>
 </html>

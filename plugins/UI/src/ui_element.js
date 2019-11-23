@@ -24,7 +24,7 @@ class UIElement
     {
         this.offset = UIPoint.zero();
         this.size = new UIPoint(100, 'px', 100, 'px');
-        this.anchor = Anchors.TopLeft;
+        this.anchor = Anchors.Auto;
         this.scale = 1;
         this.margin = new Sides(5, 5, 5, 5);
         this.ignoreParentPadding = false;
