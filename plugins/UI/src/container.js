@@ -26,6 +26,25 @@ class Container extends UIElement
         this._children = [];
         this.padding = new Sides(10, 10, 10, 10);
         this.paddingMode = SizeModes.Pixels;
+        this.__background = null;
+    }
+
+    /**
+     * Get background element, or null if not set.
+     */
+    get background()
+    {
+        return this.__background;
+    }
+
+    /**
+     * Set background element.
+     */
+    set background(backgroundElement)
+    {
+        if (this.__background) { this.__background._setParent(null); }
+        backgroundElement._setParent(this);
+        this.__background = backgroundElement;
     }
 
     /**
@@ -83,6 +102,11 @@ class Container extends UIElement
      */
     draw(pintar)
     {
+        // draw background
+        if (this.background) {
+            this.background.draw(pintar);
+        }
+
         // draw children
         for (var i = 0; i < this._children.length; ++i) {
             this._children[i].draw(pintar);
@@ -96,6 +120,13 @@ class Container extends UIElement
     {
         // call base class update
         super.update(input);
+        
+        // update background
+        if (this.background)
+        {
+            this.background.update(input);
+            this.background.size = this.size;
+        }
 
         // update children
         var lastElement = null;

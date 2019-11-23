@@ -42,18 +42,27 @@
     // load ui texture
     var uiTexture = new PintarJS.Texture("imgs/ui.png");
 
-    // create sliced sprite
+    // create root
+    var root = new PintarJS.UI.UIRoot(pintar, null);
+
+    // create a container
+    var container = new PintarJS.UI.Container()
+    container.anchor = PintarJS.UI.Anchors.Center;
+    container.size.set(300, 400);
+    root.addChild(container);
+
+    // set contaner's background
     const panelWholeRect = new PintarJS.Rectangle(0, 32, 64, 64);
     const panelInternalRect = new PintarJS.Rectangle(5, 37, 54, 54);
-    var slicedSprite = new PintarJS.UI.SlicedSprite(uiTexture, panelWholeRect, panelInternalRect, 5);
-    slicedSprite.offset = new PintarJS.Point(120, 120);
-    slicedSprite.size.set(300, 400);
+    var background = new PintarJS.UI.SlicedSprite(uiTexture, panelWholeRect, panelInternalRect, 5);
+    container.background = background;
 
     // create progressbar element
     const progressBarBackground = new PintarJS.Rectangle(0, 0, 64, 10);
     const progressBarFill = new PintarJS.Rectangle(0, 10, 64, 10);
     var progressbar = new PintarJS.UI.ProgressBar(uiTexture, progressBarBackground, progressBarFill, 256);
     progressbar.value = 0.75;
+    root.addChild(progressbar);
 
     // draw everything
     function drawUI()
@@ -61,9 +70,9 @@
       // start frame
       pintar.startFrame();
 
-      // draw ui elements
-      progressbar.draw(pintar);
-      slicedSprite.draw(pintar);
+      // update & draw ui elements
+      root.update();
+      root.draw();
 
       // end frame
       pintar.endFrame();

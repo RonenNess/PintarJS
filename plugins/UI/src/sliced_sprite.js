@@ -83,8 +83,6 @@ class SlicedSprite extends UIElement
         // get scale and adjust position to centerize sprite
         var scaleFactor = this.absoluteScale;
         var frameScale = scaleFactor * this.frameScale;
-        destRect.x -= this.leftFrameSourceRect.width * frameScale / 2;
-        destRect.y -= this.topFrameSourceRect.height * frameScale / 2;
 
         // get position
         var position = destRect.getPosition();

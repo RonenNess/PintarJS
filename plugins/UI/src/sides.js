@@ -11,6 +11,9 @@
  */
 class Sides
 {
+    /**
+     * Create the sides data.
+     */
     constructor(left, right, top, bottom)
     {
         this.left = left || 0;
@@ -19,6 +22,9 @@ class Sides
         this.bottom = bottom || 0;
     }
 
+    /**
+     * Set values.
+     */
     set(left, right, top, bottom)
     {
         this.left = left;
@@ -27,6 +33,9 @@ class Sides
         this.bottom = bottom;
     }
 
+    /**
+     * Clone and return sides data.
+     */
     clone()
     {
         return new Sides(this.left, this.right, this.top, this.bottom);

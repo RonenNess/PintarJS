@@ -49,6 +49,25 @@ class Container extends UIElement
         this._children = [];
         this.padding = new Sides(10, 10, 10, 10);
         this.paddingMode = SizeModes.Pixels;
+        this.__background = null;
+    }
+
+    /**
+     * Get background element, or null if not set.
+     */
+    get background()
+    {
+        return this.__background;
+    }
+
+    /**
+     * Set background element.
+     */
+    set background(backgroundElement)
+    {
+        if (this.__background) { this.__background._setParent(null); }
+        backgroundElement._setParent(this);
+        this.__background = backgroundElement;
     }
 
     /**
@@ -106,6 +125,11 @@ class Container extends UIElement
      */
     draw(pintar)
     {
+        // draw background
+        if (this.background) {
+            this.background.draw(pintar);
+        }
+
         // draw children
         for (var i = 0; i < this._children.length; ++i) {
             this._children[i].draw(pintar);
@@ -119,6 +143,13 @@ class Container extends UIElement
     {
         // call base class update
         super.update(input);
+        
+        // update background
+        if (this.background)
+        {
+            this.background.update(input);
+            this.background.size = this.size;
+        }
 
         // update children
         var lastElement = null;
@@ -161,8 +192,9 @@ class Container extends UIElement
 }
 
 module.exports = Container; 
-},{"./anchors":1,"./pintar":5,"./sides":7,"./size_modes":8,"./ui_element":10}],3:[function(require,module,exports){
+},{"./anchors":1,"./pintar":5,"./sides":8,"./size_modes":9,"./ui_element":11}],3:[function(require,module,exports){
 var UI = {
+    UIRoot: require('./root'),
     UIElement: require('./ui_element'),
     ProgressBar: require('./progress_bar'),
     InputManager: require('./input_manager'),
@@ -174,7 +206,7 @@ var UI = {
 const pintar = require('./pintar');
 pintar.UI = UI;
 module.exports = UI;
-},{"./anchors":1,"./container":2,"./input_manager":4,"./pintar":5,"./progress_bar":6,"./size_modes":8,"./sliced_sprite":9,"./ui_element":10}],4:[function(require,module,exports){
+},{"./anchors":1,"./container":2,"./input_manager":4,"./pintar":5,"./progress_bar":6,"./root":7,"./size_modes":9,"./sliced_sprite":10,"./ui_element":11}],4:[function(require,module,exports){
 /**
  * file: input_data.js
  * description: Define the input manager API.
@@ -361,7 +393,64 @@ class ProgressBar extends UIElement
 }
 
 module.exports = ProgressBar; 
-},{"./pintar":5,"./ui_element":10}],7:[function(require,module,exports){
+},{"./pintar":5,"./ui_element":11}],7:[function(require,module,exports){
+/**
+ * file: root.js
+ * description: Implement a UI root element.
+ * author: Ronen Ness.
+ * since: 2019.
+ */
+"use strict";
+const Container = require('./container');
+const PintarJS = require('./pintar');
+
+
+/**
+ * Implement a root element to hold all UI elements.
+ */
+class UIRoot extends Container
+{
+    /**
+     * Create the UI root element.
+     * @param {PintarJS} pintar PintarJS instance.
+     * @param {InputManager} inputManager Input manager instance.
+     */
+    constructor(pintar, inputManager)
+    {
+        super();
+        this.pintar = pintar;
+        this.inputManager = inputManager;
+        this.padding.set(0, 0, 0, 0);
+    }
+
+    /**
+     * Get this element's bounding rectangle, in pixels.
+     * @returns {PintarJS.Rectangle} Bounding box, in pixels.
+     */
+    getBoundingBox()
+    {
+        return this.pintar.canvasRect;
+    }
+
+    /**
+     * Draw the UI element.
+     */
+    draw(pintar)
+    {
+        super.draw(this.pintar);
+    }
+
+    /**
+     * Update the UI element.
+     */
+    update(input)
+    {
+        super.update(this.inputManager);
+    }
+}
+
+module.exports = UIRoot; 
+},{"./container":2,"./pintar":5}],8:[function(require,module,exports){
 /**
  * file: sides.js
  * description: Implement a data structure for sides.
@@ -375,6 +464,9 @@ module.exports = ProgressBar;
  */
 class Sides
 {
+    /**
+     * Create the sides data.
+     */
     constructor(left, right, top, bottom)
     {
         this.left = left || 0;
@@ -383,6 +475,9 @@ class Sides
         this.bottom = bottom || 0;
     }
 
+    /**
+     * Set values.
+     */
     set(left, right, top, bottom)
     {
         this.left = left;
@@ -391,6 +486,9 @@ class Sides
         this.bottom = bottom;
     }
 
+    /**
+     * Clone and return sides data.
+     */
     clone()
     {
         return new Sides(this.left, this.right, this.top, this.bottom);
@@ -399,7 +497,7 @@ class Sides
 
 
 module.exports = Sides;
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 /**
  * file: size_modes.js
  * description: Define size modes we can set.
@@ -412,7 +510,7 @@ module.exports = {
     Pixels: 'px',
     Percents: '%'
 };
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 /**
  * file: sliced_sprite.js
  * description: A sliced sprite.
@@ -498,8 +596,6 @@ class SlicedSprite extends UIElement
         // get scale and adjust position to centerize sprite
         var scaleFactor = this.absoluteScale;
         var frameScale = scaleFactor * this.frameScale;
-        destRect.x -= this.leftFrameSourceRect.width * frameScale / 2;
-        destRect.y -= this.topFrameSourceRect.height * frameScale / 2;
 
         // get position
         var position = destRect.getPosition();
@@ -714,7 +810,7 @@ SlicedSprite.FillModes =
 
 // export SlicedSprite
 module.exports = SlicedSprite;
-},{"./pintar":5,"./ui_element":10}],10:[function(require,module,exports){
+},{"./pintar":5,"./ui_element":11}],11:[function(require,module,exports){
 /**
  * file: ui_element.js
  * description: Base UI element class.
@@ -855,7 +951,6 @@ class UIElement
      */
     update(input)
     {
-        throw new Error("Not Implemented!");
     }
 
     /**
@@ -885,7 +980,10 @@ class UIElement
      */
     getParentBoundingBox()
     {
-        return this.parent ? this.parent.getInternalBoundingBox() : new PintarJS.Rectangle(0, 0, window.innerWidth, window.innerHeight);
+        if (!this.parent) {
+            throw new Error("Missing parent element! Did you forget to create a UI root and add elements to it?");
+        }
+        return this.parent.getInternalBoundingBox();
     } 
 
     /**
@@ -985,5 +1083,5 @@ UIElement.globalScale = 1;
 
 // export the base UI element object
 module.exports = UIElement; 
-},{"./anchors":1,"./pintar":5,"./sides":7,"./size_modes":8}]},{},[3])(3)
+},{"./anchors":1,"./pintar":5,"./sides":8,"./size_modes":9}]},{},[3])(3)
 });

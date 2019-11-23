@@ -1,4 +1,5 @@
 var UI = {
+    UIRoot: require('./root'),
     UIElement: require('./ui_element'),
     ProgressBar: require('./progress_bar'),
     InputManager: require('./input_manager'),

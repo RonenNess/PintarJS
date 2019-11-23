@@ -138,7 +138,6 @@ class UIElement
      */
     update(input)
     {
-        throw new Error("Not Implemented!");
     }
 
     /**
@@ -168,7 +167,10 @@ class UIElement
      */
     getParentBoundingBox()
     {
-        return this.parent ? this.parent.getInternalBoundingBox() : new PintarJS.Rectangle(0, 0, window.innerWidth, window.innerHeight);
+        if (!this.parent) {
+            throw new Error("Missing parent element! Did you forget to create a UI root and add elements to it?");
+        }
+        return this.parent.getInternalBoundingBox();
     } 
 
     /**
