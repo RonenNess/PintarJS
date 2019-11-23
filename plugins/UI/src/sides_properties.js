@@ -20,6 +20,7 @@ class SidesProperties
         this.right = right || 0;
         this.top = top || 0;
         this.bottom = bottom || 0;
+        this.leftMode = this.rightMode = this.topMode = this.bottomMode = 'px';
     }
 
     /**
@@ -38,7 +39,12 @@ class SidesProperties
      */
     clone()
     {
-        return new SidesProperties(this.left, this.right, this.top, this.bottom);
+        var ret = new SidesProperties(this.left, this.right, this.top, this.bottom);
+        ret.leftMode = this.leftMode;
+        ret.rightMode = this.rightMode;
+        ret.topMode = this.topMode;
+        ret.bottomMode = this.bottomMode;
+        return ret;
     }
 }
 

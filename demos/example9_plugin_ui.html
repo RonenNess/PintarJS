@@ -85,13 +85,13 @@
         // default progressbar
         default: {
           texture: uiTexture,
-          fillExternalSourceRect: new PintarJS.Rectangle(3, 13, 58, 4),
-          fillInternalSourceRect: new PintarJS.Rectangle(5, 14, 54, 2),
+          fillExternalSourceRect: new PintarJS.Rectangle(2, 13, 60, 4),
+          fillInternalSourceRect: new PintarJS.Rectangle(4, 14, 56, 2),
           backgroundExternalSourceRect: new PintarJS.Rectangle(0, 0, 64, 10),
           backgroundInternalSourceRect: new PintarJS.Rectangle(4, 4, 56, 2),
           foregroundExternalSourceRect: new PintarJS.Rectangle(0, 20, 64, 10),
           foregroundInternalSourceRect: new PintarJS.Rectangle(4, 24, 56, 2),
-          fillOffset: new PintarJS.Point(3 * textureScale, 3 * textureScale),
+          fillOffset: new PintarJS.Point(2 * textureScale, 3 * textureScale),
           textureScale: textureScale,
           fillColor: PintarJS.Color.red(),
           backgroundColor: PintarJS.Color.white(),
@@ -114,8 +114,19 @@
 
     // create progressbar element
     var progressbar = new PintarJS.UI.ProgressBar(UI_THEME);
-    progressbar.anchor = PintarJS.UI.Anchors.TopCenter;
-    progressbar.size.x = 250;
+    progressbar.anchor = PintarJS.UI.Anchors.Auto;
+    progressbar.value = 0.75;
+    container.addChild(progressbar);
+
+    // create additional progressbar, but align to right and set green color
+    progressbar = new PintarJS.UI.ProgressBar(UI_THEME, null, {fillAnchor: "TopRight", fillColor: PintarJS.Color.green()});
+    progressbar.anchor = PintarJS.UI.Anchors.Auto;
+    progressbar.value = 0.75;
+    container.addChild(progressbar);
+
+    // create additional progressbar, but align to center and set yellow color
+    progressbar = new PintarJS.UI.ProgressBar(UI_THEME, null, {fillAnchor: "Center", fillColor: PintarJS.Color.yellow(), fillOffset: null});
+    progressbar.anchor = PintarJS.UI.Anchors.Auto;
     progressbar.value = 0.75;
     container.addChild(progressbar);
 

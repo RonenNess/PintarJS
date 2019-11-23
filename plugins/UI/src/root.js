@@ -46,6 +46,14 @@ class UIRoot extends Container
     }
 
     /**
+     * Get this element's internal bounding rectangle, in pixels, with padding.
+     */
+    getInternalBoundingBox()
+    {
+        return this.pintar.canvasRect;
+    }
+
+    /**
      * Draw the UI element.
      */
     draw(pintar)

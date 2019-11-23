@@ -33,8 +33,10 @@ class SlicedSprite extends UIElement
         super();
 
         // if we got skin, we assume 'options' is actually a theme - used when other elements inherit from us, like in 'panel' case
-        if (skin) {
+        if (skin) 
+        {
             options = this.getOptionsFromTheme(options, skin, override);
+            this.setBaseOptions(options);
         }
 
         // extract params

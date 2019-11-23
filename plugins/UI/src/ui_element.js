@@ -9,6 +9,7 @@ const PintarJS = require('./pintar');
 const Anchors = require('./anchors');
 const SizeModes = require('./size_modes');
 const Sides = require('./sides_properties');
+const UIPoint = require('./ui_point');
 
 
 /**
@@ -21,14 +22,24 @@ class UIElement
      */
     constructor()
     {
-        this.offset = PintarJS.Point.zero();
-        this.offsetMode = SizeModes.Pixels;
-        this.size = new PintarJS.Point(100, 100);
-        this.sizeMode = SizeModes.Pixels;
+        this.offset = UIPoint.zero();
+        this.size = new UIPoint(100, 'px', 100, 'px');
         this.anchor = Anchors.TopLeft;
         this.scale = 1;
+        this.margin = new Sides(5, 5, 5, 5);
         this.ignoreParentPadding = false;
         this.__parent = null;
+    }
+
+    /**
+     * Set base element theme-related options.
+     * @param {Object} options.
+     */
+    setBaseOptions(options)
+    {
+        this.scale = options.scale || this.scale;
+        this.margin = options.margin || this.margin;
+        this.anchor = options.anchor || this.anchor;
     }
 
     /**
@@ -60,12 +71,11 @@ class UIElement
             var temp = {};
             for (var key in options)
             {
-                if (key in override) {
-                    temp[key] = override[key];
-                }
-                else {
-                    temp[key] = options[key];
-                }
+                temp[key] = options[key];
+            }
+            for (var key in override)
+            {
+                temp[key] = override[key];
             }
             options = temp;
         }
@@ -108,22 +118,19 @@ class UIElement
     }
 
     /**
-     * Convert size value to absolute pixels. 
+     * Convert a single value to absolute value in pixels.
      */
-    _convertSize(val, mode)
+    _convertVal(val, parentSize, mode)
     {
         switch (mode)
         {
+            case undefined:
             case SizeModes.Pixels:
-                var ret = val.clone();
                 var scale = this.absoluteScale;
-                ret.x *= scale;
-                ret.y *= scale;
-                return ret;
+                return val * scale;
 
             case SizeModes.Percents:
-                var parentSize = this.getParentInternalBoundingBox().size;
-                return new PintarJS.Point((val.x / 100.0) * parentSize.x, (val.y / 100.0) * parentSize.y);
+                return (val / 100.0) * parentSize;
 
             default:
                 throw new Error("Invalid size mode!");
@@ -133,30 +140,25 @@ class UIElement
     /**
      * Convert size value to absolute pixels. 
      */
-    _convertSides(val, mode)
+    _convertSize(val)
     {
-        switch (mode)
-        {
-            case SizeModes.Pixels:
-                var ret = val.clone();
-                var scale = this.absoluteScale;
-                ret.left *= scale;
-                ret.right *= scale;
-                ret.top *= scale;
-                ret.bottom *= scale;
-                return ret;
+        var parentSize = (val.xMode == SizeModes.Percents || val.yMode == SizeModes.Percents) ? this.getParentInternalBoundingBox().getSize() : {x:0, y:0};
+        return new PintarJS.Point(this._convertVal(val.x, parentSize.x, val.xMode), this._convertVal(val.y, parentSize.y, val.yMode));
+    }
 
-            case SizeModes.Percents:
-                var parentSize = this.getParentInternalBoundingBox().size;
-                return new Sides(
-                    (val.left / 100.0) * parentSize.x, 
-                    (val.right / 100.0) * parentSize.x,
-                    (val.top / 100.0) * parentSize.y,
-                    (val.bottom / 100.0) * parentSize.y);
-
-            default:
-                throw new Error("Invalid size mode!");
-        }
+    /**
+     * Convert size value to absolute pixels. 
+     */
+    _convertSides(val)
+    {
+        var ret = val.clone();
+        var parentSize = (ret.leftMode == SizeModes.Percents || ret.rightMode == SizeModes.Percents || ret.topMode == SizeModes.Percents || ret.bottomMode == SizeModes.Percents) ? 
+            this.getParentInternalBoundingBox().getSize() : {x:0, y:0};
+        ret.left = this._convertVal(ret.left, parentSize.x, ret.leftMode);
+        ret.right = this._convertVal(ret.right, parentSize.x, ret.rightMode);
+        ret.top = this._convertVal(ret.top, parentSize.y, ret.topMode);
+        ret.bottom = this._convertVal(ret.bottom, parentSize.y, ret.bottomMode);
+        return ret;
     }
 
     /**
@@ -164,7 +166,7 @@ class UIElement
      */
     getSizeInPixels()
     {
-        return this._convertSize(this.size, this.sizeMode);
+        return this._convertSize(this.size);
     }
 
     /**
@@ -172,7 +174,7 @@ class UIElement
      */
     getOffsetInPixels()
     {
-        return this._convertSize(this.offset, this.offsetMode);
+        return this._convertSize(this.offset);
     }
 
     /**
@@ -234,37 +236,22 @@ class UIElement
     } 
 
     /**
-     * Get absolute top-left drawing position.
-     * @returns {PintarJS.Point} Element top-left position.
+     * Get absolute top-left position for a given parent internal rectangle, size in pixels, and anchor.
      */
-    getDestTopLeftPosition()
+    getDestTopLeftPositionForRect(parentRect, selfSize, anchor, offset)
     {
-        // special case - absolute
-        if (this.anchor === Anchors.Fixed)
-        {
-            return this.offset.clone();
-        }
+        // to return
+        var ret = new PintarJS.Point(0, 0);
 
-        // get parent bounding box
-        var parentRect = this.getParentInternalBoundingBox();
-        var selfSize = this.getSizeInPixels();
-        var offset = this.getOffsetInPixels();
-        var ret = new PintarJS.Point();
-
-        // check if we can use cache
-        if (this.__cachedTopLeftPos &&
-            this.anchor === this.__lastAnchor &&
-            selfSize.equals(this.__lastSize || PintarJS.Point.zero()) &&
-            offset.equals(this.__lastOffset || PintarJS.Point.zero()) &&
-            parentRect.equals(this.__lastParentRect || new PintarJS.Rectangle()))
-            {
-                return this.__cachedTopLeftPos;
-            }
+        // set offset factor based on anchor
+        var offsetFactor = new PintarJS.Point(1, 1);
         
         // set position based on anchor
-        switch (this.anchor)
+        switch (anchor)
         {
             case Anchors.TopLeft:
+            case Anchors.Auto:          // note: auto and auto-inline behave just like top-left because offset is set by the parent container.
+            case Anchors.AutoInline:
                 ret.set(parentRect.x, parentRect.y);
                 break;
 
@@ -274,6 +261,7 @@ class UIElement
 
             case Anchors.TopRight:
                 ret.set(parentRect.right - selfSize.x, parentRect.y)
+                offsetFactor.x = -1;
                 break;
 
             case Anchors.CenterLeft:
@@ -289,27 +277,66 @@ class UIElement
             case Anchors.CenterRight:
                 ret.x = parentRect.right - selfSize.x;
                 ret.y = parentRect.y + (parentRect.height / 2) - (selfSize.y / 2);
+                offsetFactor.x = -1;
                 break;
 
             case Anchors.BottomLeft:
                 ret.x = parentRect.x;
                 ret.y = parentRect.bottom - selfSize.y;
+                offsetFactor.y = -1;
                 break;
 
             case Anchors.BottomCenter:
                 ret.x = parentRect.x + (parentRect.width / 2) - (selfSize.x / 2);
                 ret.y = parentRect.bottom - selfSize.y;
+                offsetFactor.y = -1;
                 break;
 
             case Anchors.BottomRight:
                 ret.x = parentRect.right - selfSize.x;
                 ret.y = parentRect.bottom - selfSize.y;
+                offsetFactor.x = -1;
+                offsetFactor.y = -1;
                 break;       
         }
         
-        // add self position
-        ret.x += offset.x;
-        ret.y += offset.y;
+        // add self position and return
+        if (offset) {
+            ret = ret.add(offset.mul(offsetFactor));
+        }
+        return ret;
+    }
+
+    /**
+     * Get absolute top-left drawing position.
+     * @returns {PintarJS.Point} Element top-left position.
+     */
+    getDestTopLeftPosition()
+    {
+        // special case - absolute
+        if (this.anchor === Anchors.Fixed)
+        {
+            return this.offset.clone();
+        }
+
+        // get parent bounding box
+        var parentRect = this.getParentInternalBoundingBox();
+        var selfSize = this.getSizeInPixels();
+        var offset = this.getOffsetInPixels();
+        
+
+        // check if we can use cache
+        if (this.__cachedTopLeftPos &&
+            this.anchor === this.__lastAnchor &&
+            selfSize.equals(this.__lastSize || PintarJS.Point.zero()) &&
+            offset.equals(this.__lastOffset || PintarJS.Point.zero()) &&
+            parentRect.equals(this.__lastParentRect || new PintarJS.Rectangle()))
+            {
+                return this.__cachedTopLeftPos;
+            }
+        
+        // get position based on anchor
+        var ret = this.getDestTopLeftPositionForRect(parentRect, selfSize, this.anchor, offset);
 
         // put in cache and return
         this.__cachedTopLeftPos = ret.clone();

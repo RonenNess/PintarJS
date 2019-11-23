@@ -31,6 +31,7 @@ class Container extends UIElement
 
         // get options and create children list
         var options = this.getOptionsFromTheme(theme, skin);
+        this.setBaseOptions(options);
         this._children = [];
         
         // set padding
@@ -105,7 +106,7 @@ class Container extends UIElement
     getInternalBoundingBox()
     {
         var ret = this.getBoundingBox();
-        var padding = this._convertSides(this.padding, this.paddingMode);
+        var padding = this._convertSides(this.padding);
         ret.x += padding.left;
         ret.y += padding.top;
         ret.width -= padding.right + padding.left;
@@ -156,7 +157,9 @@ class Container extends UIElement
             if (element.anchor === Anchors.AutoInline)
             {
                 if (lastElement) {
-                    element.offset.set(0, lastElement.offset.y + lastElement.size.y);
+                    var marginX = Math.max(element.margin.left, lastElement.margin.right);
+                    var marginY = Math.max(element.margin.top, lastElement.margin.bottom);
+                    element.offset.set(lastElement.offset.x + lastElement.size.x + marginX, lastElement.offset.y + lastElement.size.y + marginY);
                     if (element.offset.x > this.size.x) {
                         needToSetAuto = true;
                     }
@@ -170,7 +173,8 @@ class Container extends UIElement
             if (needToSetAuto || element.anchor === Anchors.Auto)
             {
                 if (lastElement) {
-                    element.offset.set(0, lastElement.offset.y + lastElement.size.y);
+                    var marginY = Math.max(element.margin.top, lastElement.margin.bottom);
+                    element.offset.set(0, lastElement.offset.y + lastElement.size.y + marginY);
                 }
                 else {
                     element.offset.set(0, 0);

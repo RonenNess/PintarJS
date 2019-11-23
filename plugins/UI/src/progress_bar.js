@@ -34,6 +34,7 @@ class ProgressBar extends UIElement
      * @param {PintarJS.Point} theme.ProgressBar[skin].fillOffset (Optional) Fill part offset from its base position. By default, with offset 0,0, fill part will start from the background's top-left corner.
      * @param {Number} theme.ProgressBar[skin].height (Optional) Progressbar height (if not defined, will base on texture source rectangle).
      * @param {Number} theme.ProgressBar[skin].animationSpeed (Optional) Animation speed when value changes (if 0, will show new value immediately).
+     * @param {PintarJS.UI.Anchors} theme.ProgressBar[skin].fillAnchor (Optional) Anchor type for the fill part. Defaults to Top-Left.
      * @param {Boolean} theme.ProgressBar[skin].valueSetWidth (Optional) If true (default), progressbar value will set the fill width.
      * @param {Boolean} theme.ProgressBar[skin].valueSetHeight (Optional) If true (not default), progressbar value will set the fill height.
      * @param {String} skin Element skin to use from theme.
@@ -45,6 +46,7 @@ class ProgressBar extends UIElement
 
         // get options from theme and skin type
         var options = this.getOptionsFromTheme(theme, skin, override);
+        this.setBaseOptions(options);
 
         // store fill offset
         this.fillOffset = options.fillOffset || PintarJS.Point.zero();
@@ -83,8 +85,13 @@ class ProgressBar extends UIElement
             this.foregroundSprite.sizeMode = SizeModes.Pixels;
         }
 
-        // calculate progressbar default height
+        // store fill part anchor
+        this.fillPartAnchor = options.fillAnchor || Anchors.TopLeft;
+
+        // calculate progressbar default height and width
         this.size.y = options.height || (options.backgroundExternalSourceRect.height * textureScale);
+        this.size.x = 100;
+        this.size.xMode = SizeModes.Percents;
 
         // store animation speed
         this.animationSpeed = options.animationSpeed || 0;
@@ -155,9 +162,9 @@ class ProgressBar extends UIElement
         var value = this._displayValue;
         if (value > 0)
         {
-            this.fillSprite.offset = dest.getPosition().add(this.fillOffset);
             this.fillSprite.size.x = (this.backgroundSprite.size.x - this.fillWidthToRemove) * (this.setWidth ? value : 1);
             this.fillSprite.size.y = (this.backgroundSprite.size.y - this.fillHeightToRemove) * (this.setHeight ? value : 1);;
+            this.fillSprite.offset = this.getDestTopLeftPositionForRect(dest, this.fillSprite.size, this.fillPartAnchor, this.fillOffset);
             this.fillSprite.draw(pintar);
         }
 

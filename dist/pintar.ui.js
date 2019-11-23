@@ -55,6 +55,7 @@ class Container extends UIElement
 
         // get options and create children list
         var options = this.getOptionsFromTheme(theme, skin);
+        this.setBaseOptions(options);
         this._children = [];
         
         // set padding
@@ -129,7 +130,7 @@ class Container extends UIElement
     getInternalBoundingBox()
     {
         var ret = this.getBoundingBox();
-        var padding = this._convertSides(this.padding, this.paddingMode);
+        var padding = this._convertSides(this.padding);
         ret.x += padding.left;
         ret.y += padding.top;
         ret.width -= padding.right + padding.left;
@@ -180,7 +181,9 @@ class Container extends UIElement
             if (element.anchor === Anchors.AutoInline)
             {
                 if (lastElement) {
-                    element.offset.set(0, lastElement.offset.y + lastElement.size.y);
+                    var marginX = Math.max(element.margin.left, lastElement.margin.right);
+                    var marginY = Math.max(element.margin.top, lastElement.margin.bottom);
+                    element.offset.set(lastElement.offset.x + lastElement.size.x + marginX, lastElement.offset.y + lastElement.size.y + marginY);
                     if (element.offset.x > this.size.x) {
                         needToSetAuto = true;
                     }
@@ -194,7 +197,8 @@ class Container extends UIElement
             if (needToSetAuto || element.anchor === Anchors.Auto)
             {
                 if (lastElement) {
-                    element.offset.set(0, lastElement.offset.y + lastElement.size.y);
+                    var marginY = Math.max(element.margin.top, lastElement.margin.bottom);
+                    element.offset.set(0, lastElement.offset.y + lastElement.size.y + marginY);
                 }
                 else {
                     element.offset.set(0, 0);
@@ -222,11 +226,12 @@ var UI = {
     SizeModes: require('./size_modes'),
     SidesProperties: require('./sides_properties'),
     Panel: require('./panel'),
+    UIPoint: require('./ui_point'),
 };
 const pintar = require('./pintar');
 pintar.UI = UI;
 module.exports = UI;
-},{"./anchors":1,"./container":2,"./input_manager":4,"./panel":5,"./pintar":6,"./progress_bar":7,"./root":8,"./sides_properties":9,"./size_modes":10,"./sliced_sprite":11,"./ui_element":12}],4:[function(require,module,exports){
+},{"./anchors":1,"./container":2,"./input_manager":4,"./panel":5,"./pintar":6,"./progress_bar":7,"./root":8,"./sides_properties":9,"./size_modes":10,"./sliced_sprite":11,"./ui_element":12,"./ui_point":13}],4:[function(require,module,exports){
 /**
  * file: input_manager.js
  * description: Define a basic input manager class.
@@ -486,6 +491,7 @@ class ProgressBar extends UIElement
      * @param {PintarJS.Point} theme.ProgressBar[skin].fillOffset (Optional) Fill part offset from its base position. By default, with offset 0,0, fill part will start from the background's top-left corner.
      * @param {Number} theme.ProgressBar[skin].height (Optional) Progressbar height (if not defined, will base on texture source rectangle).
      * @param {Number} theme.ProgressBar[skin].animationSpeed (Optional) Animation speed when value changes (if 0, will show new value immediately).
+     * @param {PintarJS.UI.Anchors} theme.ProgressBar[skin].fillAnchor (Optional) Anchor type for the fill part. Defaults to Top-Left.
      * @param {Boolean} theme.ProgressBar[skin].valueSetWidth (Optional) If true (default), progressbar value will set the fill width.
      * @param {Boolean} theme.ProgressBar[skin].valueSetHeight (Optional) If true (not default), progressbar value will set the fill height.
      * @param {String} skin Element skin to use from theme.
@@ -497,6 +503,7 @@ class ProgressBar extends UIElement
 
         // get options from theme and skin type
         var options = this.getOptionsFromTheme(theme, skin, override);
+        this.setBaseOptions(options);
 
         // store fill offset
         this.fillOffset = options.fillOffset || PintarJS.Point.zero();
@@ -535,8 +542,13 @@ class ProgressBar extends UIElement
             this.foregroundSprite.sizeMode = SizeModes.Pixels;
         }
 
-        // calculate progressbar default height
+        // store fill part anchor
+        this.fillPartAnchor = options.fillAnchor || Anchors.TopLeft;
+
+        // calculate progressbar default height and width
         this.size.y = options.height || (options.backgroundExternalSourceRect.height * textureScale);
+        this.size.x = 100;
+        this.size.xMode = SizeModes.Percents;
 
         // store animation speed
         this.animationSpeed = options.animationSpeed || 0;
@@ -607,9 +619,9 @@ class ProgressBar extends UIElement
         var value = this._displayValue;
         if (value > 0)
         {
-            this.fillSprite.offset = dest.getPosition().add(this.fillOffset);
             this.fillSprite.size.x = (this.backgroundSprite.size.x - this.fillWidthToRemove) * (this.setWidth ? value : 1);
             this.fillSprite.size.y = (this.backgroundSprite.size.y - this.fillHeightToRemove) * (this.setHeight ? value : 1);;
+            this.fillSprite.offset = this.getDestTopLeftPositionForRect(dest, this.fillSprite.size, this.fillPartAnchor, this.fillOffset);
             this.fillSprite.draw(pintar);
         }
 
@@ -649,7 +661,7 @@ class ProgressBar extends UIElement
 }
 
 module.exports = ProgressBar; 
-},{"./anchors":1,"./pintar":6,"./size_modes":10,"./sliced_sprite":11,"./ui_element":12,"./utils":13}],8:[function(require,module,exports){
+},{"./anchors":1,"./pintar":6,"./size_modes":10,"./sliced_sprite":11,"./ui_element":12,"./utils":14}],8:[function(require,module,exports){
 /**
  * file: root.js
  * description: Implement a UI root element.
@@ -698,6 +710,14 @@ class UIRoot extends Container
     }
 
     /**
+     * Get this element's internal bounding rectangle, in pixels, with padding.
+     */
+    getInternalBoundingBox()
+    {
+        return this.pintar.canvasRect;
+    }
+
+    /**
      * Draw the UI element.
      */
     draw(pintar)
@@ -740,6 +760,7 @@ class SidesProperties
         this.right = right || 0;
         this.top = top || 0;
         this.bottom = bottom || 0;
+        this.leftMode = this.rightMode = this.topMode = this.bottomMode = 'px';
     }
 
     /**
@@ -758,7 +779,12 @@ class SidesProperties
      */
     clone()
     {
-        return new SidesProperties(this.left, this.right, this.top, this.bottom);
+        var ret = new SidesProperties(this.left, this.right, this.top, this.bottom);
+        ret.leftMode = this.leftMode;
+        ret.rightMode = this.rightMode;
+        ret.topMode = this.topMode;
+        ret.bottomMode = this.bottomMode;
+        return ret;
     }
 }
 
@@ -813,8 +839,10 @@ class SlicedSprite extends UIElement
         super();
 
         // if we got skin, we assume 'options' is actually a theme - used when other elements inherit from us, like in 'panel' case
-        if (skin) {
+        if (skin) 
+        {
             options = this.getOptionsFromTheme(options, skin, override);
+            this.setBaseOptions(options);
         }
 
         // extract params
@@ -1136,6 +1164,7 @@ const PintarJS = require('./pintar');
 const Anchors = require('./anchors');
 const SizeModes = require('./size_modes');
 const Sides = require('./sides_properties');
+const UIPoint = require('./ui_point');
 
 
 /**
@@ -1148,14 +1177,24 @@ class UIElement
      */
     constructor()
     {
-        this.offset = PintarJS.Point.zero();
-        this.offsetMode = SizeModes.Pixels;
-        this.size = new PintarJS.Point(100, 100);
-        this.sizeMode = SizeModes.Pixels;
+        this.offset = UIPoint.zero();
+        this.size = new UIPoint(100, 'px', 100, 'px');
         this.anchor = Anchors.TopLeft;
         this.scale = 1;
+        this.margin = new Sides(5, 5, 5, 5);
         this.ignoreParentPadding = false;
         this.__parent = null;
+    }
+
+    /**
+     * Set base element theme-related options.
+     * @param {Object} options.
+     */
+    setBaseOptions(options)
+    {
+        this.scale = options.scale || this.scale;
+        this.margin = options.margin || this.margin;
+        this.anchor = options.anchor || this.anchor;
     }
 
     /**
@@ -1187,12 +1226,11 @@ class UIElement
             var temp = {};
             for (var key in options)
             {
-                if (key in override) {
-                    temp[key] = override[key];
-                }
-                else {
-                    temp[key] = options[key];
-                }
+                temp[key] = options[key];
+            }
+            for (var key in override)
+            {
+                temp[key] = override[key];
             }
             options = temp;
         }
@@ -1235,22 +1273,19 @@ class UIElement
     }
 
     /**
-     * Convert size value to absolute pixels. 
+     * Convert a single value to absolute value in pixels.
      */
-    _convertSize(val, mode)
+    _convertVal(val, parentSize, mode)
     {
         switch (mode)
         {
+            case undefined:
             case SizeModes.Pixels:
-                var ret = val.clone();
                 var scale = this.absoluteScale;
-                ret.x *= scale;
-                ret.y *= scale;
-                return ret;
+                return val * scale;
 
             case SizeModes.Percents:
-                var parentSize = this.getParentInternalBoundingBox().size;
-                return new PintarJS.Point((val.x / 100.0) * parentSize.x, (val.y / 100.0) * parentSize.y);
+                return (val / 100.0) * parentSize;
 
             default:
                 throw new Error("Invalid size mode!");
@@ -1260,30 +1295,25 @@ class UIElement
     /**
      * Convert size value to absolute pixels. 
      */
-    _convertSides(val, mode)
+    _convertSize(val)
     {
-        switch (mode)
-        {
-            case SizeModes.Pixels:
-                var ret = val.clone();
-                var scale = this.absoluteScale;
-                ret.left *= scale;
-                ret.right *= scale;
-                ret.top *= scale;
-                ret.bottom *= scale;
-                return ret;
+        var parentSize = (val.xMode == SizeModes.Percents || val.yMode == SizeModes.Percents) ? this.getParentInternalBoundingBox().getSize() : {x:0, y:0};
+        return new PintarJS.Point(this._convertVal(val.x, parentSize.x, val.xMode), this._convertVal(val.y, parentSize.y, val.yMode));
+    }
 
-            case SizeModes.Percents:
-                var parentSize = this.getParentInternalBoundingBox().size;
-                return new Sides(
-                    (val.left / 100.0) * parentSize.x, 
-                    (val.right / 100.0) * parentSize.x,
-                    (val.top / 100.0) * parentSize.y,
-                    (val.bottom / 100.0) * parentSize.y);
-
-            default:
-                throw new Error("Invalid size mode!");
-        }
+    /**
+     * Convert size value to absolute pixels. 
+     */
+    _convertSides(val)
+    {
+        var ret = val.clone();
+        var parentSize = (ret.leftMode == SizeModes.Percents || ret.rightMode == SizeModes.Percents || ret.topMode == SizeModes.Percents || ret.bottomMode == SizeModes.Percents) ? 
+            this.getParentInternalBoundingBox().getSize() : {x:0, y:0};
+        ret.left = this._convertVal(ret.left, parentSize.x, ret.leftMode);
+        ret.right = this._convertVal(ret.right, parentSize.x, ret.rightMode);
+        ret.top = this._convertVal(ret.top, parentSize.y, ret.topMode);
+        ret.bottom = this._convertVal(ret.bottom, parentSize.y, ret.bottomMode);
+        return ret;
     }
 
     /**
@@ -1291,7 +1321,7 @@ class UIElement
      */
     getSizeInPixels()
     {
-        return this._convertSize(this.size, this.sizeMode);
+        return this._convertSize(this.size);
     }
 
     /**
@@ -1299,7 +1329,7 @@ class UIElement
      */
     getOffsetInPixels()
     {
-        return this._convertSize(this.offset, this.offsetMode);
+        return this._convertSize(this.offset);
     }
 
     /**
@@ -1361,37 +1391,22 @@ class UIElement
     } 
 
     /**
-     * Get absolute top-left drawing position.
-     * @returns {PintarJS.Point} Element top-left position.
+     * Get absolute top-left position for a given parent internal rectangle, size in pixels, and anchor.
      */
-    getDestTopLeftPosition()
+    getDestTopLeftPositionForRect(parentRect, selfSize, anchor, offset)
     {
-        // special case - absolute
-        if (this.anchor === Anchors.Fixed)
-        {
-            return this.offset.clone();
-        }
+        // to return
+        var ret = new PintarJS.Point(0, 0);
 
-        // get parent bounding box
-        var parentRect = this.getParentInternalBoundingBox();
-        var selfSize = this.getSizeInPixels();
-        var offset = this.getOffsetInPixels();
-        var ret = new PintarJS.Point();
-
-        // check if we can use cache
-        if (this.__cachedTopLeftPos &&
-            this.anchor === this.__lastAnchor &&
-            selfSize.equals(this.__lastSize || PintarJS.Point.zero()) &&
-            offset.equals(this.__lastOffset || PintarJS.Point.zero()) &&
-            parentRect.equals(this.__lastParentRect || new PintarJS.Rectangle()))
-            {
-                return this.__cachedTopLeftPos;
-            }
+        // set offset factor based on anchor
+        var offsetFactor = new PintarJS.Point(1, 1);
         
         // set position based on anchor
-        switch (this.anchor)
+        switch (anchor)
         {
             case Anchors.TopLeft:
+            case Anchors.Auto:          // note: auto and auto-inline behave just like top-left because offset is set by the parent container.
+            case Anchors.AutoInline:
                 ret.set(parentRect.x, parentRect.y);
                 break;
 
@@ -1401,6 +1416,7 @@ class UIElement
 
             case Anchors.TopRight:
                 ret.set(parentRect.right - selfSize.x, parentRect.y)
+                offsetFactor.x = -1;
                 break;
 
             case Anchors.CenterLeft:
@@ -1416,27 +1432,66 @@ class UIElement
             case Anchors.CenterRight:
                 ret.x = parentRect.right - selfSize.x;
                 ret.y = parentRect.y + (parentRect.height / 2) - (selfSize.y / 2);
+                offsetFactor.x = -1;
                 break;
 
             case Anchors.BottomLeft:
                 ret.x = parentRect.x;
                 ret.y = parentRect.bottom - selfSize.y;
+                offsetFactor.y = -1;
                 break;
 
             case Anchors.BottomCenter:
                 ret.x = parentRect.x + (parentRect.width / 2) - (selfSize.x / 2);
                 ret.y = parentRect.bottom - selfSize.y;
+                offsetFactor.y = -1;
                 break;
 
             case Anchors.BottomRight:
                 ret.x = parentRect.right - selfSize.x;
                 ret.y = parentRect.bottom - selfSize.y;
+                offsetFactor.x = -1;
+                offsetFactor.y = -1;
                 break;       
         }
         
-        // add self position
-        ret.x += offset.x;
-        ret.y += offset.y;
+        // add self position and return
+        if (offset) {
+            ret = ret.add(offset.mul(offsetFactor));
+        }
+        return ret;
+    }
+
+    /**
+     * Get absolute top-left drawing position.
+     * @returns {PintarJS.Point} Element top-left position.
+     */
+    getDestTopLeftPosition()
+    {
+        // special case - absolute
+        if (this.anchor === Anchors.Fixed)
+        {
+            return this.offset.clone();
+        }
+
+        // get parent bounding box
+        var parentRect = this.getParentInternalBoundingBox();
+        var selfSize = this.getSizeInPixels();
+        var offset = this.getOffsetInPixels();
+        
+
+        // check if we can use cache
+        if (this.__cachedTopLeftPos &&
+            this.anchor === this.__lastAnchor &&
+            selfSize.equals(this.__lastSize || PintarJS.Point.zero()) &&
+            offset.equals(this.__lastOffset || PintarJS.Point.zero()) &&
+            parentRect.equals(this.__lastParentRect || new PintarJS.Rectangle()))
+            {
+                return this.__cachedTopLeftPos;
+            }
+        
+        // get position based on anchor
+        var ret = this.getDestTopLeftPositionForRect(parentRect, selfSize, this.anchor, offset);
 
         // put in cache and return
         this.__cachedTopLeftPos = ret.clone();
@@ -1463,7 +1518,77 @@ UIElement.globalScale = 1;
 
 // export the base UI element object
 module.exports = UIElement; 
-},{"./anchors":1,"./pintar":6,"./sides_properties":9,"./size_modes":10}],13:[function(require,module,exports){
+},{"./anchors":1,"./pintar":6,"./sides_properties":9,"./size_modes":10,"./ui_point":13}],13:[function(require,module,exports){
+/**
+ * file: ui_point.js
+ * description: A Point for UI elements position and size.
+ * author: Ronen Ness.
+ * since: 2019.
+ */
+"use strict";
+const PintarJS = require('./pintar');
+const SizeModes = require('./size_modes');
+
+/**
+ * A UI point = regular point + mode.
+ */
+class UIPoint extends PintarJS.Point
+{
+    /**
+     * Create the UI point.
+     */
+    constructor(x, modeX, y, modeY)
+    {
+        super(x, y);
+        this.xMode = modeX || SizeModes.Pixels;
+        this.yMode = modeY || SizeModes.Pixels;
+    }
+        
+    /**
+     * Return a clone of this point.
+     */
+    clone()
+    {
+        return new UIPoint(this.x, this.xMode, this.y, this.yMode);
+    }
+    
+    /**
+     * Check if equal to another point.
+     * @param {PintarJS.Point} other Other point to compare to.
+     */
+    equals(other)
+    {
+        return other && this.x == other.x && this.y == other.y && this.xMode == other.xMode && this.yMode == other.yMode;
+    }
+}
+
+/**
+ * Get point with 0,0 values.
+ */
+UIPoint.zero = function()
+{
+    return new UIPoint(0, 'px', 0, 'px');
+}
+
+/**
+ * Get point with 1,1 values.
+ */
+UIPoint.one = function()
+{
+    return new UIPoint(1, 'px', 1, 'px');
+}
+
+/**
+ * Get point with 0.5,0.5 values.
+ */
+UIPoint.half = function()
+{
+    return new UIPoint(0.5, 'px', 0.5, 'px');
+}
+
+// export the UI point
+module.exports = UIPoint;
+},{"./pintar":6,"./size_modes":10}],14:[function(require,module,exports){
 /**
  * file: utils.js
  * description: Mixed utility methods.
