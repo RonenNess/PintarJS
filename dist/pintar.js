@@ -2095,47 +2095,54 @@ class WebGlRenderer extends Renderer
 
         // create sprite to draw
         var sprite = new Sprite(fontTexture.texture);
-
-        // get text lines
-        var lines = textSprite.textLines;
         
-        // starting properties
+        // style properties
         var fillColor = null;
         var strokeWidth = null;
         var strokeColor = null;
 
-        // now draw text front
-        for (var i = 0; i < lines.length; ++i) {
+        // calc ratio between font texture and text sprite size
+        var ratio = (textSprite.fontSize / fontTexture.fontSize);
 
-            // get current line
-            var line = lines[i];
-
-            // calculate line width and individual character sizes
-            var lineWidth = 0;
-            var charsData = [];
-            for (var j = 0; j < line.length; ++j) {
-                
-                // get source rect
-                var char = line[j];
-                var srcRect = fontTexture.getSourceRect(char);
-
-                // calc actual size
-                var ratio = (textSprite.fontSize / fontTexture.fontSize);
-                var width = Math.ceil(ratio * srcRect.width);
-                var height = Math.ceil(ratio * srcRect.height);
-
-                // add character data
-                charsData.push({
-                    srcRect: srcRect,
-                    size: new Point(width, height),
-                });
-                lineWidth += width - 1 * ratio;
+        // get the size, in pixels, of a specific character.
+        var charsSizeCache = {};
+        var getCharSize = (char, strokeWidth) => 
+        {
+            // if in cache return it
+            if (char in charsSizeCache) {
+                return charsSizeCache[char];
             }
 
-            // calc offset based on alignment
-            var offset = 0;
-            switch (textSprite.alignment) {
+            // get source rect
+            var srcRect = fontTexture.getSourceRect(char);
 
+            // calc actual size
+            var width = Math.ceil(ratio * srcRect.width);
+            var height = Math.ceil(ratio * srcRect.height);
+            var sizeWithStroke = width + strokeWidth / 4;
+            var ret = {
+                base: new Point(width, height), 
+                withStroke: new Point(sizeWithStroke, height),
+                width: sizeWithStroke - 1 * ratio,
+            };
+            charsSizeCache[char] = ret;
+            return ret;
+        }
+
+        // get text lines and style commands
+        var lines = textSprite.getProcessedTextAndCommands(getCharSize);
+
+        // draw text
+        for (var i = 0; i < lines.length; ++i) 
+        {
+            // get current line data
+            var line = lines[i];
+
+            // calc offset based on alignment
+            var lineWidth = line.totalWidth;
+            var offset = 0;
+            switch (textSprite.alignment) 
+            {
                 case "right":
                     offset -= lineWidth;
                     break;
@@ -2146,87 +2153,51 @@ class WebGlRenderer extends Renderer
             }
 
             // now actually draw characters
-            for (var j = 0; j < line.length; ++j) {
-
-                // check if its a style command
-                if (textSprite.useStyleCommands) 
+            for (var j = 0; j < line.text.length; ++j) 
+            {
+                // check if we reached a style command
+                if (textSprite.useStyleCommands && line.styleCommands[j]) 
                 {
-                    while (line[j] == '{' && line[j + 1] == '{') 
+                    var styleCommands = line.styleCommands[j];
+                    for (var _x = 0; _x < styleCommands.length; ++ _x) 
                     {
-                        // reset command
-                        if (line.substr(j, "{{res}}".length) === "{{res}}") {
-                            fillColor = strokeWidth = strokeColor = null;
-                            j += "{{res}}".length;
-                        }
-                        else
+                        var styleCommand = styleCommands[_x];
+                        switch (styleCommand.type)
                         {
-                            // get command part
-                            var command = line.substr(j, "{{xx:".length);
+                            case "reset":
+                                fillColor = strokeWidth = strokeColor = null;
+                                break;
 
-                            // method to get value part of the command
-                            var getValuePart = () => 
-                            {
-                                var closingIndex = line.substr(j, 64).indexOf('}}');
-                                if (closingIndex === -1) { 
-                                    throw new PintarConsole.Error("Invalid broken style command in line: '" + line + "'!");
-                                }
-                                return line.substring(j + 5, j + closingIndex);
-                            };
+                            case "fc":
+                                fillColor = styleCommand.val;
+                                break;
+                            
+                            case "sc":
+                                strokeColor = styleCommand.val;
+                                break;
 
-                            // parse color value for style command
-                            var parseColor = (colorVal) => 
-                            {
-                                if (colorVal[0] === '#') {
-                                    return Color.fromHex(colorVal);
-                                }
-                                return Color[colorVal]();
-                            }
-
-                            // get style value part and advance index
-                            var styleVal = getValuePart();
-                            j += styleVal.length + 2 + 5;
-
-                            // is it front color?
-                            if (command == "{{fc:") {
-                                var val = parseColor(styleVal);
-                                fillColor = val;
-                            }
-                            // is it stroke color?
-                            else if (command == "{{sc:") {
-                                var val = parseColor(styleVal);
-                                strokeColor = val;
-                            }
-                            // is it stroke color?
-                            else if (command == "{{sw:") {
-                                var val = parseInt(styleVal);
-                                strokeWidth = val;
-                            }
-                        } 
+                            case "sw":
+                                strokeWidth = styleCommand.val;
+                                break;
+                        }
                     }
                 }
 
-                // special case - if end of ext was a style command for whatever reason, we now exceed line length..
-                if (j >= line.length) {
-                    continue;
-                }
-
-                // get current character
-                var char = line[j];
+                // get current character + source rect + size
+                var char = line.text[j];
+                var srcRect = fontTexture.getSourceRect(char);
+                var size = line.sizes[j];
 
                 // set starting properties
                 if (fillColor === null) { fillColor = textSprite.color; }
                 if (strokeWidth === null) { strokeWidth = textSprite.strokeWidth; }
                 if (strokeColor === null) { strokeColor = textSprite.strokeColor; }
 
-                // get source rect and size
-                var srcRect = charsData[j].srcRect;
-                var size = charsData[j].size;
-
                 // set sprite params
                 sprite.sourceRectangle = srcRect;
-                var position = new Point(textSprite.position.x + offset, textSprite.position.y + (i * textSprite.lineHeight) - height * 0.75);
-                sprite.width = size.x;
-                sprite.height = size.y;
+                var position = new Point(textSprite.position.x + offset, textSprite.position.y + (i * textSprite.lineHeight) - size.base.y * 0.75);
+                sprite.width = size.base.x;
+                sprite.height = size.base.y;
                 sprite.smoothingEnabled = this.smoothText;
 
                 // draw character stroke
@@ -2237,8 +2208,8 @@ class WebGlRenderer extends Renderer
                             var centerPart = sx == 0 && sy == 0;
                             var extraWidth = (centerPart ? strokeWidth : 0);
                             var extraHeight = (centerPart ? strokeWidth : 0);
-                            sprite.width = size.x + extraWidth;
-                            sprite.height = size.y + extraHeight;
+                            sprite.width = size.base.x + extraWidth;
+                            sprite.height = size.base.y + extraHeight;
                             sprite.position.x = position.x + sx * (strokeWidth / 2.5) - extraWidth / 2;
                             sprite.position.y = position.y + sy * (strokeWidth / 2.5) - extraHeight / 2;
                             this.drawSprite(sprite);
@@ -2247,8 +2218,8 @@ class WebGlRenderer extends Renderer
                 }
 
                 // set character size
-                sprite.width = size.x;
-                sprite.height = size.y;
+                sprite.width = size.base.x;
+                sprite.height = size.base.y;
 
                 // draw character fill
                 sprite.position = position;
@@ -2256,7 +2227,7 @@ class WebGlRenderer extends Renderer
                 this.drawSprite(sprite);
 
                 // update offset
-                offset += size.x - 1 * ratio;
+                offset += size.withStroke.x - 1 * ratio;
             }
         }
     }
@@ -4277,6 +4248,23 @@ class TextSprite extends Renderable
     }
 
     /**
+     * Set if to use style commands.
+     */
+    set useStyleCommands(val)
+    {
+        this._useStyleCommands = val;
+        this._cachedLinesAndCommands = null;
+    }
+
+    /**
+     * Get if using style commands.
+     */
+    get useStyleCommands()
+    {
+        return this._useStyleCommands;
+    }
+
+    /**
      * Set stroke color.
      */
     set strokeColor(val)
@@ -4299,6 +4287,7 @@ class TextSprite extends Renderable
     set maxWidth(val)
     {
         this._maxWidth = val;
+        this._cachedLinesAndCommands = null;
         this._version++;
     }
 
@@ -4316,6 +4305,7 @@ class TextSprite extends Renderable
     set strokeWidth(val)
     {
         this._strokeWidth = val;
+        this._cachedLinesAndCommands = null;
         this._version++;
     }
 
@@ -4333,6 +4323,7 @@ class TextSprite extends Renderable
     set text(val)
     {
         this._text = val;
+        this._cachedLinesAndCommands = null;
         this._textLines = val.split('\n');
         this._version++;
     }
@@ -4363,6 +4354,7 @@ class TextSprite extends Renderable
     {
         this._font = val;
         this._fontString = null;
+        this._cachedLinesAndCommands = null;
         this._version++;
     }
 
@@ -4381,6 +4373,7 @@ class TextSprite extends Renderable
     {
         this._fontSize = val;
         this._fontString = null;
+        this._cachedLinesAndCommands = null;
         this._version++;
     }
 
@@ -4415,6 +4408,140 @@ class TextSprite extends Renderable
     get textLines()
     {
         return this._textLines;
+    }
+
+    /**
+     * Get text as an array of lines after breaking them based on maxWidth + list of style commands.
+     * @param {Function(char, strokeWidth)} getCharSize Method to get a single character's size.
+     */
+    getProcessedTextAndCommands(getCharSize)
+    {
+        // got cached? return it
+        if (this._cachedLinesAndCommands) {
+            return this._cachedLinesAndCommands;
+        }
+
+        // ret list + method to finish line
+        var ret = [];
+        var currLine = {styleCommands: {}, text: "", sizes: [], totalWidth: 0};
+        var endLine = () => 
+        {    
+            // sanity
+            if (currLine.sizes.length != currLine.text.length) {
+                throw new Error("Internal error!");
+            }
+
+            // push line data
+            ret.push(currLine);
+            currLine = {styleCommands: {}, text: "", sizes: [], totalWidth: 0};
+        }
+
+        // method to get value part of the command
+        var getValuePart = (j) => 
+        {
+            var closingIndex = this._text.substr(j, 64).indexOf('}}');
+            if (closingIndex === -1) { 
+                throw new PintarConsole.Error("Invalid broken style command: '" + this._text.substr(j - 3, 10) + "'!");
+            }
+            return this._text.substring(j + 5, j + closingIndex);
+        };
+
+        // parse color value for style command
+        var parseColor = (colorVal) => 
+        {
+            if (colorVal[0] === '#') {
+                return Color.fromHex(colorVal);
+            }
+            return Color[colorVal]();
+        }
+
+        // current offset X, to add line breaks
+        var strokeWidth = this.strokeWidth;
+
+        // parse lines and style commands
+        for (var j = 0; j < this._text.length; ++j) {
+
+            // check if its a style command
+            if (this.useStyleCommands) 
+            {
+                var styleCommandKey = currLine.text.length;
+                while (this._text[j] == '{' && this._text[j + 1] == '{') 
+                {
+                    // create list for style commands
+                    currLine.styleCommands[styleCommandKey] = currLine.styleCommands[styleCommandKey] || [];
+
+                    // reset command
+                    if (this._text.substr(j, "{{res}}".length) === "{{res}}") {
+                        currLine.styleCommands[styleCommandKey].push({'type': 'reset'});
+                        strokeWidth = this.strokeWidth;
+                        j += "{{res}}".length;
+                    }
+                    else
+                    {
+                        // get command part
+                        var command = this._text.substr(j, "{{xx:".length);
+
+                        // get style value part and advance index
+                        var styleVal = getValuePart(j);
+                        j += styleVal.length + 2 + 5;
+
+                        // is it front color?
+                        if (command == "{{fc:") {
+                            var val = parseColor(styleVal);
+                            currLine.styleCommands[styleCommandKey].push({'type': 'fc', 'val': val});
+                        }
+                        // is it stroke color?
+                        else if (command == "{{sc:") {
+                            var val = parseColor(styleVal);
+                            currLine.styleCommands[styleCommandKey].push({'type': 'sc', 'val': val});
+                        }
+                        // is it stroke color?
+                        else if (command == "{{sw:") {
+                            var val = parseInt(styleVal);
+                            strokeWidth = val;
+                            currLine.styleCommands[styleCommandKey].push({'type': 'sw', 'val': val});
+                        }
+                    } 
+                }
+            }
+
+            // get current character and add to line
+            var char = this._text[j];
+            if (char === undefined) {
+                continue;
+            }
+
+            // get current char width and add to sizes array
+            var currCharSize = getCharSize(char, strokeWidth);
+
+            // check if need to break due to exceeding size
+            if (this.maxWidth && currLine.totalWidth >= this.maxWidth) 
+            {
+                endLine();
+            }
+
+            // break line character?
+            if (char == '\n') 
+            {
+                endLine();
+            }
+            // regular character, add to output line
+            else 
+            {
+                currLine.sizes.push(currCharSize);
+                currLine.text += char;
+                currLine.totalWidth += currCharSize.width;
+            }
+        }
+
+        // push last line
+        if (currLine.text.length) { 
+            endLine(); 
+        }
+
+        // store in cache and return
+        this._cachedLinesAndCommands = ret;
+        return ret;
     }
  
     /**

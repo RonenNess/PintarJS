@@ -300,47 +300,54 @@ class WebGlRenderer extends Renderer
 
         // create sprite to draw
         var sprite = new Sprite(fontTexture.texture);
-
-        // get text lines
-        var lines = textSprite.textLines;
         
-        // starting properties
+        // style properties
         var fillColor = null;
         var strokeWidth = null;
         var strokeColor = null;
 
-        // now draw text front
-        for (var i = 0; i < lines.length; ++i) {
+        // calc ratio between font texture and text sprite size
+        var ratio = (textSprite.fontSize / fontTexture.fontSize);
 
-            // get current line
-            var line = lines[i];
-
-            // calculate line width and individual character sizes
-            var lineWidth = 0;
-            var charsData = [];
-            for (var j = 0; j < line.length; ++j) {
-                
-                // get source rect
-                var char = line[j];
-                var srcRect = fontTexture.getSourceRect(char);
-
-                // calc actual size
-                var ratio = (textSprite.fontSize / fontTexture.fontSize);
-                var width = Math.ceil(ratio * srcRect.width);
-                var height = Math.ceil(ratio * srcRect.height);
-
-                // add character data
-                charsData.push({
-                    srcRect: srcRect,
-                    size: new Point(width, height),
-                });
-                lineWidth += width - 1 * ratio;
+        // get the size, in pixels, of a specific character.
+        var charsSizeCache = {};
+        var getCharSize = (char, strokeWidth) => 
+        {
+            // if in cache return it
+            if (char in charsSizeCache) {
+                return charsSizeCache[char];
             }
 
-            // calc offset based on alignment
-            var offset = 0;
-            switch (textSprite.alignment) {
+            // get source rect
+            var srcRect = fontTexture.getSourceRect(char);
 
+            // calc actual size
+            var width = Math.ceil(ratio * srcRect.width);
+            var height = Math.ceil(ratio * srcRect.height);
+            var sizeWithStroke = width + strokeWidth / 4;
+            var ret = {
+                base: new Point(width, height), 
+                withStroke: new Point(sizeWithStroke, height),
+                width: sizeWithStroke - 1 * ratio,
+            };
+            charsSizeCache[char] = ret;
+            return ret;
+        }
+
+        // get text lines and style commands
+        var lines = textSprite.getProcessedTextAndCommands(getCharSize);
+
+        // draw text
+        for (var i = 0; i < lines.length; ++i) 
+        {
+            // get current line data
+            var line = lines[i];
+
+            // calc offset based on alignment
+            var lineWidth = line.totalWidth;
+            var offset = 0;
+            switch (textSprite.alignment) 
+            {
                 case "right":
                     offset -= lineWidth;
                     break;
@@ -351,87 +358,51 @@ class WebGlRenderer extends Renderer
             }
 
             // now actually draw characters
-            for (var j = 0; j < line.length; ++j) {
-
-                // check if its a style command
-                if (textSprite.useStyleCommands) 
+            for (var j = 0; j < line.text.length; ++j) 
+            {
+                // check if we reached a style command
+                if (textSprite.useStyleCommands && line.styleCommands[j]) 
                 {
-                    while (line[j] == '{' && line[j + 1] == '{') 
+                    var styleCommands = line.styleCommands[j];
+                    for (var _x = 0; _x < styleCommands.length; ++ _x) 
                     {
-                        // reset command
-                        if (line.substr(j, "{{res}}".length) === "{{res}}") {
-                            fillColor = strokeWidth = strokeColor = null;
-                            j += "{{res}}".length;
-                        }
-                        else
+                        var styleCommand = styleCommands[_x];
+                        switch (styleCommand.type)
                         {
-                            // get command part
-                            var command = line.substr(j, "{{xx:".length);
+                            case "reset":
+                                fillColor = strokeWidth = strokeColor = null;
+                                break;
 
-                            // method to get value part of the command
-                            var getValuePart = () => 
-                            {
-                                var closingIndex = line.substr(j, 64).indexOf('}}');
-                                if (closingIndex === -1) { 
-                                    throw new PintarConsole.Error("Invalid broken style command in line: '" + line + "'!");
-                                }
-                                return line.substring(j + 5, j + closingIndex);
-                            };
+                            case "fc":
+                                fillColor = styleCommand.val;
+                                break;
+                            
+                            case "sc":
+                                strokeColor = styleCommand.val;
+                                break;
 
-                            // parse color value for style command
-                            var parseColor = (colorVal) => 
-                            {
-                                if (colorVal[0] === '#') {
-                                    return Color.fromHex(colorVal);
-                                }
-                                return Color[colorVal]();
-                            }
-
-                            // get style value part and advance index
-                            var styleVal = getValuePart();
-                            j += styleVal.length + 2 + 5;
-
-                            // is it front color?
-                            if (command == "{{fc:") {
-                                var val = parseColor(styleVal);
-                                fillColor = val;
-                            }
-                            // is it stroke color?
-                            else if (command == "{{sc:") {
-                                var val = parseColor(styleVal);
-                                strokeColor = val;
-                            }
-                            // is it stroke color?
-                            else if (command == "{{sw:") {
-                                var val = parseInt(styleVal);
-                                strokeWidth = val;
-                            }
-                        } 
+                            case "sw":
+                                strokeWidth = styleCommand.val;
+                                break;
+                        }
                     }
                 }
 
-                // special case - if end of ext was a style command for whatever reason, we now exceed line length..
-                if (j >= line.length) {
-                    continue;
-                }
-
-                // get current character
-                var char = line[j];
+                // get current character + source rect + size
+                var char = line.text[j];
+                var srcRect = fontTexture.getSourceRect(char);
+                var size = line.sizes[j];
 
                 // set starting properties
                 if (fillColor === null) { fillColor = textSprite.color; }
                 if (strokeWidth === null) { strokeWidth = textSprite.strokeWidth; }
                 if (strokeColor === null) { strokeColor = textSprite.strokeColor; }
 
-                // get source rect and size
-                var srcRect = charsData[j].srcRect;
-                var size = charsData[j].size;
-
                 // set sprite params
                 sprite.sourceRectangle = srcRect;
-                var position = new Point(textSprite.position.x + offset, textSprite.position.y + (i * textSprite.lineHeight) - height * 0.75);
-                sprite.width = size.x;
-                sprite.height = size.y;
+                var position = new Point(textSprite.position.x + offset, textSprite.position.y + (i * textSprite.lineHeight) - size.base.y * 0.75);
+                sprite.width = size.base.x;
+                sprite.height = size.base.y;
                 sprite.smoothingEnabled = this.smoothText;
 
                 // draw character stroke
@@ -442,8 +413,8 @@ class WebGlRenderer extends Renderer
                             var centerPart = sx == 0 && sy == 0;
                             var extraWidth = (centerPart ? strokeWidth : 0);
                             var extraHeight = (centerPart ? strokeWidth : 0);
-                            sprite.width = size.x + extraWidth;
-                            sprite.height = size.y + extraHeight;
+                            sprite.width = size.base.x + extraWidth;
+                            sprite.height = size.base.y + extraHeight;
                             sprite.position.x = position.x + sx * (strokeWidth / 2.5) - extraWidth / 2;
                             sprite.position.y = position.y + sy * (strokeWidth / 2.5) - extraHeight / 2;
                             this.drawSprite(sprite);
@@ -452,8 +423,8 @@ class WebGlRenderer extends Renderer
                 }
 
                 // set character size
-                sprite.width = size.x;
-                sprite.height = size.y;
+                sprite.width = size.base.x;
+                sprite.height = size.base.y;
 
                 // draw character fill
                 sprite.position = position;
@@ -461,7 +432,7 @@ class WebGlRenderer extends Renderer
                 this.drawSprite(sprite);
 
                 // update offset
-                offset += size.x - 1 * ratio;
+                offset += size.withStroke.x - 1 * ratio;
             }
         }
     }

@@ -91,6 +91,23 @@ class TextSprite extends Renderable
     }
 
     /**
+     * Set if to use style commands.
+     */
+    set useStyleCommands(val)
+    {
+        this._useStyleCommands = val;
+        this._cachedLinesAndCommands = null;
+    }
+
+    /**
+     * Get if using style commands.
+     */
+    get useStyleCommands()
+    {
+        return this._useStyleCommands;
+    }
+
+    /**
      * Set stroke color.
      */
     set strokeColor(val)
@@ -113,6 +130,7 @@ class TextSprite extends Renderable
     set maxWidth(val)
     {
         this._maxWidth = val;
+        this._cachedLinesAndCommands = null;
         this._version++;
     }
 
@@ -130,6 +148,7 @@ class TextSprite extends Renderable
     set strokeWidth(val)
     {
         this._strokeWidth = val;
+        this._cachedLinesAndCommands = null;
         this._version++;
     }
 
@@ -147,6 +166,7 @@ class TextSprite extends Renderable
     set text(val)
     {
         this._text = val;
+        this._cachedLinesAndCommands = null;
         this._textLines = val.split('\n');
         this._version++;
     }
@@ -177,6 +197,7 @@ class TextSprite extends Renderable
     {
         this._font = val;
         this._fontString = null;
+        this._cachedLinesAndCommands = null;
         this._version++;
     }
 
@@ -195,6 +216,7 @@ class TextSprite extends Renderable
     {
         this._fontSize = val;
         this._fontString = null;
+        this._cachedLinesAndCommands = null;
         this._version++;
     }
 
@@ -233,14 +255,29 @@ class TextSprite extends Renderable
 
     /**
      * Get text as an array of lines after breaking them based on maxWidth + list of style commands.
+     * @param {Function(char, strokeWidth)} getCharSize Method to get a single character's size.
      */
-    getProcessedTextAndCommands()
+    getProcessedTextAndCommands(getCharSize)
     {
-        // for style commands
-        var styleCommands = {};
+        // got cached? return it
+        if (this._cachedLinesAndCommands) {
+            return this._cachedLinesAndCommands;
+        }
 
-        // for actual lines
-        var lines = [];
+        // ret list + method to finish line
+        var ret = [];
+        var currLine = {styleCommands: {}, text: "", sizes: [], totalWidth: 0};
+        var endLine = () => 
+        {    
+            // sanity
+            if (currLine.sizes.length != currLine.text.length) {
+                throw new Error("Internal error!");
+            }
+
+            // push line data
+            ret.push(currLine);
+            currLine = {styleCommands: {}, text: "", sizes: [], totalWidth: 0};
+        }
 
         // method to get value part of the command
         var getValuePart = (j) => 
@@ -261,21 +298,25 @@ class TextSprite extends Renderable
             return Color[colorVal]();
         }
 
-        // for actual index
-        var actualIndex = 0;
+        // current offset X, to add line breaks
+        var strokeWidth = this.strokeWidth;
 
         // parse lines and style commands
-        var line = "";
         for (var j = 0; j < this._text.length; ++j) {
 
             // check if its a style command
-            if (textSprite.useStyleCommands) 
+            if (this.useStyleCommands) 
             {
+                var styleCommandKey = currLine.text.length;
                 while (this._text[j] == '{' && this._text[j + 1] == '{') 
                 {
+                    // create list for style commands
+                    currLine.styleCommands[styleCommandKey] = currLine.styleCommands[styleCommandKey] || [];
+
                     // reset command
                     if (this._text.substr(j, "{{res}}".length) === "{{res}}") {
-                        styleCommands[actualIndex] = {'type': 'reset'};
+                        currLine.styleCommands[styleCommandKey].push({'type': 'reset'});
+                        strokeWidth = this.strokeWidth;
                         j += "{{res}}".length;
                     }
                     else
@@ -290,17 +331,18 @@ class TextSprite extends Renderable
                         // is it front color?
                         if (command == "{{fc:") {
                             var val = parseColor(styleVal);
-                            styleCommands[actualIndex] = {'type': 'fc', 'val': val};
+                            currLine.styleCommands[styleCommandKey].push({'type': 'fc', 'val': val});
                         }
                         // is it stroke color?
                         else if (command == "{{sc:") {
                             var val = parseColor(styleVal);
-                            styleCommands[actualIndex] = {'type': 'sc', 'val': val};
+                            currLine.styleCommands[styleCommandKey].push({'type': 'sc', 'val': val});
                         }
                         // is it stroke color?
                         else if (command == "{{sw:") {
                             var val = parseInt(styleVal);
-                            styleCommands[actualIndex] = {'type': 'sw', 'val': val};
+                            strokeWidth = val;
+                            currLine.styleCommands[styleCommandKey].push({'type': 'sw', 'val': val});
                         }
                     } 
                 }
@@ -308,21 +350,41 @@ class TextSprite extends Renderable
 
             // get current character and add to line
             var char = this._text[j];
+            if (char === undefined) {
+                continue;
+            }
 
-            // break line?
-            if (char == '\n') {
-                lines.push(line);
-                line = "";
+            // get current char width and add to sizes array
+            var currCharSize = getCharSize(char, strokeWidth);
+
+            // check if need to break due to exceeding size
+            if (this.maxWidth && currLine.totalWidth >= this.maxWidth) 
+            {
+                endLine();
+            }
+
+            // break line character?
+            if (char == '\n') 
+            {
+                endLine();
             }
             // regular character, add to output line
-            else {
-                actualIndex++;
-                line += char;
+            else 
+            {
+                currLine.sizes.push(currCharSize);
+                currLine.text += char;
+                currLine.totalWidth += currCharSize.width;
             }
         }
 
-        // get lines and style commands
-        return {lines: lines, styleCommands: styleCommands};
+        // push last line
+        if (currLine.text.length) { 
+            endLine(); 
+        }
+
+        // store in cache and return
+        this._cachedLinesAndCommands = ret;
+        return ret;
     }
  
     /**

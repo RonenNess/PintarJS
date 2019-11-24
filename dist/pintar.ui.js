@@ -489,6 +489,10 @@ class Paragraph extends UIElement
         // get options from theme and skin type
         var options = this.getOptionsFromTheme(theme, skin, override);
         this.setBaseOptions(options);
+        
+        // by default paragraphs take full width
+        this.size.x = 100;
+        this.size.xMode = SizeModes.Percents;
 
         // create text
         this.textSprite = new PintarJS.TextSprite("");
@@ -534,9 +538,13 @@ class Paragraph extends UIElement
     draw(pintar)
     {
         // set position
-        var position = this.getDestTopLeftPosition().clone();
+        var destRect = this.getBoundingBox();
+        var position = destRect.getPosition();
         position.y += this.textSprite.fontSize;
         this.textSprite.position = position;
+
+        // set max width
+        this.textSprite.maxWidth = destRect.width;
 
         // draw text
         pintar.drawText(this.textSprite);
