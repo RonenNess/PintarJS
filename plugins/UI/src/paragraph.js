@@ -80,9 +80,13 @@ class Paragraph extends UIElement
     draw(pintar)
     {
         // set position
-        var position = this.getDestTopLeftPosition().clone();
+        var destRect = this.getBoundingBox();
+        var position = destRect.getPosition();
         position.y += this.textSprite.fontSize;
         this.textSprite.position = position;
+
+        // set max width
+        this.textSprite.maxWidth = destRect.width;
 
         // draw text
         pintar.drawText(this.textSprite);

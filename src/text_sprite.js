@@ -230,6 +230,100 @@ class TextSprite extends Renderable
     {
         return this._textLines;
     }
+
+    /**
+     * Get text as an array of lines after breaking them based on maxWidth + list of style commands.
+     */
+    getProcessedTextAndCommands()
+    {
+        // for style commands
+        var styleCommands = {};
+
+        // for actual lines
+        var lines = [];
+
+        // method to get value part of the command
+        var getValuePart = (j) => 
+        {
+            var closingIndex = this._text.substr(j, 64).indexOf('}}');
+            if (closingIndex === -1) { 
+                throw new PintarConsole.Error("Invalid broken style command: '" + this._text.substr(j - 3, 10) + "'!");
+            }
+            return this._text.substring(j + 5, j + closingIndex);
+        };
+
+        // parse color value for style command
+        var parseColor = (colorVal) => 
+        {
+            if (colorVal[0] === '#') {
+                return Color.fromHex(colorVal);
+            }
+            return Color[colorVal]();
+        }
+
+        // for actual index
+        var actualIndex = 0;
+
+        // parse lines and style commands
+        var line = "";
+        for (var j = 0; j < this._text.length; ++j) {
+
+            // check if its a style command
+            if (textSprite.useStyleCommands) 
+            {
+                while (this._text[j] == '{' && this._text[j + 1] == '{') 
+                {
+                    // reset command
+                    if (this._text.substr(j, "{{res}}".length) === "{{res}}") {
+                        styleCommands[actualIndex] = {'type': 'reset'};
+                        j += "{{res}}".length;
+                    }
+                    else
+                    {
+                        // get command part
+                        var command = this._text.substr(j, "{{xx:".length);
+
+                        // get style value part and advance index
+                        var styleVal = getValuePart(j);
+                        j += styleVal.length + 2 + 5;
+
+                        // is it front color?
+                        if (command == "{{fc:") {
+                            var val = parseColor(styleVal);
+                            styleCommands[actualIndex] = {'type': 'fc', 'val': val};
+                        }
+                        // is it stroke color?
+                        else if (command == "{{sc:") {
+                            var val = parseColor(styleVal);
+                            styleCommands[actualIndex] = {'type': 'sc', 'val': val};
+                        }
+                        // is it stroke color?
+                        else if (command == "{{sw:") {
+                            var val = parseInt(styleVal);
+                            styleCommands[actualIndex] = {'type': 'sw', 'val': val};
+                        }
+                    } 
+                }
+            }
+
+            // get current character and add to line
+            var char = this._text[j];
+
+            // break line?
+            if (char == '\n') {
+                lines.push(line);
+                line = "";
+            }
+            // regular character, add to output line
+            else {
+                actualIndex++;
+                line += char;
+            }
+        }
+
+        // get lines and style commands
+        return {lines: lines, styleCommands: styleCommands};
+    }
  
     /**
      * Return a clone of this text sprite.
