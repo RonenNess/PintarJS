@@ -174,7 +174,7 @@ class Container extends UIElement
             {
                 if (lastElement) {
                     var marginY = Math.max(element.margin.top, lastElement.margin.bottom);
-                    element.offset.set(0, lastElement.offset.y + lastElement.size.y + marginY);
+                    element.offset.set(element.margin.left, lastElement.offset.y + lastElement.size.y + marginY);
                 }
                 else {
                     element.offset.set(element.margin.left, element.margin.top);

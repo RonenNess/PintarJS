@@ -2152,7 +2152,8 @@ class WebGlRenderer extends Renderer
                 }
 
                 // now actually draw characters
-                for (var j = 0; j < line.text.length; ++j) 
+                // note: take text length + 1 to capture style command in end of lines
+                for (var j = 0; j < line.text.length + 1; ++j) 
                 {
                     // check if we reached a style command
                     if (textSprite.useStyleCommands && line.styleCommands[j]) 
@@ -2182,8 +2183,15 @@ class WebGlRenderer extends Renderer
                         }
                     }
 
-                    // get current character + source rect + size
+                    // check if should finish line
+                    if (j >= line.text.length) {
+                        break;
+                    }
+
+                    // get current character
                     var char = line.text[j];
+
+                    // get source rect and size
                     var srcRect = fontTexture.getSourceRect(char);
                     var size = line.sizes[j];
 
@@ -4455,8 +4463,8 @@ class TextSprite extends Renderable
         this.calculatedHeight = this.calculatedLineHeight = 0;
 
         // parse lines and style commands
-        for (var j = 0; j < this._text.length; ++j) {
-
+        for (var j = 0; j < this._text.length; ++j) 
+        {
             // check if its a style command
             if (this.useStyleCommands) 
             {
@@ -4467,7 +4475,8 @@ class TextSprite extends Renderable
                     currLine.styleCommands[styleCommandKey] = currLine.styleCommands[styleCommandKey] || [];
 
                     // reset command
-                    if (this._text.substr(j, "{{res}}".length) === "{{res}}") {
+                    if (this._text.substr(j, "{{res}}".length) === "{{res}}") 
+                    {
                         currLine.styleCommands[styleCommandKey].push({'type': 'reset'});
                         strokeWidth = this.strokeWidth;
                         j += "{{res}}".length;

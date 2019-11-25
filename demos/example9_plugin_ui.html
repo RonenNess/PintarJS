@@ -117,12 +117,35 @@
           // default paragraph
           default: {
             font: "ui-font",
-            fontSize: 20,
+            fontSize: 12,
             fillColor: PintarJS.Color.white(),
             strokeColor: PintarJS.Color.black(),
-            strokeWidth: 10,
-            margin: new PintarJS.UI.SidesProperties(8, 8, 12, 12),
-          }
+            strokeWidth: 6,
+            useStyleCommands: true,
+            margin: new PintarJS.UI.SidesProperties(10, 8, 10, 8),
+          },
+
+          // headers
+          header: {
+            font: "ui-font",
+            fontSize: 18,
+            fillColor: PintarJS.Color.yellow(),
+            strokeColor: PintarJS.Color.black(),
+            strokeWidth: 8,
+            useStyleCommands: false,
+            margin: new PintarJS.UI.SidesProperties(8, 8, 12, 8),
+          },
+
+          // small paragraph
+          small: {
+            font: "ui-font",
+            fontSize: 9,
+            fillColor: new PintarJS.Color(0.8, 0.8, 0.8, 1),
+            strokeColor: PintarJS.Color.black(),
+            strokeWidth: 5,
+            useStyleCommands: true,
+            margin: new PintarJS.UI.SidesProperties(10, 8, 10, 8),
+          },
         },
 
       };
@@ -133,31 +156,50 @@
       // create a container
       var container = new PintarJS.UI.Container(UI_THEME);
       container.anchor = PintarJS.UI.Anchors.Center;
-      container.size.set(300, 400);
+      container.size.set(370, 400);
       root.addChild(container);
 
-      // create header paragraph
-      var paragraph = new PintarJS.UI.Paragraph(UI_THEME);
-      paragraph.text = "Progress Bars: bla bla bla bla bla bla bla bla bla bla bla bla";
+      // create header paragraph and info text
+      var header = new PintarJS.UI.Paragraph(UI_THEME, "header");
+      header.text = "Progress Bars:";
+      container.addChild(header);
+
+      var paragraph = new PintarJS.UI.Paragraph(UI_THEME, "default");
+      paragraph.text = "Progress bars display values from {{fc:yellow}}0.0{{res}} to {{fc:yellow}}1.0{{res}}, useful for things like HP bars, loading screens, ect.";
+      container.addChild(paragraph);
+
+      var paragraph = new PintarJS.UI.Paragraph(UI_THEME, "small");
+      paragraph.text = "In this demo values change randomly.";
       container.addChild(paragraph);
 
       // create progressbar element
+      var progressbars = [];
       var progressbar = new PintarJS.UI.ProgressBar(UI_THEME);
       progressbar.anchor = PintarJS.UI.Anchors.Auto;
       progressbar.value = 0.85;
       container.addChild(progressbar);
+      progressbars.push(progressbar);
 
       // create additional progressbar, but align to right and set green color
       progressbar = new PintarJS.UI.ProgressBar(UI_THEME, null, {fillAnchor: "TopRight", fillColor: PintarJS.Color.green()});
       progressbar.anchor = PintarJS.UI.Anchors.Auto;
       progressbar.value = 0.7;
       container.addChild(progressbar);
+      progressbars.push(progressbar);
 
       // create additional progressbar, but align to center and set yellow color
       progressbar = new PintarJS.UI.ProgressBar(UI_THEME, null, {fillAnchor: "Center", fillColor: PintarJS.Color.yellow(), fillOffset: null});
       progressbar.anchor = PintarJS.UI.Anchors.Auto;
       progressbar.value = 0.65;
       container.addChild(progressbar);
+      progressbars.push(progressbar);
+
+      // set random values every few seconds for progress bars
+      setInterval(() => {
+        for (var i = 0; i < progressbars.length; ++i) {
+          progressbars[i].value = Math.random();
+        }
+      }, 5000);
 
       // draw everything
       function drawUI()

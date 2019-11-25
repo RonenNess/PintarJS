@@ -282,8 +282,8 @@ class TextSprite extends Renderable
         this.calculatedHeight = this.calculatedLineHeight = 0;
 
         // parse lines and style commands
-        for (var j = 0; j < this._text.length; ++j) {
-
+        for (var j = 0; j < this._text.length; ++j) 
+        {
             // check if its a style command
             if (this.useStyleCommands) 
             {
@@ -294,7 +294,8 @@ class TextSprite extends Renderable
                     currLine.styleCommands[styleCommandKey] = currLine.styleCommands[styleCommandKey] || [];
 
                     // reset command
-                    if (this._text.substr(j, "{{res}}".length) === "{{res}}") {
+                    if (this._text.substr(j, "{{res}}".length) === "{{res}}") 
+                    {
                         currLine.styleCommands[styleCommandKey].push({'type': 'reset'});
                         strokeWidth = this.strokeWidth;
                         j += "{{res}}".length;

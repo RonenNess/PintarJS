@@ -361,7 +361,8 @@ class WebGlRenderer extends Renderer
                 }
 
                 // now actually draw characters
-                for (var j = 0; j < line.text.length; ++j) 
+                // note: take text length + 1 to capture style command in end of lines
+                for (var j = 0; j < line.text.length + 1; ++j) 
                 {
                     // check if we reached a style command
                     if (textSprite.useStyleCommands && line.styleCommands[j]) 
@@ -391,8 +392,15 @@ class WebGlRenderer extends Renderer
                         }
                     }
 
-                    // get current character + source rect + size
+                    // check if should finish line
+                    if (j >= line.text.length) {
+                        break;
+                    }
+
+                    // get current character
                     var char = line.text[j];
+
+                    // get source rect and size
                     var srcRect = fontTexture.getSourceRect(char);
                     var size = line.sizes[j];
 
