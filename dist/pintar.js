@@ -1289,7 +1289,8 @@ class CanvasRenderer extends Renderer
     {  
         // set font and alignment
         var newFont = textSprite.fontPropertyAsString;
-        if (this._currFont !== newFont) {
+        if (this._currFont !== newFont) 
+        {
             this._ctx.font = newFont;
             this._currFont = newFont;
         }
@@ -1307,34 +1308,51 @@ class CanvasRenderer extends Renderer
         var posX = Math.round(textSprite.position.x - this._viewport.offset.x);
         var posY = Math.round(textSprite.position.y - this._viewport.offset.y);
 
-        // get text and break into lines
-        var lines = textSprite.textLines;
-        var lineHeight = textSprite.lineHeight;
+        // get the size, in pixels, of a specific character.
+        var charsSizeCache = {};
+        var getCharSize = (char, strokeWidth) => 
+        {
+            // if in cache return it
+            if (char in charsSizeCache) {
+                return charsSizeCache[char];
+            }
+
+            // calc actual size
+            var width = TextSprite.measureTextWidth(textSprite.font, textSprite.fontSize, char);
+            var height = TextSprite.measureTextHeight(textSprite.font, textSprite.fontSize, char);
+            var strokeExtra = 0;
+            var ret = {
+                base: new Point(width, height), 
+                withStroke: new Point(width + strokeExtra, height + strokeExtra),
+                width: width + strokeExtra,
+            };
+            charsSizeCache[char] = ret;
+            return ret;
+        }
+
+        // get lines and data
+        var linesWithData = textSprite.getProcessedTextAndCommands(getCharSize);
+        var lineHeight = textSprite.calculatedLineHeight;
 
         // draw stroke
-        if (textSprite.strokeWidth) {
+        if (textSprite.strokeWidth) 
+        {
             this._ctx.strokeStyle = textSprite.strokeColor.asHex();
             this._ctx.lineWidth = textSprite.strokeWidth;
-            for (var i = 0; i < lines.length; ++i) 
+            for (var i = 0; i < linesWithData.length; ++i) 
             {
-                var line = lines[i];
-                if (textSprite.useStyleCommands) {
-                    line = TextSprite.getTextWithoutStyleCommands(line);
-                }
-                this._ctx.strokeText(line, posX, posY + i * lineHeight, textSprite.maxWidth || undefined);
+                var line = linesWithData[i].text;
+                this._ctx.strokeText(line, posX, posY + i * lineHeight);
             }
         }
 
         // draw text fill
-        if (textSprite.color.a) {
+        if (textSprite.color.a) 
+        {
             this._ctx.fillStyle  = textSprite.color.asHex();
-            for (var i = 0; i < lines.length; ++i) 
+            for (var i = 0; i < linesWithData.length; ++i) 
             {
-                var line = lines[i];
-                if (textSprite.useStyleCommands) {
-                    line = TextSprite.getTextWithoutStyleCommands(line);
-                }
-                this._ctx.fillText(line, posX, posY + i * lineHeight, textSprite.maxWidth || undefined);
+                this._ctx.fillText(linesWithData[i].text, posX, posY + i * lineHeight);
             }
         }
         
@@ -1522,6 +1540,7 @@ const Point = require('../../point');
 const Rectangle = require('../../rectangle');
 const Texture = require('./../../texture');
 const PintarConsole = require('./../../console');
+const TextSprite = require('./../../text_sprite');
 
 
 // default ascii characters to generate font textures
@@ -1539,33 +1558,10 @@ function makePowerTwo(val)
 }
 
 // measure font's actual height
-var measureTextHeight = function(fontFamily, fontSize) 
-{
-    var text = document.createElement('span');
-    text.style.fontFamily = fontFamily;
-    text.style.fontSize = fontSize + "px";
-    text.style.paddingBottom = text.style.paddingLeft = text.style.paddingTop = text.style.paddingRight = '0px';
-    text.style.marginBottom = text.style.marginLeft = text.style.marginTop = text.style.marginRight = '0px';
-    text.textContent = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ";
-    document.body.appendChild(text);
-    var result = text.getBoundingClientRect().height;
-    document.body.removeChild(text);
-    return result;
-};
+var measureTextHeight = TextSprite.measureTextHeight;
 
 // measure font's actual width
-var measureTextWidth = function(fontFamily, fontSize) 
-{
-    var canvas = document.createElement("canvas");
-    var context = canvas.getContext("2d");
-    context.font = fontSize.toString() + 'px ' + fontFamily;
-    var result = 0;
-    var text = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ";
-    for (var i = 0; i < text.length; ++i) {
-        result = Math.max(result, context.measureText(text[i]).width);
-    }
-    return Math.ceil(result);
-};
+var measureTextWidth = TextSprite.measureTextWidth;
 
 /**
  * Class to convert a font and a set of characters into a texture, so it can be later rendered as sprites.
@@ -1690,7 +1686,7 @@ FontTexture.enforceValidTexureSize = true;
 
 // export the font texture class
 module.exports = FontTexture;
-},{"../../point":5,"../../rectangle":6,"./../../console":3,"./../../texture":20}],13:[function(require,module,exports){
+},{"../../point":5,"../../rectangle":6,"./../../console":3,"./../../text_sprite":19,"./../../texture":20}],13:[function(require,module,exports){
 /**
  * file: index.js
  * description: Index file for webgl renderer.
@@ -2119,11 +2115,11 @@ class WebGlRenderer extends Renderer
             // calc actual size
             var width = Math.ceil(ratio * srcRect.width);
             var height = Math.ceil(ratio * srcRect.height);
-            var sizeWithStroke = width + strokeWidth / 4;
+            var strokeExtra = strokeWidth / 5;
             var ret = {
                 base: new Point(width, height), 
-                withStroke: new Point(sizeWithStroke, height),
-                width: sizeWithStroke - 1 * ratio,
+                withStroke: new Point(width + strokeExtra, height + strokeExtra),
+                width: width + strokeExtra - 1 * ratio,
             };
             charsSizeCache[char] = ret;
             return ret;
@@ -2132,104 +2128,124 @@ class WebGlRenderer extends Renderer
         // get text lines and style commands
         var lines = textSprite.getProcessedTextAndCommands(getCharSize);
 
-        // draw text
-        for (var i = 0; i < lines.length; ++i) 
+        // method to draw text - prepare all params and just wait for the actual drawing, which is via a function
+        var drawText = (drawSpriteMethod) => 
         {
-            // get current line data
-            var line = lines[i];
-
-            // calc offset based on alignment
-            var lineWidth = line.totalWidth;
-            var offset = 0;
-            switch (textSprite.alignment) 
+            // iterate lines
+            for (var i = 0; i < lines.length; ++i) 
             {
-                case "right":
-                    offset -= lineWidth;
-                    break;
+                // get current line data
+                var line = lines[i];
 
-                case "center":
-                    offset -= lineWidth / 2;
-                    break;
-            }
-
-            // now actually draw characters
-            for (var j = 0; j < line.text.length; ++j) 
-            {
-                // check if we reached a style command
-                if (textSprite.useStyleCommands && line.styleCommands[j]) 
+                // calc offset based on alignment
+                var lineWidth = line.totalWidth;
+                var offset = 0;
+                switch (textSprite.alignment) 
                 {
-                    var styleCommands = line.styleCommands[j];
-                    for (var _x = 0; _x < styleCommands.length; ++ _x) 
+                    case "right":
+                        offset -= lineWidth;
+                        break;
+
+                    case "center":
+                        offset -= lineWidth / 2;
+                        break;
+                }
+
+                // now actually draw characters
+                for (var j = 0; j < line.text.length; ++j) 
+                {
+                    // check if we reached a style command
+                    if (textSprite.useStyleCommands && line.styleCommands[j]) 
                     {
-                        var styleCommand = styleCommands[_x];
-                        switch (styleCommand.type)
+                        var styleCommands = line.styleCommands[j];
+                        for (var _x = 0; _x < styleCommands.length; ++ _x) 
                         {
-                            case "reset":
-                                fillColor = strokeWidth = strokeColor = null;
-                                break;
+                            var styleCommand = styleCommands[_x];
+                            switch (styleCommand.type)
+                            {
+                                case "reset":
+                                    fillColor = strokeWidth = strokeColor = null;
+                                    break;
 
-                            case "fc":
-                                fillColor = styleCommand.val;
-                                break;
-                            
-                            case "sc":
-                                strokeColor = styleCommand.val;
-                                break;
+                                case "fc":
+                                    fillColor = styleCommand.val;
+                                    break;
+                                
+                                case "sc":
+                                    strokeColor = styleCommand.val;
+                                    break;
 
-                            case "sw":
-                                strokeWidth = styleCommand.val;
-                                break;
+                                case "sw":
+                                    strokeWidth = styleCommand.val;
+                                    break;
+                            }
                         }
                     }
+
+                    // get current character + source rect + size
+                    var char = line.text[j];
+                    var srcRect = fontTexture.getSourceRect(char);
+                    var size = line.sizes[j];
+
+                    // set starting properties
+                    if (fillColor === null) { fillColor = textSprite.color; }
+                    if (strokeWidth === null) { strokeWidth = textSprite.strokeWidth; }
+                    if (strokeColor === null) { strokeColor = textSprite.strokeColor; }
+
+                    // set sprite params
+                    sprite.sourceRectangle = srcRect;
+                    var posX = textSprite.position.x + offset;
+                    var posY = textSprite.position.y + ((i - 0.75) * textSprite.calculatedLineHeight);
+                    var position = new Point(posX, posY);
+                    sprite.width = size.base.x;
+                    sprite.height = size.base.y;
+                    sprite.smoothingEnabled = this.smoothText;
+                    sprite.position.set(position.x, position.y);
+
+                    // actually draw sprite
+                    drawSpriteMethod(sprite, position, fillColor, strokeWidth, strokeColor);
+
+
+                    // update offset
+                    offset += size.withStroke.x - 1 * ratio;
                 }
-
-                // get current character + source rect + size
-                var char = line.text[j];
-                var srcRect = fontTexture.getSourceRect(char);
-                var size = line.sizes[j];
-
-                // set starting properties
-                if (fillColor === null) { fillColor = textSprite.color; }
-                if (strokeWidth === null) { strokeWidth = textSprite.strokeWidth; }
-                if (strokeColor === null) { strokeColor = textSprite.strokeColor; }
-
-                // set sprite params
-                sprite.sourceRectangle = srcRect;
-                var position = new Point(textSprite.position.x + offset, textSprite.position.y + (i * textSprite.lineHeight) - size.base.y * 0.75);
-                sprite.width = size.base.x;
-                sprite.height = size.base.y;
-                sprite.smoothingEnabled = this.smoothText;
-
-                // draw character stroke
-                if (strokeWidth > 0 && strokeColor.a > 0) {
-                    sprite.color = strokeColor;
-                    for (var sx = -1; sx <= 1; sx++) {
-                        for (var sy = -1; sy <= 1; sy++) {      
-                            var centerPart = sx == 0 && sy == 0;
-                            var extraWidth = (centerPart ? strokeWidth : 0);
-                            var extraHeight = (centerPart ? strokeWidth : 0);
-                            sprite.width = size.base.x + extraWidth;
-                            sprite.height = size.base.y + extraHeight;
-                            sprite.position.x = position.x + sx * (strokeWidth / 2.5) - extraWidth / 2;
-                            sprite.position.y = position.y + sy * (strokeWidth / 2.5) - extraHeight / 2;
-                            this.drawSprite(sprite);
-                        }   
-                    }
-                }
-
-                // set character size
-                sprite.width = size.base.x;
-                sprite.height = size.base.y;
-
-                // draw character fill
-                sprite.position = position;
-                sprite.color = fillColor;
-                this.drawSprite(sprite);
-
-                // update offset
-                offset += size.withStroke.x - 1 * ratio;
             }
-        }
+        };
+
+        // draw strokes
+        drawText((sprite, position, fillColor, strokeWidth, strokeColor) => 
+        {
+            // get width and height
+            var width = sprite.width;
+            var height = sprite.height;
+
+            // draw character stroke
+            if (strokeWidth > 0 && strokeColor.a > 0) 
+            {
+                sprite.color = strokeColor;
+                for (var sx = -1; sx <= 1; sx++) 
+                {
+                    for (var sy = -1; sy <= 1; sy++) 
+                    {      
+                        var centerPart = sx == 0 && sy == 0;
+                        var extraWidth = (centerPart ? strokeWidth : 0);
+                        var extraHeight = (centerPart ? strokeWidth : 0);
+                        sprite.width = width + extraWidth;
+                        sprite.height = height + extraHeight;
+                        sprite.position.x = position.x + sx * (strokeWidth / 2.5) - extraWidth / 2;
+                        sprite.position.y = position.y + sy * (strokeWidth / 2.5) - extraHeight / 2;
+                        this.drawSprite(sprite);
+                    }   
+                }
+            }
+        });
+
+        // draw text fill
+        drawText((sprite, position, fillColor, strokeWidth, strokeColor) => 
+        {
+            sprite.color = fillColor;
+            this.drawSprite(sprite);
+        });
     }
 
     /**
@@ -4324,7 +4340,6 @@ class TextSprite extends Renderable
     {
         this._text = val;
         this._cachedLinesAndCommands = null;
-        this._textLines = val.split('\n');
         this._version++;
     }
 
@@ -4386,31 +4401,6 @@ class TextSprite extends Renderable
     }
 
     /**
-     * Set text line height. If not set or null, will use font size.
-     */
-    set lineHeight(val)
-    {
-        this._lineHeight = val;
-        this._version++;
-    }
-
-    /**
-     * Get text line height.
-     */
-    get lineHeight()
-    {
-        return this._lineHeight || (Math.ceil(this.fontSize) + 1);
-    }
-
-    /**
-     * Get text as an array of lines.
-     */
-    get textLines()
-    {
-        return this._textLines;
-    }
-
-    /**
      * Get text as an array of lines after breaking them based on maxWidth + list of style commands.
      * @param {Function(char, strokeWidth)} getCharSize Method to get a single character's size.
      */
@@ -4434,6 +4424,9 @@ class TextSprite extends Renderable
             // push line data
             ret.push(currLine);
             currLine = {styleCommands: {}, text: "", sizes: [], totalWidth: 0};
+
+            // update height
+            this.calculatedHeight += this.calculatedLineHeight;
         }
 
         // method to get value part of the command
@@ -4457,6 +4450,9 @@ class TextSprite extends Renderable
 
         // current offset X, to add line breaks
         var strokeWidth = this.strokeWidth;
+
+        // reset actual heights
+        this.calculatedHeight = this.calculatedLineHeight = 0;
 
         // parse lines and style commands
         for (var j = 0; j < this._text.length; ++j) {
@@ -4514,8 +4510,13 @@ class TextSprite extends Renderable
             // get current char width and add to sizes array
             var currCharSize = getCharSize(char, strokeWidth);
 
+            // calculate line height
+            if (!this.calculatedLineHeight) {
+                this.calculatedLineHeight = currCharSize.withStroke.y;
+            }
+
             // check if need to break due to exceeding size
-            if (this.maxWidth && currLine.totalWidth >= this.maxWidth) 
+            if (this.maxWidth && currLine.totalWidth >= this.maxWidth - currCharSize.withStroke.x) 
             {
                 endLine();
             }
@@ -4606,6 +4607,39 @@ TextSprite.getTextWithoutStyleCommands = function(text)
     }
     return ret;
 }
+
+/**
+ * Measure font's actual height.
+ */
+TextSprite.measureTextHeight = function(fontFamily, fontSize, char) 
+{
+    var text = document.createElement('span');
+    text.style.fontFamily = fontFamily;
+    text.style.fontSize = fontSize + "px";
+    text.style.paddingBottom = text.style.paddingLeft = text.style.paddingTop = text.style.paddingRight = '0px';
+    text.style.marginBottom = text.style.marginLeft = text.style.marginTop = text.style.marginRight = '0px';
+    text.textContent = char || "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ";
+    document.body.appendChild(text);
+    var result = text.getBoundingClientRect().height;
+    document.body.removeChild(text);
+    return result;
+};
+
+/**
+ * Measure font's actual width.
+ */
+TextSprite.measureTextWidth = function(fontFamily, fontSize, char) 
+{
+    var canvas = document.createElement("canvas");
+    var context = canvas.getContext("2d");
+    context.font = fontSize.toString() + 'px ' + fontFamily;
+    var result = 0;
+    var text = char || "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ";
+    for (var i = 0; i < text.length; ++i) {
+        result = Math.max(result, context.measureText(text[i]).width);
+    }
+    return Math.ceil(result);
+};
 
 // export TextSprite
 module.exports = TextSprite;

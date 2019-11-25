@@ -167,7 +167,6 @@ class TextSprite extends Renderable
     {
         this._text = val;
         this._cachedLinesAndCommands = null;
-        this._textLines = val.split('\n');
         this._version++;
     }
 
@@ -229,31 +228,6 @@ class TextSprite extends Renderable
     }
 
     /**
-     * Set text line height. If not set or null, will use font size.
-     */
-    set lineHeight(val)
-    {
-        this._lineHeight = val;
-        this._version++;
-    }
-
-    /**
-     * Get text line height.
-     */
-    get lineHeight()
-    {
-        return this._lineHeight || (Math.ceil(this.fontSize) + 1);
-    }
-
-    /**
-     * Get text as an array of lines.
-     */
-    get textLines()
-    {
-        return this._textLines;
-    }
-
-    /**
      * Get text as an array of lines after breaking them based on maxWidth + list of style commands.
      * @param {Function(char, strokeWidth)} getCharSize Method to get a single character's size.
      */
@@ -277,6 +251,9 @@ class TextSprite extends Renderable
             // push line data
             ret.push(currLine);
             currLine = {styleCommands: {}, text: "", sizes: [], totalWidth: 0};
+
+            // update height
+            this.calculatedHeight += this.calculatedLineHeight;
         }
 
         // method to get value part of the command
@@ -300,6 +277,9 @@ class TextSprite extends Renderable
 
         // current offset X, to add line breaks
         var strokeWidth = this.strokeWidth;
+
+        // reset actual heights
+        this.calculatedHeight = this.calculatedLineHeight = 0;
 
         // parse lines and style commands
         for (var j = 0; j < this._text.length; ++j) {
@@ -357,8 +337,13 @@ class TextSprite extends Renderable
             // get current char width and add to sizes array
             var currCharSize = getCharSize(char, strokeWidth);
 
+            // calculate line height
+            if (!this.calculatedLineHeight) {
+                this.calculatedLineHeight = currCharSize.withStroke.y;
+            }
+
             // check if need to break due to exceeding size
-            if (this.maxWidth && currLine.totalWidth >= this.maxWidth) 
+            if (this.maxWidth && currLine.totalWidth >= this.maxWidth - currCharSize.withStroke.x) 
             {
                 endLine();
             }
@@ -449,6 +434,39 @@ TextSprite.getTextWithoutStyleCommands = function(text)
     }
     return ret;
 }
+
+/**
+ * Measure font's actual height.
+ */
+TextSprite.measureTextHeight = function(fontFamily, fontSize, char) 
+{
+    var text = document.createElement('span');
+    text.style.fontFamily = fontFamily;
+    text.style.fontSize = fontSize + "px";
+    text.style.paddingBottom = text.style.paddingLeft = text.style.paddingTop = text.style.paddingRight = '0px';
+    text.style.marginBottom = text.style.marginLeft = text.style.marginTop = text.style.marginRight = '0px';
+    text.textContent = char || "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ";
+    document.body.appendChild(text);
+    var result = text.getBoundingClientRect().height;
+    document.body.removeChild(text);
+    return result;
+};
+
+/**
+ * Measure font's actual width.
+ */
+TextSprite.measureTextWidth = function(fontFamily, fontSize, char) 
+{
+    var canvas = document.createElement("canvas");
+    var context = canvas.getContext("2d");
+    context.font = fontSize.toString() + 'px ' + fontFamily;
+    var result = 0;
+    var text = char || "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ";
+    for (var i = 0; i < text.length; ++i) {
+        result = Math.max(result, context.measureText(text[i]).width);
+    }
+    return Math.ceil(result);
+};
 
 // export TextSprite
 module.exports = TextSprite;

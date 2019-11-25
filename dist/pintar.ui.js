@@ -553,7 +553,7 @@ class Paragraph extends UIElement
         if (this.autoSetHeight) 
         {
             this.size.yMode = SizeModes.Pixels;
-            this.size.y = this.textSprite.textLines.length * this.textSprite.lineHeight;
+            this.size.y = this.textSprite.calculatedHeight;
         }
     }
 }

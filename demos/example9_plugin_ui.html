@@ -120,7 +120,7 @@
             fontSize: 20,
             fillColor: PintarJS.Color.white(),
             strokeColor: PintarJS.Color.black(),
-            strokeWidth: 4,
+            strokeWidth: 10,
             margin: new PintarJS.UI.SidesProperties(8, 8, 12, 12),
           }
         },
@@ -138,25 +138,25 @@
 
       // create header paragraph
       var paragraph = new PintarJS.UI.Paragraph(UI_THEME);
-      paragraph.text = "Progress Bars:";
+      paragraph.text = "Progress Bars: bla bla bla bla bla bla bla bla bla bla bla bla";
       container.addChild(paragraph);
 
       // create progressbar element
       var progressbar = new PintarJS.UI.ProgressBar(UI_THEME);
       progressbar.anchor = PintarJS.UI.Anchors.Auto;
-      progressbar.value = 0.75;
+      progressbar.value = 0.85;
       container.addChild(progressbar);
 
       // create additional progressbar, but align to right and set green color
       progressbar = new PintarJS.UI.ProgressBar(UI_THEME, null, {fillAnchor: "TopRight", fillColor: PintarJS.Color.green()});
       progressbar.anchor = PintarJS.UI.Anchors.Auto;
-      progressbar.value = 0.75;
+      progressbar.value = 0.7;
       container.addChild(progressbar);
 
       // create additional progressbar, but align to center and set yellow color
       progressbar = new PintarJS.UI.ProgressBar(UI_THEME, null, {fillAnchor: "Center", fillColor: PintarJS.Color.yellow(), fillOffset: null});
       progressbar.anchor = PintarJS.UI.Anchors.Auto;
-      progressbar.value = 0.75;
+      progressbar.value = 0.65;
       container.addChild(progressbar);
 
       // draw everything

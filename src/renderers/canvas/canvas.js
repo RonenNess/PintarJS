@@ -158,7 +158,8 @@ class CanvasRenderer extends Renderer
     {  
         // set font and alignment
         var newFont = textSprite.fontPropertyAsString;
-        if (this._currFont !== newFont) {
+        if (this._currFont !== newFont) 
+        {
             this._ctx.font = newFont;
             this._currFont = newFont;
         }
@@ -176,34 +177,51 @@ class CanvasRenderer extends Renderer
         var posX = Math.round(textSprite.position.x - this._viewport.offset.x);
         var posY = Math.round(textSprite.position.y - this._viewport.offset.y);
 
-        // get text and break into lines
-        var lines = textSprite.textLines;
-        var lineHeight = textSprite.lineHeight;
+        // get the size, in pixels, of a specific character.
+        var charsSizeCache = {};
+        var getCharSize = (char, strokeWidth) => 
+        {
+            // if in cache return it
+            if (char in charsSizeCache) {
+                return charsSizeCache[char];
+            }
+
+            // calc actual size
+            var width = TextSprite.measureTextWidth(textSprite.font, textSprite.fontSize, char);
+            var height = TextSprite.measureTextHeight(textSprite.font, textSprite.fontSize, char);
+            var strokeExtra = 0;
+            var ret = {
+                base: new Point(width, height), 
+                withStroke: new Point(width + strokeExtra, height + strokeExtra),
+                width: width + strokeExtra,
+            };
+            charsSizeCache[char] = ret;
+            return ret;
+        }
+
+        // get lines and data
+        var linesWithData = textSprite.getProcessedTextAndCommands(getCharSize);
+        var lineHeight = textSprite.calculatedLineHeight;
 
         // draw stroke
-        if (textSprite.strokeWidth) {
+        if (textSprite.strokeWidth) 
+        {
             this._ctx.strokeStyle = textSprite.strokeColor.asHex();
             this._ctx.lineWidth = textSprite.strokeWidth;
-            for (var i = 0; i < lines.length; ++i) 
+            for (var i = 0; i < linesWithData.length; ++i) 
             {
-                var line = lines[i];
-                if (textSprite.useStyleCommands) {
-                    line = TextSprite.getTextWithoutStyleCommands(line);
-                }
-                this._ctx.strokeText(line, posX, posY + i * lineHeight, textSprite.maxWidth || undefined);
+                var line = linesWithData[i].text;
+                this._ctx.strokeText(line, posX, posY + i * lineHeight);
             }
         }
 
         // draw text fill
-        if (textSprite.color.a) {
+        if (textSprite.color.a) 
+        {
             this._ctx.fillStyle  = textSprite.color.asHex();
-            for (var i = 0; i < lines.length; ++i) 
+            for (var i = 0; i < linesWithData.length; ++i) 
             {
-                var line = lines[i];
-                if (textSprite.useStyleCommands) {
-                    line = TextSprite.getTextWithoutStyleCommands(line);
-                }
-                this._ctx.fillText(line, posX, posY + i * lineHeight, textSprite.maxWidth || undefined);
+                this._ctx.fillText(linesWithData[i].text, posX, posY + i * lineHeight);
             }
         }
         

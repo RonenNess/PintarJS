@@ -9,6 +9,7 @@ const Point = require('../../point');
 const Rectangle = require('../../rectangle');
 const Texture = require('./../../texture');
 const PintarConsole = require('./../../console');
+const TextSprite = require('./../../text_sprite');
 
 
 // default ascii characters to generate font textures
@@ -26,33 +27,10 @@ function makePowerTwo(val)
 }
 
 // measure font's actual height
-var measureTextHeight = function(fontFamily, fontSize) 
-{
-    var text = document.createElement('span');
-    text.style.fontFamily = fontFamily;
-    text.style.fontSize = fontSize + "px";
-    text.style.paddingBottom = text.style.paddingLeft = text.style.paddingTop = text.style.paddingRight = '0px';
-    text.style.marginBottom = text.style.marginLeft = text.style.marginTop = text.style.marginRight = '0px';
-    text.textContent = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ";
-    document.body.appendChild(text);
-    var result = text.getBoundingClientRect().height;
-    document.body.removeChild(text);
-    return result;
-};
+var measureTextHeight = TextSprite.measureTextHeight;
 
 // measure font's actual width
-var measureTextWidth = function(fontFamily, fontSize) 
-{
-    var canvas = document.createElement("canvas");
-    var context = canvas.getContext("2d");
-    context.font = fontSize.toString() + 'px ' + fontFamily;
-    var result = 0;
-    var text = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ";
-    for (var i = 0; i < text.length; ++i) {
-        result = Math.max(result, context.measureText(text[i]).width);
-    }
-    return Math.ceil(result);
-};
+var measureTextWidth = TextSprite.measureTextWidth;
 
 /**
  * Class to convert a font and a set of characters into a texture, so it can be later rendered as sprites.
