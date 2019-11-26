@@ -10,6 +10,7 @@ var UI = {
     SidesProperties: require('./sides_properties'),
     Panel: require('./panel'),
     Paragraph: require('./paragraph'),
+    HorizontalLine: require('./horizontal_line'),
     UIPoint: require('./ui_point'),
 };
 const pintar = require('./pintar');

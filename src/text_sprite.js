@@ -95,8 +95,10 @@ class TextSprite extends Renderable
      */
     set useStyleCommands(val)
     {
-        this._useStyleCommands = val;
-        this._cachedLinesAndCommands = null;
+        if (this._useStyleCommands !== val) {
+            this._useStyleCommands = val;
+            this._cachedLinesAndCommands = null;
+        }
     }
 
     /**
@@ -129,9 +131,11 @@ class TextSprite extends Renderable
      */
     set maxWidth(val)
     {
-        this._maxWidth = val;
-        this._cachedLinesAndCommands = null;
-        this._version++;
+        if (this._maxWidth !== val) {
+            this._maxWidth = val;
+            this._cachedLinesAndCommands = null;
+            this._version++;
+        }
     }
 
     /**
@@ -147,9 +151,11 @@ class TextSprite extends Renderable
      */
     set strokeWidth(val)
     {
-        this._strokeWidth = val;
-        this._cachedLinesAndCommands = null;
-        this._version++;
+        if (this._strokeWidth !== val) {
+            this._strokeWidth = val;
+            this._cachedLinesAndCommands = null;
+            this._version++;
+        }
     }
 
     /**
@@ -165,9 +171,11 @@ class TextSprite extends Renderable
      */
     set text(val)
     {
-        this._text = val;
-        this._cachedLinesAndCommands = null;
-        this._version++;
+        if (this._text !== val) {
+            this._text = val;
+            this._cachedLinesAndCommands = null;
+            this._version++;
+        }
     }
 
     /**
@@ -194,10 +202,12 @@ class TextSprite extends Renderable
      */
     set font(val)
     {
-        this._font = val;
-        this._fontString = null;
-        this._cachedLinesAndCommands = null;
-        this._version++;
+        if (this._font !== val) {
+            this._font = val;
+            this._fontString = null;
+            this._cachedLinesAndCommands = null;
+            this._version++;
+        }
     }
 
     /**
@@ -213,10 +223,12 @@ class TextSprite extends Renderable
      */
     set fontSize(val)
     {
-        this._fontSize = val;
-        this._fontString = null;
-        this._cachedLinesAndCommands = null;
-        this._version++;
+        if (this._fontSize !== val) {
+            this._fontSize = val;
+            this._fontString = null;
+            this._cachedLinesAndCommands = null;
+            this._version++;
+        }
     }
 
     /**
@@ -346,7 +358,42 @@ class TextSprite extends Renderable
             // check if need to break due to exceeding size
             if (this.maxWidth && currLine.totalWidth >= this.maxWidth - currCharSize.withStroke.x) 
             {
+                // break line, but store it first
+                var prevLine = currLine;
                 endLine();
+
+                // if this character was not ideal for break, search for a better character
+                if (!TextSprite.charForLineBreak(char))
+                {
+                    // try to find better index to break
+                    var breakIndex = prevLine.text.length - 1;
+                    while (breakIndex-- > 1 && !TextSprite.charForLineBreak(prevLine.text[breakIndex])) {}
+
+                    // got a better place to break? migrate character to previous line
+                    if (breakIndex > 1) {
+                        breakIndex++; // <-- add +1 so it will break *after* the breaking character and not before it
+                        for (var _x = breakIndex; _x < prevLine.text.length; ++_x)
+                        {
+                            var prevSize = prevLine.sizes[_x];
+                            currLine.text += prevLine.text[_x];
+                            currLine.totalWidth += prevSize.width;
+                            prevLine.totalWidth -= prevSize.width;
+                            currLine.sizes.push(prevSize);
+                        }
+
+                        // migrate style commands
+                        for (var key in prevLine.styleCommands) {
+                            if (parseInt(key) >= breakIndex) {
+                                currLine.styleCommands[currLine.text.length] = prevLine.styleCommands[key];
+                                delete prevLine.styleCommands[key];
+                            }
+                        }
+
+                        // remove text from previous line
+                        prevLine.text = prevLine.text.substr(0, breakIndex);
+                    }
+                }
+                continue
             }
 
             // break line character?
@@ -468,6 +515,14 @@ TextSprite.measureTextWidth = function(fontFamily, fontSize, char)
     }
     return Math.ceil(result);
 };
+
+/**
+ * Get if a given character is fitting for an unexpected line break.
+ */
+TextSprite.charForLineBreak = function(char)
+{
+    return ".,:;- \t-+=/\\*&^~".indexOf(char) !== -1;
+}
 
 // export TextSprite
 module.exports = TextSprite;

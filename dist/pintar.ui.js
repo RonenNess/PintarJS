@@ -133,8 +133,8 @@ class Container extends UIElement
         var padding = this._convertSides(this.padding);
         ret.x += padding.left;
         ret.y += padding.top;
-        ret.width -= padding.right + padding.left;
-        ret.height -= padding.bottom + padding.top;
+        ret.width -= (padding.right + padding.left);
+        ret.height -= (padding.bottom + padding.top);
         return ret;
     }
 
@@ -189,19 +189,24 @@ class Container extends UIElement
                     }
                 }
                 else {
-                    element.offset.set(element.margin.left, element.margin.top);
+                    var padding = this._convertSides(this.padding);
+                    element.offset.set(Math.max(element.margin.left - padding.left, 0), Math.max(element.margin.top - padding.top, 0));
                 }
             }
 
             // if auto anchor, arrange it
             if (needToSetAuto || element.anchor === Anchors.Auto)
             {
-                if (lastElement) {
+                if (lastElement) 
+                {
                     var marginY = Math.max(element.margin.top, lastElement.margin.bottom);
-                    element.offset.set(element.margin.left, lastElement.offset.y + lastElement.size.y + marginY);
+                    var marginX = Math.max(element.margin.left - padding.left, 0);
+                    element.offset.set(marginX, lastElement.offset.y + lastElement.size.y + marginY);
                 }
-                else {
-                    element.offset.set(element.margin.left, element.margin.top);
+                else 
+                {
+                    var padding = this._convertSides(this.padding);
+                    element.offset.set(Math.max(element.margin.left - padding.left, 0), Math.max(element.margin.top - padding.top, 0));
                 }
             }
 
@@ -214,7 +219,107 @@ class Container extends UIElement
 
 // export the container
 module.exports = Container; 
-},{"./anchors":1,"./panel":5,"./pintar":7,"./sides_properties":10,"./size_modes":11,"./ui_element":13}],3:[function(require,module,exports){
+},{"./anchors":1,"./panel":6,"./pintar":8,"./sides_properties":11,"./size_modes":12,"./ui_element":14}],3:[function(require,module,exports){
+/**
+ * file: horizontal_line.js
+ * description: Implement a horizontal line element.
+ * author: Ronen Ness.
+ * since: 2019.
+ */
+"use strict";
+const UIElement = require('./ui_element');
+const PintarJS = require('./pintar');
+const SizeModes = require('./size_modes');
+
+
+/**
+ * Implement a horizontal line element.
+ */
+class HorizontalLine extends UIElement
+{
+    /**
+     * Create a horizontal line element.
+     * @param {Object} theme
+     * @param {PintarJS.Texture} theme.HorizontalLine[skin].texture Texture to use.
+     * @param {PintarJS.Rectangle} theme.HorizontalLine[skin].middleSourceRect The source rect of the line center part (repeating).
+     * @param {PintarJS.Rectangle} theme.HorizontalLine[skin].leftEdgeSourceRect The source rect of the line left side edge.
+     * @param {PintarJS.Rectangle} theme.HorizontalLine[skin].rightEdgeSourceRect The source rect of the line right side edge.
+     * @param {Number} theme.HorizontalLine[skin].textureScale (Optional) Texture scale for horizontal line. 
+     */
+    constructor(theme, skin, override)
+    {
+        super();
+
+        // get options from theme and skin type
+        var options = this.getOptionsFromTheme(theme, skin, override);
+        this.setBaseOptions(options);
+        
+        // by default horizontal lines take full width
+        this.size.x = 100;
+        this.size.xMode = SizeModes.Percents;
+
+        // get texture scale
+        var textureScale = (options.textureScale || 1);
+
+        // set height
+        this.size.y = options.middleSourceRect.height * textureScale;
+        this.size.yMode = SizeModes.Pixels;
+
+        // create left-side edge
+        var leftSideSourceRect = options.leftEdgeSourceRect;
+        if (leftSideSourceRect)
+        {
+            this.leftEdgeSprite = new PintarJS.Sprite(options.texture);
+            this.leftEdgeSprite.sourceRectangle = leftSideSourceRect;
+            this.leftEdgeSprite.size.set(leftSideSourceRect.width * textureScale, leftSideSourceRect.height * textureScale);
+        }
+        // create right-side edge
+        var rightSideSourceRect = options.rightEdgeSourceRect;
+        if (rightSideSourceRect)
+        {
+            this.rightEdgeSprite = new PintarJS.Sprite(options.texture);
+            this.rightEdgeSprite.sourceRectangle = rightSideSourceRect;
+            this.rightEdgeSprite.size.set(rightSideSourceRect.width * textureScale, rightSideSourceRect.height * textureScale);
+        }
+        // create center part
+        this.middleSprite = new PintarJS.Sprite(options.texture);
+        this.middleSprite.sourceRectangle = options.middleSourceRect;
+        this.middleSprite.size.set(options.middleSourceRect.width * textureScale, options.middleSourceRect.height * textureScale);
+    }
+
+    /**
+     * Get required options for this element type.
+     */
+    get requiredOptions()
+    {
+        return ["texture", "middleSourceRect"];
+    }
+
+    /**
+     * Draw the UI element.
+     */
+    draw(pintar)
+    {
+        // get dest rect
+        var destRect = this.getBoundingBox();
+
+        // draw left edge
+        if (this.leftEdgeSprite)
+        {
+            this.leftEdgeSprite.position.set(destRect.x, destRect.y);
+            pintar.drawSprite(this.leftEdgeSprite);
+        }
+        // draw right edge
+        if (this.rightEdgeSprite)
+        {
+            this.rightEdgeSprite.position.set(destRect.right - this.rightEdgeSprite.width, destRect.y);
+            pintar.drawSprite(this.rightEdgeSprite);
+        }
+    }
+}
+
+module.exports = HorizontalLine; 
+},{"./pintar":8,"./size_modes":12,"./ui_element":14}],4:[function(require,module,exports){
 var UI = {
     UIRoot: require('./root'),
     UIElement: require('./ui_element'),
@@ -227,12 +332,13 @@ var UI = {
     SidesProperties: require('./sides_properties'),
     Panel: require('./panel'),
     Paragraph: require('./paragraph'),
+    HorizontalLine: require('./horizontal_line'),
     UIPoint: require('./ui_point'),
 };
 const pintar = require('./pintar');
 pintar.UI = UI;
 module.exports = UI;
-},{"./anchors":1,"./container":2,"./input_manager":4,"./panel":5,"./paragraph":6,"./pintar":7,"./progress_bar":8,"./root":9,"./sides_properties":10,"./size_modes":11,"./sliced_sprite":12,"./ui_element":13,"./ui_point":14}],4:[function(require,module,exports){
+},{"./anchors":1,"./container":2,"./horizontal_line":3,"./input_manager":5,"./panel":6,"./paragraph":7,"./pintar":8,"./progress_bar":9,"./root":10,"./sides_properties":11,"./size_modes":12,"./sliced_sprite":13,"./ui_element":14,"./ui_point":15}],5:[function(require,module,exports){
 /**
  * file: input_manager.js
  * description: Define a basic input manager class.
@@ -403,7 +509,7 @@ class InputManager
 }
 
 module.exports = InputManager; 
-},{"./pintar":7}],5:[function(require,module,exports){
+},{"./pintar":8}],6:[function(require,module,exports){
 /**
  * file: panel.js
  * description: A graphical panel object.
@@ -451,7 +557,7 @@ class Panel extends SlicedSprite
 
 // export the panel class
 module.exports = Panel;
-},{"./pintar":7,"./sliced_sprite":12}],6:[function(require,module,exports){
+},{"./pintar":8,"./sliced_sprite":13}],7:[function(require,module,exports){
 /**
  * file: paragraph.js
  * description: Implement a paragraph element.
@@ -470,10 +576,9 @@ const SizeModes = require('./size_modes');
 class Paragraph extends UIElement
 {
     /**
-     * Create a progressbar element.
-     * @param {String} text Paragraph text.
+     * Create a paragraph element.
      * @param {Object} theme
-     * @param {PintarJS.Texture} theme.Paragraph[skin].font (Optional) Font to use.
+     * @param {String} theme.Paragraph[skin].font (Optional) Font to use.
      * @param {Number} theme.Paragraph[skin].fontSize (Optional) Font size to use.
      * @param {PintarJS.Color} theme.Paragraph[skin].fillColor (Optional) Text fill color.
      * @param {PintarJS.Color} theme.Paragraph[skin].strokeColor (Optional) Text stroke color.
@@ -493,6 +598,9 @@ class Paragraph extends UIElement
         // by default paragraphs take full width
         this.size.x = 100;
         this.size.xMode = SizeModes.Percents;
+
+        // limit paragraph text to element width
+        this.enableLineBreaking = true;
 
         // create text
         this.textSprite = new PintarJS.TextSprite("");
@@ -544,7 +652,7 @@ class Paragraph extends UIElement
         this.textSprite.position = position;
 
         // set max width
-        this.textSprite.maxWidth = destRect.width;
+        this.textSprite.maxWidth = this.enableLineBreaking ? destRect.width : 0;
 
         // draw text
         pintar.drawText(this.textSprite);
@@ -559,11 +667,11 @@ class Paragraph extends UIElement
 }
 
 module.exports = Paragraph; 
-},{"./pintar":7,"./size_modes":11,"./ui_element":13}],7:[function(require,module,exports){
+},{"./pintar":8,"./size_modes":12,"./ui_element":14}],8:[function(require,module,exports){
 var pintar = window.PintarJS || window.pintar;
 if (!pintar) { throw new Error("Missing PintarJS main object."); }
 module.exports = pintar;
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 /**
  * file: progress_bar.js
  * description: Implement a progress bar element.
@@ -596,14 +704,13 @@ class ProgressBar extends UIElement
      * @param {PintarJS.Rectangle} theme.ProgressBar[skin].foregroundExternalSourceRect The entire source rect, including frame and fill, of an optional foreground sprite.
      * @param {PintarJS.Rectangle} theme.ProgressBar[skin].foregroundInternalSourceRect The internal source rect of the foreground sprite (must be contained inside the whole source rect).
      * @param {PintarJS.Color} theme.ProgressBar[skin].foregroundColor (Optional) Progressbar foreground color.
-     * @param {Number} theme.ProgressBar[skin].textureScale (Optional) frame and fill texture scale for both background and progressbar fill.
+     * @param {Number} theme.ProgressBar[skin].textureScale (Optional) Frame and fill texture scale for both background and progressbar fill.
      * @param {PintarJS.Point} theme.ProgressBar[skin].fillOffset (Optional) Fill part offset from its base position. By default, with offset 0,0, fill part will start from the background's top-left corner.
      * @param {Number} theme.ProgressBar[skin].height (Optional) Progressbar height (if not defined, will base on texture source rectangle).
      * @param {Number} theme.ProgressBar[skin].animationSpeed (Optional) Animation speed when value changes (if 0, will show new value immediately).
      * @param {PintarJS.UI.Anchors} theme.ProgressBar[skin].fillAnchor (Optional) Anchor type for the fill part. Defaults to Top-Left.
      * @param {Boolean} theme.ProgressBar[skin].valueSetWidth (Optional) If true (default), progressbar value will set the fill width.
      * @param {Boolean} theme.ProgressBar[skin].valueSetHeight (Optional) If true (not default), progressbar value will set the fill height.
-     * @param {Number} theme.ProgressBar[skin].minValueToShow (Optional) Minimum value to still display value.
      * @param {String} skin Element skin to use from theme.
      * @param {Object} override Optional override options (can override any of the theme properties listed above).
      */
@@ -771,7 +878,7 @@ class ProgressBar extends UIElement
 }
 
 module.exports = ProgressBar; 
-},{"./anchors":1,"./pintar":7,"./size_modes":11,"./sliced_sprite":12,"./ui_element":13,"./utils":15}],9:[function(require,module,exports){
+},{"./anchors":1,"./pintar":8,"./size_modes":12,"./sliced_sprite":13,"./ui_element":14,"./utils":16}],10:[function(require,module,exports){
 /**
  * file: root.js
  * description: Implement a UI root element.
@@ -847,7 +954,7 @@ class UIRoot extends Container
 }
 
 module.exports = UIRoot; 
-},{"./container":2,"./input_manager":4,"./pintar":7}],10:[function(require,module,exports){
+},{"./container":2,"./input_manager":5,"./pintar":8}],11:[function(require,module,exports){
 /**
  * file: sides.js
  * description: Implement a data structure for sides.
@@ -900,7 +1007,7 @@ class SidesProperties
 
 
 module.exports = SidesProperties;
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 /**
  * file: size_modes.js
  * description: Define size modes we can set.
@@ -913,7 +1020,7 @@ module.exports = {
     Pixels: 'px',
     Percents: '%'
 };
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 /**
  * file: sliced_sprite.js
  * description: A sliced sprite.
@@ -1266,7 +1373,7 @@ SlicedSprite.FillModes =
 
 // export SlicedSprite
 module.exports = SlicedSprite;
-},{"./pintar":7,"./ui_element":13}],13:[function(require,module,exports){
+},{"./pintar":8,"./ui_element":14}],14:[function(require,module,exports){
 /**
  * file: ui_element.js
  * description: Base UI element class.
@@ -1632,7 +1739,7 @@ UIElement.globalScale = 1;
 
 // export the base UI element object
 module.exports = UIElement; 
-},{"./anchors":1,"./pintar":7,"./sides_properties":10,"./size_modes":11,"./ui_point":14}],14:[function(require,module,exports){
+},{"./anchors":1,"./pintar":8,"./sides_properties":11,"./size_modes":12,"./ui_point":15}],15:[function(require,module,exports){
 /**
  * file: ui_point.js
  * description: A Point for UI elements position and size.
@@ -1702,7 +1809,7 @@ UIPoint.half = function()
 
 // export the UI point
 module.exports = UIPoint;
-},{"./pintar":7,"./size_modes":11}],15:[function(require,module,exports){
+},{"./pintar":8,"./size_modes":12}],16:[function(require,module,exports){
 /**
  * file: utils.js
  * description: Mixed utility methods.
@@ -1736,5 +1843,5 @@ module.exports = {
         return ret;
     },
 }
-},{}]},{},[3])(3)
+},{}]},{},[4])(4)
 });

@@ -16,10 +16,9 @@ const SizeModes = require('./size_modes');
 class Paragraph extends UIElement
 {
     /**
-     * Create a progressbar element.
-     * @param {String} text Paragraph text.
+     * Create a paragraph element.
      * @param {Object} theme
-     * @param {PintarJS.Texture} theme.Paragraph[skin].font (Optional) Font to use.
+     * @param {String} theme.Paragraph[skin].font (Optional) Font to use.
      * @param {Number} theme.Paragraph[skin].fontSize (Optional) Font size to use.
      * @param {PintarJS.Color} theme.Paragraph[skin].fillColor (Optional) Text fill color.
      * @param {PintarJS.Color} theme.Paragraph[skin].strokeColor (Optional) Text stroke color.
@@ -39,6 +38,9 @@ class Paragraph extends UIElement
         // by default paragraphs take full width
         this.size.x = 100;
         this.size.xMode = SizeModes.Percents;
+
+        // limit paragraph text to element width
+        this.enableLineBreaking = true;
 
         // create text
         this.textSprite = new PintarJS.TextSprite("");
@@ -90,7 +92,7 @@ class Paragraph extends UIElement
         this.textSprite.position = position;
 
         // set max width
-        this.textSprite.maxWidth = destRect.width;
+        this.textSprite.maxWidth = this.enableLineBreaking ? destRect.width : 0;
 
         // draw text
         pintar.drawText(this.textSprite);

@@ -109,8 +109,8 @@ class Container extends UIElement
         var padding = this._convertSides(this.padding);
         ret.x += padding.left;
         ret.y += padding.top;
-        ret.width -= padding.right + padding.left;
-        ret.height -= padding.bottom + padding.top;
+        ret.width -= (padding.right + padding.left);
+        ret.height -= (padding.bottom + padding.top);
         return ret;
     }
 
@@ -165,19 +165,24 @@ class Container extends UIElement
                     }
                 }
                 else {
-                    element.offset.set(element.margin.left, element.margin.top);
+                    var padding = this._convertSides(this.padding);
+                    element.offset.set(Math.max(element.margin.left - padding.left, 0), Math.max(element.margin.top - padding.top, 0));
                 }
             }
 
             // if auto anchor, arrange it
             if (needToSetAuto || element.anchor === Anchors.Auto)
             {
-                if (lastElement) {
+                if (lastElement) 
+                {
                     var marginY = Math.max(element.margin.top, lastElement.margin.bottom);
-                    element.offset.set(element.margin.left, lastElement.offset.y + lastElement.size.y + marginY);
+                    var marginX = Math.max(element.margin.left - padding.left, 0);
+                    element.offset.set(marginX, lastElement.offset.y + lastElement.size.y + marginY);
                 }
-                else {
-                    element.offset.set(element.margin.left, element.margin.top);
+                else 
+                {
+                    var padding = this._convertSides(this.padding);
+                    element.offset.set(Math.max(element.margin.left - padding.left, 0), Math.max(element.margin.top - padding.top, 0));
                 }
             }
 
