@@ -93,6 +93,14 @@ class SlicedSprite extends UIElement
     }
 
     /**
+     * Get the external source rect of this sliced sprite.
+     */
+    get sourceRectangle()
+    {
+        return this.externalSourceRect;
+    }
+
+    /**
      * Set color for both fill and frame.
      */
     set color(color)

@@ -82,14 +82,17 @@ class ProgressBar extends UIElement
                 internalSourceRect: options.backgroundInternalSourceRect, 
                 textureScale: textureScale});
         }
-        // set other background properties
-        if (this.backgroundSprite) {
-            this.backgroundSprite.color = options.backgroundColor || PintarJS.Color.white();
-            this.backgroundSprite.anchor = Anchors.Fixed;
+        else
+        {
+            throw new Error("Progress bars must have a background sprite!");
         }
+        // set other background properties
+        this.backgroundSprite.color = options.backgroundColor || PintarJS.Color.white();
+        this.backgroundSprite.anchor = Anchors.Fixed;
 
         // create fill sprite as regular UI sprite
         if (options.fillSourceRect) {
+            this.spriteFillSourceRect = options.fillSourceRect;
             this.fillSprite = new Sprite({texture: options.texture, 
                 sourceRect: options.fillSourceRect, 
                 textureScale: textureScale});
@@ -112,8 +115,8 @@ class ProgressBar extends UIElement
         var backRect = options.backgroundExternalSourceRect || options.backgroundSourceRect;
         this.fillSprite.color = options.fillColor || PintarJS.Color.white();
         this.fillSprite.anchor = Anchors.Fixed;
-        this.fillWidthToRemove = backRect ? Math.round(backRect.width - fillRect.width) * textureScale : 0;
-        this.fillHeightToRemove = backRect ? Math.round(backRect.height - fillRect.height) * textureScale : 0;
+        this.fillWidthToRemove = backRect ? Math.round(backRect.width - fillRect.width) : 0;
+        this.fillHeightToRemove = backRect ? Math.round(backRect.height - fillRect.height) : 0;
 
         // create optional foreground sprite as regular UI sprite
         if (options.foregroundSourceRect) {
@@ -212,20 +215,46 @@ class ProgressBar extends UIElement
         var dest = this.getBoundingBox();
 
         // draw background
-        if (this.backgroundSprite) 
-        {
-            this.backgroundSprite.offset = dest.getPosition();
-            this.backgroundSprite.size = dest.getSize();
-            this.backgroundSprite.draw(pintar);
-        }
+        this.backgroundSprite.offset = dest.getPosition();
+        this.backgroundSprite.size = dest.getSize();
+        this.backgroundSprite.draw(pintar);
+
+        // get texture scale factor
+        var textureScaleX = this.backgroundSprite.size.x / this.backgroundSprite.sourceRectangle.width ;
+        var textureScaleY = this.backgroundSprite.size.y / this.backgroundSprite.sourceRectangle.height;
 
         // draw fill
         var value = this._displayValue;
         if (value > 0)
         {
-            this.fillSprite.size.x = (this.backgroundSprite.size.x - this.fillWidthToRemove) * (this.setWidth ? value : 1);
-            this.fillSprite.size.y = (this.backgroundSprite.size.y - this.fillHeightToRemove) * (this.setHeight ? value : 1);;
+            // set size and offset
+            this.fillSprite.size.x = (this.backgroundSprite.size.x - this.fillWidthToRemove * textureScaleX) * (this.setWidth ? value : 1);
+            this.fillSprite.size.y = (this.backgroundSprite.size.y - this.fillHeightToRemove * textureScaleY) * (this.setHeight ? value : 1);
             this.fillSprite.offset = this.getDestTopLeftPositionForRect(dest, this.fillSprite.size, this.fillPartAnchor, this.fillOffset);
+
+            // update source rect for single sprite mode
+            if (this.spriteFillSourceRect) 
+            {
+                // reset source rect
+                this.fillSprite.sourceRectangle = this.spriteFillSourceRect.clone();
+
+                // update width
+                if (this.setWidth) {
+                    this.fillSprite.sourceRectangle.width = (this.backgroundSprite.sourceRectangle.width - this.fillWidthToRemove) * value;
+                    if (this.fillPartAnchor.indexOf("right") !== -1) {
+                        this.fillSprite.sourceRectangle.x = this.spriteFillSourceRect.right - this.fillSprite.sourceRectangle.width;
+                    }
+                }
+                // update height
+                if (this.setHeight) {
+                    this.fillSprite.sourceRectangle.height = (this.backgroundSprite.sourceRectangle.height - this.fillHeightToRemove) * value;
+                    if (this.fillPartAnchor.indexOf("Bottom") !== -1) {
+                        this.fillSprite.sourceRectangle.y = this.spriteFillSourceRect.bottom - this.fillSprite.sourceRectangle.height;
+                    }
+                }
+            }
+
+            // draw sprite
             this.fillSprite.draw(pintar);
         }
 

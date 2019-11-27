@@ -78,6 +78,22 @@ class Sprite extends UIElement
     }
 
     /**
+     * Get source rectangle.
+     */
+    get sourceRectangle()
+    {
+        return this.sprite.sourceRectangle;
+    }
+
+    /**
+     * Set source rectangle.
+     */
+    set sourceRectangle(val)
+    {
+        this.sprite.sourceRectangle = val;
+    }
+
+    /**
      * Draw the UI element.
      * @param {*} pintar Pintar instance to draw this element on.
      */
