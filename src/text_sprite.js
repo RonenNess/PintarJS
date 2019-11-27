@@ -393,7 +393,9 @@ class TextSprite extends Renderable
                         prevLine.text = prevLine.text.substr(0, breakIndex);
                     }
                 }
-                continue
+                
+                // if current char is space, no point adding it to start of line after we broke it
+                if (char === ' ') { continue; }
             }
 
             // break line character?

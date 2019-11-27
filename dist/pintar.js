@@ -4049,13 +4049,12 @@ class Sprite extends Renderable
 
             // store last source rect and recalc relative rect
             if (this.cacheRelativeSourceRectangle) { this._lastSrcRect = this.sourceRectangle.clone(); }
-            var antiBleedFactor = this.applyAntiBleeding ? 0.5 : 0;
+            var antiBleedFactor = this.applyAntiBleeding ? 0.075 : 0;
             this._sourceRectangleRelative = new Rectangle(
                 ((this.sourceRectangle.x + antiBleedFactor) / twidth), 
                 ((this.sourceRectangle.y + antiBleedFactor) / theight), 
                 (((this.sourceRectangle.width || this.texture.width) - antiBleedFactor) / twidth), 
                 (((this.sourceRectangle.height || this.texture.height) - antiBleedFactor) / theight));
-                // note: the + 0.5 and -1 is to sample the pixel's center to avoid bleeding in texture atlases.
         }
         return this._sourceRectangleRelative;
     }
@@ -4172,7 +4171,7 @@ Sprite.defaults = {
     color: Color.white(),
     origin: Point.zero(),
     colorBoost: Color.transparent(),
-    applyAntiBleeding: false,
+    applyAntiBleeding: true,
     size: new Point(64, 64),
 }
 
@@ -4574,7 +4573,9 @@ class TextSprite extends Renderable
                         prevLine.text = prevLine.text.substr(0, breakIndex);
                     }
                 }
-                continue
+                
+                // if current char is space, no point adding it to start of line after we broke it
+                if (char === ' ') { continue; }
             }
 
             // break line character?

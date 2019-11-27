@@ -85,6 +85,14 @@ class SlicedSprite extends UIElement
     }
 
     /**
+     * Get required options for this element type.
+     */
+    get requiredOptions()
+    {
+        return ['texture', 'externalSourceRect', 'internalSourceRect'];
+    }
+
+    /**
      * Set color for both fill and frame.
      */
     set color(color)
