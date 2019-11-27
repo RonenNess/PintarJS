@@ -61,8 +61,8 @@ class HorizontalLine extends UIElement
         }
         // create center part
         this.middleSprite = new PintarJS.Sprite(options.texture);
-        this.middleSprite.sourceRectangle = options.middleSourceRect;
-        this.middleSprite.size.set(options.middleSourceRect.width * textureScale, options.middleSourceRect.height * textureScale);
+        this._textureScale = options.textureScale;
+        this._middleSourceRect = options.middleSourceRect;
     }
 
     /**
@@ -81,17 +81,47 @@ class HorizontalLine extends UIElement
         // get dest rect
         var destRect = this.getBoundingBox();
 
+        // width left to draw for center part
+        var widthLeft = destRect.width;
+        var offsetX = 0;
+
         // draw left edge
         if (this.leftEdgeSprite)
         {
             this.leftEdgeSprite.position.set(destRect.x, destRect.y);
             pintar.drawSprite(this.leftEdgeSprite);
+            widthLeft -= this.leftEdgeSprite.size.x;
+            offsetX += this.leftEdgeSprite.size.x
         }
         // draw right edge
         if (this.rightEdgeSprite)
         {
             this.rightEdgeSprite.position.set(destRect.right - this.rightEdgeSprite.width, destRect.y);
             pintar.drawSprite(this.rightEdgeSprite);
+            widthLeft -= this.rightEdgeSprite.size.x;
+        }
+
+        // draw center parts
+        if (this.middleSprite)
+        {
+            // reset middle part properties
+            this.middleSprite.sourceRectangle = this._middleSourceRect.clone();
+            this.middleSprite.size.set(this._middleSourceRect.width * this._textureScale, this._middleSourceRect.height * this._textureScale);
+
+            // draw middle parts
+            while (widthLeft > 0)
+            {
+                this.middleSprite.position.set(destRect.x + offsetX, destRect.y);
+                if (this.middleSprite.size.x > widthLeft)
+                {
+                    var toCut = this.middleSprite.size.x - widthLeft;
+                    this.middleSprite.size.x -= toCut;
+                    this.middleSprite.sourceRectangle.width -= toCut / this._textureScale;
+                }
+                pintar.drawSprite(this.middleSprite);
+                widthLeft -= this.middleSprite.size.x;
+                offsetX += this.middleSprite.size.x
+            }
         }
     }
 }
