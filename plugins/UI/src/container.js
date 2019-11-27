@@ -39,7 +39,7 @@ class Container extends UIElement
         this.paddingMode = options.paddingMode || SizeModes.Pixels;
 
         // set background
-        this.__background = null;
+        this._background = null;
         if (options.background) {
             this.background = new Panel(theme, options.background);
         }
@@ -50,7 +50,7 @@ class Container extends UIElement
      */
     get background()
     {
-        return this.__background;
+        return this._background;
     }
 
     /**
@@ -58,10 +58,10 @@ class Container extends UIElement
      */
     set background(backgroundElement)
     {
-        if (this.__background) { this.__background._setParent(null); }
+        if (this._background) { this._background._setParent(null); }
         backgroundElement._setParent(this);
         backgroundElement.ignoreParentPadding = true;
-        this.__background = backgroundElement;
+        this._background = backgroundElement;
     }
 
     /**

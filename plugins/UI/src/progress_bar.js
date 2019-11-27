@@ -71,13 +71,13 @@ class ProgressBar extends UIElement
 
         // create background sprite as regular UI sprite
         if (options.backgroundSourceRect) {
-            this.backgroundSprite = new Sprite({texture: options.texture, 
+            this._backgroundSprite = new Sprite({texture: options.texture, 
                 sourceRect: options.backgroundSourceRect, 
                 textureScale: textureScale});
         }
         // create background sprite as 9-sliced sprite
         else if (options.backgroundExternalSourceRect) {
-            this.backgroundSprite = new SlicedSprite({texture: options.texture, 
+            this._backgroundSprite = new SlicedSprite({texture: options.texture, 
                 externalSourceRect: options.backgroundExternalSourceRect, 
                 internalSourceRect: options.backgroundInternalSourceRect, 
                 textureScale: textureScale});
@@ -87,19 +87,19 @@ class ProgressBar extends UIElement
             throw new Error("Progress bars must have a background sprite!");
         }
         // set other background properties
-        this.backgroundSprite.color = options.backgroundColor || PintarJS.Color.white();
-        this.backgroundSprite.anchor = Anchors.Fixed;
+        this._backgroundSprite.color = options.backgroundColor || PintarJS.Color.white();
+        this._backgroundSprite.anchor = Anchors.Fixed;
 
         // create fill sprite as regular UI sprite
         if (options.fillSourceRect) {
             this.spriteFillSourceRect = options.fillSourceRect;
-            this.fillSprite = new Sprite({texture: options.texture, 
+            this._fillSprite = new Sprite({texture: options.texture, 
                 sourceRect: options.fillSourceRect, 
                 textureScale: textureScale});
         }
         // create fill sprite as 9-sliced sprite
         else if (options.fillExternalSourceRect) {
-            this.fillSprite = new SlicedSprite({texture: options.texture, 
+            this._fillSprite = new SlicedSprite({texture: options.texture, 
                 externalSourceRect: options.fillExternalSourceRect, 
                 internalSourceRect: options.fillInternalSourceRect, 
                 textureScale: textureScale});
@@ -113,28 +113,28 @@ class ProgressBar extends UIElement
         // set fill other properties
         var fillRect = options.fillExternalSourceRect || options.fillSourceRect;
         var backRect = options.backgroundExternalSourceRect || options.backgroundSourceRect;
-        this.fillSprite.color = options.fillColor || PintarJS.Color.white();
-        this.fillSprite.anchor = Anchors.Fixed;
-        this.fillWidthToRemove = backRect ? Math.round(backRect.width - fillRect.width) : 0;
-        this.fillHeightToRemove = backRect ? Math.round(backRect.height - fillRect.height) : 0;
+        this._fillSprite.color = options.fillColor || PintarJS.Color.white();
+        this._fillSprite.anchor = Anchors.Fixed;
+        this._fillWidthToRemove = backRect ? Math.round(backRect.width - fillRect.width) : 0;
+        this._fillHeightToRemove = backRect ? Math.round(backRect.height - fillRect.height) : 0;
 
         // create optional foreground sprite as regular UI sprite
         if (options.foregroundSourceRect) {
-            this.foregroundSprite = new Sprite({texture: options.texture, 
+            this._foregroundSprite = new Sprite({texture: options.texture, 
                 sourceRect: options.foregroundSourceRect, 
                 textureScale: textureScale});
         }
         // create optional foreground sprite as 9-sliced sprite
         else if (options.foregroundExternalSourceRect) {
-            this.foregroundSprite = new SlicedSprite({texture: options.texture, 
+            this._foregroundSprite = new SlicedSprite({texture: options.texture, 
                 externalSourceRect: options.foregroundExternalSourceRect, 
                 internalSourceRect: options.foregroundInternalSourceRect, 
                 textureScale: textureScale});
         }
         // set other foreground sprite properties
-        if (this.foregroundSprite) {
-            this.foregroundSprite.color = options.foregroundColor || PintarJS.Color.white();
-            this.foregroundSprite.anchor = Anchors.Fixed;
+        if (this._foregroundSprite) {
+            this._foregroundSprite.color = options.foregroundColor || PintarJS.Color.white();
+            this._foregroundSprite.anchor = Anchors.Fixed;
         }
 
         // store fill part anchor
@@ -179,7 +179,7 @@ class ProgressBar extends UIElement
      */
     get fillColor()
     {
-        return this.fillSprite.color;
+        return this._fillSprite.color;
     }
 
     /**
@@ -187,7 +187,7 @@ class ProgressBar extends UIElement
      */
     set fillColor(color)
     {
-        this.fillSprite.color = color;
+        this._fillSprite.color = color;
     }
 
     /**
@@ -195,7 +195,7 @@ class ProgressBar extends UIElement
      */
     get fillBlendMode()
     {
-        return this.fillSprite.blendMode;
+        return this._fillSprite.blendMode;
     }
 
     /**
@@ -203,7 +203,7 @@ class ProgressBar extends UIElement
      */
     set fillBlendMode(blendMode)
     {
-        this.fillSprite.blendMode = blendMode;
+        this._fillSprite.blendMode = blendMode;
     }
 
     /**
@@ -215,55 +215,55 @@ class ProgressBar extends UIElement
         var dest = this.getBoundingBox();
 
         // draw background
-        this.backgroundSprite.offset = dest.getPosition();
-        this.backgroundSprite.size = dest.getSize();
-        this.backgroundSprite.draw(pintar);
+        this._backgroundSprite.offset = dest.getPosition();
+        this._backgroundSprite.size = dest.getSize();
+        this._backgroundSprite.draw(pintar);
 
         // get texture scale factor
-        var textureScaleX = this.backgroundSprite.size.x / this.backgroundSprite.sourceRectangle.width ;
-        var textureScaleY = this.backgroundSprite.size.y / this.backgroundSprite.sourceRectangle.height;
+        var textureScaleX = this._backgroundSprite.size.x / this._backgroundSprite.sourceRectangle.width ;
+        var textureScaleY = this._backgroundSprite.size.y / this._backgroundSprite.sourceRectangle.height;
 
         // draw fill
         var value = this._displayValue;
         if (value > 0)
         {
             // set size and offset
-            this.fillSprite.size.x = (this.backgroundSprite.size.x - this.fillWidthToRemove * textureScaleX) * (this.setWidth ? value : 1);
-            this.fillSprite.size.y = (this.backgroundSprite.size.y - this.fillHeightToRemove * textureScaleY) * (this.setHeight ? value : 1);
-            this.fillSprite.offset = this.getDestTopLeftPositionForRect(dest, this.fillSprite.size, this.fillPartAnchor, this.fillOffset);
+            this._fillSprite.size.x = (this._backgroundSprite.size.x - this._fillWidthToRemove * textureScaleX) * (this.setWidth ? value : 1);
+            this._fillSprite.size.y = (this._backgroundSprite.size.y - this._fillHeightToRemove * textureScaleY) * (this.setHeight ? value : 1);
+            this._fillSprite.offset = this.getDestTopLeftPositionForRect(dest, this._fillSprite.size, this.fillPartAnchor, this.fillOffset);
 
             // update source rect for single sprite mode
             if (this.spriteFillSourceRect) 
             {
                 // reset source rect
-                this.fillSprite.sourceRectangle = this.spriteFillSourceRect.clone();
+                this._fillSprite.sourceRectangle = this.spriteFillSourceRect.clone();
 
                 // update width
                 if (this.setWidth) {
-                    this.fillSprite.sourceRectangle.width = (this.backgroundSprite.sourceRectangle.width - this.fillWidthToRemove) * value;
+                    this._fillSprite.sourceRectangle.width = (this._backgroundSprite.sourceRectangle.width - this._fillWidthToRemove) * value;
                     if (this.fillPartAnchor.indexOf("right") !== -1) {
-                        this.fillSprite.sourceRectangle.x = this.spriteFillSourceRect.right - this.fillSprite.sourceRectangle.width;
+                        this._fillSprite.sourceRectangle.x = this.spriteFillSourceRect.right - this._fillSprite.sourceRectangle.width;
                     }
                 }
                 // update height
                 if (this.setHeight) {
-                    this.fillSprite.sourceRectangle.height = (this.backgroundSprite.sourceRectangle.height - this.fillHeightToRemove) * value;
+                    this._fillSprite.sourceRectangle.height = (this._backgroundSprite.sourceRectangle.height - this._fillHeightToRemove) * value;
                     if (this.fillPartAnchor.indexOf("Bottom") !== -1) {
-                        this.fillSprite.sourceRectangle.y = this.spriteFillSourceRect.bottom - this.fillSprite.sourceRectangle.height;
+                        this._fillSprite.sourceRectangle.y = this.spriteFillSourceRect.bottom - this._fillSprite.sourceRectangle.height;
                     }
                 }
             }
 
             // draw sprite
-            this.fillSprite.draw(pintar);
+            this._fillSprite.draw(pintar);
         }
 
          // draw foreground
-         if (this.foregroundSprite) 
+         if (this._foregroundSprite) 
          {
-            this.foregroundSprite.offset = dest.getPosition();
-            this.foregroundSprite.size = dest.getSize();
-            this.foregroundSprite.draw(pintar);
+            this._foregroundSprite.offset = dest.getPosition();
+            this._foregroundSprite.size = dest.getSize();
+            this._foregroundSprite.draw(pintar);
          }
     }
  

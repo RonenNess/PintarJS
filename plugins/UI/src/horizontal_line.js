@@ -47,20 +47,20 @@ class HorizontalLine extends UIElement
         var leftSideSourceRect = options.leftEdgeSourceRect;
         if (leftSideSourceRect)
         {
-            this.leftEdgeSprite = new PintarJS.Sprite(options.texture);
-            this.leftEdgeSprite.sourceRectangle = leftSideSourceRect;
-            this.leftEdgeSprite.size.set(leftSideSourceRect.width * textureScale, leftSideSourceRect.height * textureScale);
+            this._leftEdgeSprite = new PintarJS.Sprite(options.texture);
+            this._leftEdgeSprite.sourceRectangle = leftSideSourceRect;
+            this._leftEdgeSprite.size.set(leftSideSourceRect.width * textureScale, leftSideSourceRect.height * textureScale);
         }
         // create right-side edge
         var rightSideSourceRect = options.rightEdgeSourceRect;
         if (rightSideSourceRect)
         {
-            this.rightEdgeSprite = new PintarJS.Sprite(options.texture);
-            this.rightEdgeSprite.sourceRectangle = rightSideSourceRect;
-            this.rightEdgeSprite.size.set(rightSideSourceRect.width * textureScale, rightSideSourceRect.height * textureScale);
+            this._rightEdgeSprite = new PintarJS.Sprite(options.texture);
+            this._rightEdgeSprite.sourceRectangle = rightSideSourceRect;
+            this._rightEdgeSprite.size.set(rightSideSourceRect.width * textureScale, rightSideSourceRect.height * textureScale);
         }
         // create center part
-        this.middleSprite = new PintarJS.Sprite(options.texture);
+        this._middleSprite = new PintarJS.Sprite(options.texture);
         this._textureScale = options.textureScale;
         this._middleSourceRect = options.middleSourceRect;
     }
@@ -86,41 +86,41 @@ class HorizontalLine extends UIElement
         var offsetX = 0;
 
         // draw left edge
-        if (this.leftEdgeSprite)
+        if (this._leftEdgeSprite)
         {
-            this.leftEdgeSprite.position.set(destRect.x, destRect.y);
-            pintar.drawSprite(this.leftEdgeSprite);
-            widthLeft -= this.leftEdgeSprite.size.x;
-            offsetX += this.leftEdgeSprite.size.x
+            this._leftEdgeSprite.position.set(destRect.x, destRect.y);
+            pintar.drawSprite(this._leftEdgeSprite);
+            widthLeft -= this._leftEdgeSprite.size.x;
+            offsetX += this._leftEdgeSprite.size.x
         }
         // draw right edge
-        if (this.rightEdgeSprite)
+        if (this._rightEdgeSprite)
         {
-            this.rightEdgeSprite.position.set(destRect.right - this.rightEdgeSprite.width, destRect.y);
-            pintar.drawSprite(this.rightEdgeSprite);
-            widthLeft -= this.rightEdgeSprite.size.x;
+            this._rightEdgeSprite.position.set(destRect.right - this._rightEdgeSprite.width, destRect.y);
+            pintar.drawSprite(this._rightEdgeSprite);
+            widthLeft -= this._rightEdgeSprite.size.x;
         }
 
         // draw center parts
-        if (this.middleSprite)
+        if (this._middleSprite)
         {
             // reset middle part properties
-            this.middleSprite.sourceRectangle = this._middleSourceRect.clone();
-            this.middleSprite.size.set(this._middleSourceRect.width * this._textureScale, this._middleSourceRect.height * this._textureScale);
+            this._middleSprite.sourceRectangle = this._middleSourceRect.clone();
+            this._middleSprite.size.set(this._middleSourceRect.width * this._textureScale, this._middleSourceRect.height * this._textureScale);
 
             // draw middle parts
             while (widthLeft > 0)
             {
-                this.middleSprite.position.set(destRect.x + offsetX, destRect.y);
-                if (this.middleSprite.size.x > widthLeft)
+                this._middleSprite.position.set(destRect.x + offsetX, destRect.y);
+                if (this._middleSprite.size.x > widthLeft)
                 {
-                    var toCut = this.middleSprite.size.x - widthLeft;
-                    this.middleSprite.size.x -= toCut;
-                    this.middleSprite.sourceRectangle.width -= toCut / this._textureScale;
+                    var toCut = this._middleSprite.size.x - widthLeft;
+                    this._middleSprite.size.x -= toCut;
+                    this._middleSprite.sourceRectangle.width -= toCut / this._textureScale;
                 }
-                pintar.drawSprite(this.middleSprite);
-                widthLeft -= this.middleSprite.size.x;
-                offsetX += this.middleSprite.size.x
+                pintar.drawSprite(this._middleSprite);
+                widthLeft -= this._middleSprite.size.x;
+                offsetX += this._middleSprite.size.x
             }
         }
     }

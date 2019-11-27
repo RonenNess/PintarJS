@@ -45,9 +45,9 @@ class Sprite extends UIElement
         }
         
         // create underlying sprite
-        this.sprite = new PintarJS.Sprite(texture);
+        this._sprite = new PintarJS.Sprite(texture);
         if (sourceRect) { 
-            this.sprite.sourceRectangle = sourceRect.clone(); 
+            this._sprite.sourceRectangle = sourceRect.clone(); 
             this.size.x = sourceRect.width * textureScale;
             this.size.y = sourceRect.height * textureScale;
         }
@@ -66,7 +66,7 @@ class Sprite extends UIElement
      */
     get color()
     {
-        return this.sprite.color;
+        return this._sprite.color;
     }
 
     /**
@@ -74,7 +74,7 @@ class Sprite extends UIElement
      */
     set color(val)
     {
-        this.sprite.color = val;
+        this._sprite.color = val;
     }
 
     /**
@@ -82,7 +82,7 @@ class Sprite extends UIElement
      */
     get sourceRectangle()
     {
-        return this.sprite.sourceRectangle;
+        return this._sprite.sourceRectangle;
     }
 
     /**
@@ -90,7 +90,7 @@ class Sprite extends UIElement
      */
     set sourceRectangle(val)
     {
-        this.sprite.sourceRectangle = val;
+        this._sprite.sourceRectangle = val;
     }
 
     /**
@@ -101,9 +101,9 @@ class Sprite extends UIElement
     {
         // get drawing position and size and draw element
         var destRect = this.getBoundingBox();
-        this.sprite.size.set(destRect.width, destRect.height);
-        this.sprite.position.set(destRect.x, destRect.y);
-        pintar.drawSprite(this.sprite);
+        this._sprite.size.set(destRect.width, destRect.height);
+        this._sprite.position.set(destRect.x, destRect.y);
+        pintar.drawSprite(this._sprite);
     }
 }
 

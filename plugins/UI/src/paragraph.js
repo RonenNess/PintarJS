@@ -43,14 +43,14 @@ class Paragraph extends UIElement
         this.enableLineBreaking = true;
 
         // create text
-        this.textSprite = new PintarJS.TextSprite("");
-        this.textSprite.useStyleCommands = Boolean(options.useStyleCommands);
-        if (options.font !== undefined) { this.textSprite.font = options.font; }
-        if (options.fontSize !== undefined) { this.textSprite.fontSize = options.fontSize; }
-        if (options.alignment !== undefined) { this.textSprite.alignment = options.alignment; }
-        if (options.fillColor !== undefined) { this.textSprite.color = options.fillColor; }
-        if (options.strokeColor !== undefined) { this.textSprite.strokeColor = options.strokeColor; }
-        if (options.strokeWidth !== undefined) { this.textSprite.strokeWidth = options.strokeWidth; }
+        this._textSprite = new PintarJS.TextSprite("");
+        this._textSprite.useStyleCommands = Boolean(options.useStyleCommands);
+        if (options.font !== undefined) { this._textSprite.font = options.font; }
+        if (options.fontSize !== undefined) { this._textSprite.fontSize = options.fontSize; }
+        if (options.alignment !== undefined) { this._textSprite.alignment = options.alignment; }
+        if (options.fillColor !== undefined) { this._textSprite.color = options.fillColor; }
+        if (options.strokeColor !== undefined) { this._textSprite.strokeColor = options.strokeColor; }
+        if (options.strokeWidth !== undefined) { this._textSprite.strokeWidth = options.strokeWidth; }
 
         // if true, set element height automatically from text
         this.autoSetHeight = true;
@@ -61,7 +61,7 @@ class Paragraph extends UIElement
      */
     get text()
     {
-        return this.textSprite.text;
+        return this._textSprite.text;
     }
 
     /**
@@ -69,7 +69,7 @@ class Paragraph extends UIElement
      */
     set text(text)
     {
-        this.textSprite.text = text;
+        this._textSprite.text = text;
     }
 
     /**
@@ -88,20 +88,20 @@ class Paragraph extends UIElement
         // set position
         var destRect = this.getBoundingBox();
         var position = destRect.getPosition();
-        position.y += this.textSprite.fontSize;
-        this.textSprite.position = position;
+        position.y += this._textSprite.fontSize;
+        this._textSprite.position = position;
 
         // set max width
-        this.textSprite.maxWidth = this.enableLineBreaking ? destRect.width : 0;
+        this._textSprite.maxWidth = this.enableLineBreaking ? destRect.width : 0;
 
         // draw text
-        pintar.drawText(this.textSprite);
+        pintar.drawText(this._textSprite);
 
         // set auto height
         if (this.autoSetHeight) 
         {
             this.size.yMode = SizeModes.Pixels;
-            this.size.y = this.textSprite.calculatedHeight;
+            this.size.y = this._textSprite.calculatedHeight;
         }
     }
 }

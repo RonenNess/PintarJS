@@ -42,32 +42,32 @@ class SlicedSprite extends UIElement
         // extract params
         var texture = options.texture;
         var textureScale = options.textureScale || 1;
-        var wholeSourceRect = this.externalSourceRect = options.externalSourceRect;
-        var fillSourceRect = this.internalSourceRect = options.internalSourceRect;
+        var wholeSourceRect = this._externalSourceRect = options.externalSourceRect;
+        var fillSourceRect = this._internalSourceRect = options.internalSourceRect;
         var fillMode = options.fillMode || SlicedSprite.FillModes.Tiled;
        
         // calculate frame source rects
-        this.leftFrameSourceRect = new PintarJS.Rectangle(wholeSourceRect.x, fillSourceRect.y, fillSourceRect.x - wholeSourceRect.x, fillSourceRect.height);
-        this.rightFrameSourceRect = new PintarJS.Rectangle(fillSourceRect.right, fillSourceRect.y, wholeSourceRect.right - fillSourceRect.right, fillSourceRect.height);
-        this.topFrameSourceRect = new PintarJS.Rectangle(fillSourceRect.x, wholeSourceRect.y, fillSourceRect.width, fillSourceRect.y - wholeSourceRect.y);
-        this.bottomFrameSourceRect = new PintarJS.Rectangle(fillSourceRect.x, fillSourceRect.bottom, fillSourceRect.width, wholeSourceRect.bottom - fillSourceRect.bottom);
+        this._leftFrameSourceRect = new PintarJS.Rectangle(wholeSourceRect.x, fillSourceRect.y, fillSourceRect.x - wholeSourceRect.x, fillSourceRect.height);
+        this._rightFrameSourceRect = new PintarJS.Rectangle(fillSourceRect.right, fillSourceRect.y, wholeSourceRect.right - fillSourceRect.right, fillSourceRect.height);
+        this._topFrameSourceRect = new PintarJS.Rectangle(fillSourceRect.x, wholeSourceRect.y, fillSourceRect.width, fillSourceRect.y - wholeSourceRect.y);
+        this._bottomFrameSourceRect = new PintarJS.Rectangle(fillSourceRect.x, fillSourceRect.bottom, fillSourceRect.width, wholeSourceRect.bottom - fillSourceRect.bottom);
 
         // calculate frame corners rects
-        this.topLeftFrameCornerSourceRect = new PintarJS.Rectangle(wholeSourceRect.x, wholeSourceRect.y, fillSourceRect.x - wholeSourceRect.x, fillSourceRect.y - wholeSourceRect.y);
-        this.topRightFrameCornerSourceRect = new PintarJS.Rectangle(fillSourceRect.right, wholeSourceRect.y, wholeSourceRect.right - fillSourceRect.right, fillSourceRect.y - wholeSourceRect.y);
-        this.bottomLeftFrameCornerSourceRect = new PintarJS.Rectangle(wholeSourceRect.x, fillSourceRect.bottom, fillSourceRect.x - wholeSourceRect.x, wholeSourceRect.bottom - fillSourceRect.bottom);
-        this.bottomRightFrameCornerSourceRect = new PintarJS.Rectangle(fillSourceRect.right, fillSourceRect.bottom, wholeSourceRect.right - fillSourceRect.right, wholeSourceRect.bottom - fillSourceRect.bottom);
+        this._topLeftFrameCornerSourceRect = new PintarJS.Rectangle(wholeSourceRect.x, wholeSourceRect.y, fillSourceRect.x - wholeSourceRect.x, fillSourceRect.y - wholeSourceRect.y);
+        this._topRightFrameCornerSourceRect = new PintarJS.Rectangle(fillSourceRect.right, wholeSourceRect.y, wholeSourceRect.right - fillSourceRect.right, fillSourceRect.y - wholeSourceRect.y);
+        this._bottomLeftFrameCornerSourceRect = new PintarJS.Rectangle(wholeSourceRect.x, fillSourceRect.bottom, fillSourceRect.x - wholeSourceRect.x, wholeSourceRect.bottom - fillSourceRect.bottom);
+        this._bottomRightFrameCornerSourceRect = new PintarJS.Rectangle(fillSourceRect.right, fillSourceRect.bottom, wholeSourceRect.right - fillSourceRect.right, wholeSourceRect.bottom - fillSourceRect.bottom);
 
         // create sprites
-        this.topFrameSprite = new PintarJS.Sprite(texture);
-        this.bottomFrameSprite = new PintarJS.Sprite(texture);
-        this.leftFrameSprite = new PintarJS.Sprite(texture);
-        this.rightFrameSprite = new PintarJS.Sprite(texture);
-        this.topLeftCornerFrameSprite = new PintarJS.Sprite(texture);
-        this.bottomLeftCornerFrameSprite = new PintarJS.Sprite(texture);
-        this.topRightCornerFrameSprite = new PintarJS.Sprite(texture);
-        this.bottomRightCornerFrameSprite = new PintarJS.Sprite(texture);
-        this.fillSprite = new PintarJS.Sprite(texture);
+        this._topFrameSprite = new PintarJS.Sprite(texture);
+        this._bottomFrameSprite = new PintarJS.Sprite(texture);
+        this._leftFrameSprite = new PintarJS.Sprite(texture);
+        this._rightFrameSprite = new PintarJS.Sprite(texture);
+        this._topLeftCornerFrameSprite = new PintarJS.Sprite(texture);
+        this._bottomLeftCornerFrameSprite = new PintarJS.Sprite(texture);
+        this._topRightCornerFrameSprite = new PintarJS.Sprite(texture);
+        this._bottomRightCornerFrameSprite = new PintarJS.Sprite(texture);
+        this._fillSprite = new PintarJS.Sprite(texture);
 
         // set default colors
         this.fillColor = options.fillColor || PintarJS.Color.white();
@@ -97,7 +97,7 @@ class SlicedSprite extends UIElement
      */
     get sourceRectangle()
     {
-        return this.externalSourceRect;
+        return this._externalSourceRect;
     }
 
     /**
@@ -124,8 +124,8 @@ class SlicedSprite extends UIElement
 
         // get position
         var position = destRect.getPosition();
-        destRect.width -= this.bottomRightFrameCornerSourceRect.width * frameScale;
-        destRect.height -= this.bottomRightFrameCornerSourceRect.height * frameScale;
+        destRect.width -= this._bottomRightFrameCornerSourceRect.width * frameScale;
+        destRect.height -= this._bottomRightFrameCornerSourceRect.height * frameScale;
 
         // draw frames part
         if (destRect.width > 0 && destRect.height > 0) 
@@ -144,7 +144,7 @@ class SlicedSprite extends UIElement
                 sprite.position = position.clone();
                 sprite.blendMode = this.blendMode;
                 sprite.position.y += extraY;
-                sprite.position.x += this.topLeftFrameCornerSourceRect.width * frameScale;
+                sprite.position.x += this._topLeftFrameCornerSourceRect.width * frameScale;
                 sprite.width = sprite.sourceRectangle.width * frameScale;
                 sprite.height = sprite.sourceRectangle.height * frameScale;
                 sprite.color = this.frameColor;
@@ -172,8 +172,8 @@ class SlicedSprite extends UIElement
             }
 
             // draw top and bottom frames
-            drawTopAndBottomFrames(this.topFrameSprite, this.topFrameSourceRect, 0);
-            drawTopAndBottomFrames(this.bottomFrameSprite, this.bottomFrameSourceRect, destRect.height);
+            drawTopAndBottomFrames(this._topFrameSprite, this._topFrameSourceRect, 0);
+            drawTopAndBottomFrames(this._bottomFrameSprite, this._bottomFrameSourceRect, destRect.height);
 
             // function to draw left / right frames
             var drawLeftAndRightFrames = (sprite, sourceRect, extraX) => 
@@ -189,7 +189,7 @@ class SlicedSprite extends UIElement
                 sprite.position = position.clone();
                 sprite.blendMode = this.blendMode;
                 sprite.position.x += extraX;
-                sprite.position.y += this.topLeftFrameCornerSourceRect.height * frameScale;
+                sprite.position.y += this._topLeftFrameCornerSourceRect.height * frameScale;
                 sprite.width = sprite.sourceRectangle.width * frameScale;
                 sprite.height = sprite.sourceRectangle.height * frameScale;
                 sprite.color = this.frameColor;
@@ -217,8 +217,8 @@ class SlicedSprite extends UIElement
             }
 
             // draw top and bottom frames
-            drawLeftAndRightFrames(this.leftFrameSprite, this.leftFrameSourceRect, 0);
-            drawLeftAndRightFrames(this.rightFrameSprite, this.rightFrameSourceRect, destRect.width);
+            drawLeftAndRightFrames(this._leftFrameSprite, this._leftFrameSourceRect, 0);
+            drawLeftAndRightFrames(this._rightFrameSprite, this._rightFrameSourceRect, destRect.width);
 
             // function to draw frames corners
             var drawFramesCorner = (sprite, sourceRect, posx, posy) => 
@@ -244,30 +244,30 @@ class SlicedSprite extends UIElement
             }
 
             // draw corners
-            drawFramesCorner(this.topLeftCornerFrameSprite, this.topLeftFrameCornerSourceRect, 0, 0);
-            drawFramesCorner(this.topRightCornerFrameSprite, this.topRightFrameCornerSourceRect, destRect.width, 0);
-            drawFramesCorner(this.bottomLeftCornerFrameSprite, this.bottomLeftFrameCornerSourceRect, 0, destRect.height);
-            drawFramesCorner(this.bottomRightCornerFrameSprite, this.bottomRightFrameCornerSourceRect, destRect.width, destRect.height);
+            drawFramesCorner(this._topLeftCornerFrameSprite, this._topLeftFrameCornerSourceRect, 0, 0);
+            drawFramesCorner(this._topRightCornerFrameSprite, this._topRightFrameCornerSourceRect, destRect.width, 0);
+            drawFramesCorner(this._bottomLeftCornerFrameSprite, this._bottomLeftFrameCornerSourceRect, 0, destRect.height);
+            drawFramesCorner(this._bottomRightCornerFrameSprite, this._bottomRightFrameCornerSourceRect, destRect.width, destRect.height);
         }
 
         // draw fill
-        if (this.internalSourceRect.width && this.internalSourceRect.height)
+        if (this._internalSourceRect.width && this._internalSourceRect.height)
         {
             // prepare fill sprite properties
-            var sprite = this.fillSprite;     
+            var sprite = this._fillSprite;     
             sprite.origin = PintarJS.Point.zero();
             sprite.position = position.clone();
             sprite.blendMode = this.blendMode;
-            sprite.position.x += this.topLeftCornerFrameSprite.width;
-            sprite.position.y += this.topLeftCornerFrameSprite.height;
-            sprite.width = destRect.width - this.bottomLeftCornerFrameSprite.width;
-            sprite.height = destRect.height - this.bottomLeftCornerFrameSprite.height;
+            sprite.position.x += this._topLeftCornerFrameSprite.width;
+            sprite.position.y += this._topLeftCornerFrameSprite.height;
+            sprite.width = destRect.width - this._bottomLeftCornerFrameSprite.width;
+            sprite.height = destRect.height - this._bottomLeftCornerFrameSprite.height;
             sprite.color = this.fillColor;
 
             // draw fill - stretch mode
             if (this.fillMode === SlicedSprite.FillModes.Stretch) 
             {
-                sprite.sourceRectangle = this.internalSourceRect.clone();
+                sprite.sourceRectangle = this._internalSourceRect.clone();
                 pintar.drawSprite(sprite);
             }
             // draw fill - tiling
@@ -275,7 +275,7 @@ class SlicedSprite extends UIElement
             {
                 // setup starting params
                 var fillScale = scaleFactor * this.fillScale; 
-                var fillSize = new PintarJS.Point(Math.max(this.internalSourceRect.width * fillScale, 1), Math.max(this.internalSourceRect.height * fillScale, 1));
+                var fillSize = new PintarJS.Point(Math.max(this._internalSourceRect.width * fillScale, 1), Math.max(this._internalSourceRect.height * fillScale, 1));
                 sprite.size = fillSize.clone();
                 var startPosition = sprite.position.clone();
 
@@ -283,22 +283,22 @@ class SlicedSprite extends UIElement
                 for (var i = 0; i < destRect.width / fillSize.x; ++i)
                 {
                     // reset source rect
-                    sprite.sourceRectangle = this.internalSourceRect.clone();
+                    sprite.sourceRectangle = this._internalSourceRect.clone();
 
                     // set width and position x
                     sprite.size.x = fillSize.x;
                     sprite.position.x = startPosition.x + sprite.width * i;
 
                     // check if should finish
-                    if (sprite.position.x >= this.rightFrameSprite.position.x) {
+                    if (sprite.position.x >= this._rightFrameSprite.position.x) {
                         break;
                     }
 
                     // check if need to trim width
                     var spriteRight = sprite.position.x + sprite.size.x;
-                    if (spriteRight > this.rightFrameSprite.position.x)
+                    if (spriteRight > this._rightFrameSprite.position.x)
                     {
-                        var toCut = spriteRight - this.rightFrameSprite.position.x;
+                        var toCut = spriteRight - this._rightFrameSprite.position.x;
                         if (toCut > 0) {
                             sprite.sourceRectangle.width -= Math.round(toCut * (sprite.sourceRectangle.width / sprite.width));
                             sprite.width -= toCut;
@@ -318,15 +318,15 @@ class SlicedSprite extends UIElement
                         sprite.position.y = startPosition.y + sprite.height * j;
 
                         // check if should finish
-                        if (sprite.position.y >= this.bottomFrameSprite.position.y) {
+                        if (sprite.position.y >= this._bottomFrameSprite.position.y) {
                             break;
                         }
 
                         // check if need to trim height
                         var spriteBottom = sprite.position.y + sprite.size.y;
-                        if (spriteBottom > this.bottomFrameSprite.position.y)
+                        if (spriteBottom > this._bottomFrameSprite.position.y)
                         {
-                            var toCut = spriteBottom - this.bottomFrameSprite.position.y;
+                            var toCut = spriteBottom - this._bottomFrameSprite.position.y;
                             if (toCut > 0) {
                                 sprite.sourceRectangle.height -= Math.round(toCut * (sprite.sourceRectangle.height / sprite.height));
                                 sprite.height -= toCut;
