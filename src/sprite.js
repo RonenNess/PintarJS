@@ -246,7 +246,7 @@ Sprite.defaults = {
     color: Color.white(),
     origin: Point.zero(),
     colorBoost: Color.transparent(),
-    applyAntiBleeding: true,
+    applyAntiBleeding: false,
     size: new Point(64, 64),
 }
 

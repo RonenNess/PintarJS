@@ -127,10 +127,10 @@ class UIElement
             case undefined:
             case SizeModes.Pixels:
                 var scale = this.absoluteScale;
-                return val * scale;
+                return Math.ceil(val * scale);
 
             case SizeModes.Percents:
-                return (val / 100.0) * parentSize;
+                return Math.ceil((val / 100.0) * parentSize);
 
             default:
                 throw new Error("Invalid size mode!");
@@ -304,6 +304,8 @@ class UIElement
         if (offset) {
             ret = ret.add(offset.mul(offsetFactor));
         }
+        ret.x = Math.floor(ret.x);
+        ret.y = Math.floor(ret.y);
         return ret;
     }
 

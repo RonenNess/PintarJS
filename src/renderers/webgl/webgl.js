@@ -532,6 +532,8 @@ class WebGlRenderer extends Renderer
                 if (!gltexture) {throw new PintarConsole.Error("Invalid texture! Internal error?");}
                 gl.bindTexture(gl.TEXTURE_2D, gltexture);
                 gl.texImage2D(gl.TEXTURE_2D, 0, textureMode, img.width, img.height, 0, textureMode, gl.UNSIGNED_BYTE, img);
+                gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE );
+                gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE );
                 texture._glTextures[textureMode] = gltexture;
             }
             // if already got a gl texture, just bind to existing texture

@@ -772,7 +772,7 @@ class ProgressBar extends UIElement
         this.fillOffset = options.fillOffset || PintarJS.Point.zero();
 
         // get texture scale
-        var textureScale = options.textureScale || 1;
+        var textureScale = this._textureScale = options.textureScale || 1;
 
         // create background sprite as regular UI sprite
         if (options.backgroundSourceRect) {
@@ -924,17 +924,13 @@ class ProgressBar extends UIElement
         this._backgroundSprite.size = dest.getSize();
         this._backgroundSprite.draw(pintar);
 
-        // get texture scale factor
-        var textureScaleX = this._backgroundSprite.size.x / this._backgroundSprite.sourceRectangle.width ;
-        var textureScaleY = this._backgroundSprite.size.y / this._backgroundSprite.sourceRectangle.height;
-
         // draw fill
         var value = this._displayValue;
         if (value > 0)
         {
             // set size and offset
-            this._fillSprite.size.x = (this._backgroundSprite.size.x - this._fillWidthToRemove * textureScaleX) * (this.setWidth ? value : 1);
-            this._fillSprite.size.y = (this._backgroundSprite.size.y - this._fillHeightToRemove * textureScaleY) * (this.setHeight ? value : 1);
+            this._fillSprite.size.x = Math.floor((this._backgroundSprite.size.x - this._fillWidthToRemove * this._textureScale) * (this.setWidth ? value : 1));
+            this._fillSprite.size.y = Math.floor((this._backgroundSprite.size.y - this._fillHeightToRemove * this._textureScale) * (this.setHeight ? value : 1));
             this._fillSprite.offset = this.getDestTopLeftPositionForRect(dest, this._fillSprite.size, this.fillPartAnchor, this.fillOffset);
 
             // update source rect for single sprite mode
@@ -945,18 +941,19 @@ class ProgressBar extends UIElement
 
                 // update width
                 if (this.setWidth) {
-                    this._fillSprite.sourceRectangle.width = (this._backgroundSprite.sourceRectangle.width - this._fillWidthToRemove) * value;
+                    this._fillSprite.sourceRectangle.width = Math.floor((this._backgroundSprite.sourceRectangle.width - this._fillWidthToRemove) * value);
                     if (this.fillPartAnchor.indexOf("right") !== -1) {
-                        this._fillSprite.sourceRectangle.x = this.spriteFillSourceRect.right - this._fillSprite.sourceRectangle.width;
+                        this._fillSprite.sourceRectangle.x = Math.floor(this.spriteFillSourceRect.right - this._fillSprite.sourceRectangle.width);
                     }
                 }
                 // update height
                 if (this.setHeight) {
-                    this._fillSprite.sourceRectangle.height = (this._backgroundSprite.sourceRectangle.height - this._fillHeightToRemove) * value;
+                    this._fillSprite.sourceRectangle.height = Math.floor((this._backgroundSprite.sourceRectangle.height - this._fillHeightToRemove) * value);
                     if (this.fillPartAnchor.indexOf("Bottom") !== -1) {
-                        this._fillSprite.sourceRectangle.y = this.spriteFillSourceRect.bottom - this._fillSprite.sourceRectangle.height;
+                        this._fillSprite.sourceRectangle.y = Math.floor(this.spriteFillSourceRect.bottom - this._fillSprite.sourceRectangle.height);
                     }
                 }
+                console.log(this._fillSprite.offset, this._fillSprite.sourceRectangle.height, this._fillSprite.sourceRectangle.y)
             }
 
             // draw sprite
@@ -1753,10 +1750,10 @@ class UIElement
             case undefined:
             case SizeModes.Pixels:
                 var scale = this.absoluteScale;
-                return val * scale;
+                return Math.ceil(val * scale);
 
             case SizeModes.Percents:
-                return (val / 100.0) * parentSize;
+                return Math.ceil((val / 100.0) * parentSize);
 
             default:
                 throw new Error("Invalid size mode!");
@@ -1930,6 +1927,8 @@ class UIElement
         if (offset) {
             ret = ret.add(offset.mul(offsetFactor));
         }
+        ret.x = Math.floor(ret.x);
+        ret.y = Math.floor(ret.y);
         return ret;
     }
 
