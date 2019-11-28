@@ -928,11 +928,6 @@ class ProgressBar extends UIElement
         var value = this._displayValue;
         if (value > 0)
         {
-            // set size and offset
-            this._fillSprite.size.x = Math.floor((this._backgroundSprite.size.x - this._fillWidthToRemove * this._textureScale) * (this.setWidth ? value : 1));
-            this._fillSprite.size.y = Math.floor((this._backgroundSprite.size.y - this._fillHeightToRemove * this._textureScale) * (this.setHeight ? value : 1));
-            this._fillSprite.offset = this.getDestTopLeftPositionForRect(dest, this._fillSprite.size, this.fillPartAnchor, this.fillOffset);
-
             // update source rect for single sprite mode
             if (this.spriteFillSourceRect) 
             {
@@ -942,6 +937,7 @@ class ProgressBar extends UIElement
                 // update width
                 if (this.setWidth) {
                     this._fillSprite.sourceRectangle.width = Math.floor((this._backgroundSprite.sourceRectangle.width - this._fillWidthToRemove) * value);
+                    this._fillSprite.size.x = this._fillSprite.sourceRectangle.width * this._textureScale;
                     if (this.fillPartAnchor.indexOf("right") !== -1) {
                         this._fillSprite.sourceRectangle.x = Math.floor(this.spriteFillSourceRect.right - this._fillSprite.sourceRectangle.width);
                     }
@@ -949,11 +945,23 @@ class ProgressBar extends UIElement
                 // update height
                 if (this.setHeight) {
                     this._fillSprite.sourceRectangle.height = Math.floor((this._backgroundSprite.sourceRectangle.height - this._fillHeightToRemove) * value);
+                    this._fillSprite.size.y = this._fillSprite.sourceRectangle.height * this._textureScale;
                     if (this.fillPartAnchor.indexOf("Bottom") !== -1) {
                         this._fillSprite.sourceRectangle.y = Math.floor(this.spriteFillSourceRect.bottom - this._fillSprite.sourceRectangle.height);
                     }
                 }
-                console.log(this._fillSprite.offset, this._fillSprite.sourceRectangle.height, this._fillSprite.sourceRectangle.y)
+
+                console.log(value);
+
+                // update offset
+                this._fillSprite.offset = this.getDestTopLeftPositionForRect(dest, this._fillSprite.size, this.fillPartAnchor, this.fillOffset);
+            }
+            // update size and offset for 9-slice texture
+            else
+            {
+                this._fillSprite.size.x = Math.floor((this._backgroundSprite.size.x - (this._fillWidthToRemove * this._textureScale)) * (this.setWidth ? value : 1));
+                this._fillSprite.size.y = Math.floor((this._backgroundSprite.size.y - (this._fillHeightToRemove * this._textureScale)) * (this.setHeight ? value : 1));
+                this._fillSprite.offset = this.getDestTopLeftPositionForRect(dest, this._fillSprite.size, this.fillPartAnchor, this.fillOffset);    
             }
 
             // draw sprite
