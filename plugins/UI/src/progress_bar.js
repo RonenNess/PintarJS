@@ -5,7 +5,7 @@
  * since: 2019.
  */
 "use strict";
-const UIElement = require('./ui_element');
+const Container = require('./container');
 const PintarJS = require('./pintar');
 const SlicedSprite = require('./sliced_sprite');
 const Sprite = require('./sprite');
@@ -16,7 +16,7 @@ const Utils = require('./utils');
 /**
  * Implement a progressbar element.
  */
-class ProgressBar extends UIElement
+class ProgressBar extends Container
 {
     /**
      * Create a progressbar element.
@@ -268,6 +268,9 @@ class ProgressBar extends UIElement
             this._foregroundSprite.size = dest.getSize();
             this._foregroundSprite.draw(pintar);
          }
+
+         // draw children, if have any
+         super.draw(pintar);
     }
  
     /**

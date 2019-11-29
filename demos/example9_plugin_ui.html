@@ -71,22 +71,7 @@
             fillMode: PintarJS.UI.SlicedSprite.FillModes.Tiled,
             fillColor: PintarJS.Color.white(),
             frameColor: PintarJS.Color.white(),
-          }
-        },
-
-        // define containers
-        Container: 
-        {
-          // default container - with default panel as background
-          default: {
-            background: "default",
             padding: new PintarJS.UI.SidesProperties(30, 30, 35, 35),
-          },
-
-          // alternative container without background
-          no_ackground: {
-            background: null,
-            padding: new PintarJS.UI.SidesProperties(15, 15, 15, 15),
           }
         },
 
@@ -215,7 +200,7 @@
       var createContainer = (title) => {
 
         // create container
-        var container = new PintarJS.UI.Container(UI_THEME);
+        var container = new PintarJS.UI.Panel(UI_THEME);
         container.anchor = PintarJS.UI.Anchors.CenterLeft;
         container.size.set(370, containersHeight);
         container.offset.x = positionX;
@@ -317,6 +302,13 @@
         progressbar.value = 0.7;
         container.addChild(progressbar);
         progressbars.push(progressbar);
+
+        // add text display
+        var text = new PintarJS.UI.Paragraph(UI_THEME);
+        text.anchor = PintarJS.UI.Anchors.Center;
+        text.text = "100";
+        text.alignment = "center";
+        progressbar.addChild(text);
       }
 
       // set random values every few seconds for progress bars

@@ -777,7 +777,7 @@ PintarJS.Point = Point;
 PintarJS.Rectangle = Rectangle;
 PintarJS.Sprite = Sprite;
 PintarJS.TextSprite = TextSprite;
-PintarJS.TextAlignment = TextSprite._Alignments;
+PintarJS.TextAlignment = TextSprite.Alignments;
 PintarJS.BlendModes = BlendModes;
 PintarJS.Renderers = Renderers;
 PintarJS.Color = Color;
@@ -4630,7 +4630,7 @@ class TextSprite extends Renderable
 /**
  * Alignment types enums.
  */
-TextSprite._Alignments = {
+TextSprite.Alignments = {
     Left: "left",
     Right: "right",
     Center: "center",
@@ -4641,7 +4641,7 @@ TextSprite.defaults = {
     font: "Arial",                              // default font to use when drawing text.
     fontSize: 30,                               // default font size.
     color: Color.black(),                       // default text color.
-    alignment: TextSprite._Alignments.Left,     // default text alignment.
+    alignment: TextSprite.Alignments.Left,     // default text alignment.
     strokeWidth: 0,                             // default text stroke width.
     strokeColor: Color.transparent(),           // default text stroke color.
     blendMode: BlendModes.AlphaBlend,           // default blending mode.

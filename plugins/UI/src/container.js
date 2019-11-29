@@ -6,11 +6,7 @@
  */
 "use strict";
 const UIElement = require('./ui_element');
-const PintarJS = require('./pintar');
-const SidesProperties = require('./sides_properties');
-const SizeModes = require('./size_modes');
 const Anchors = require('./anchors');
-const Panel = require('./panel');
 
 
 /**
@@ -20,48 +16,13 @@ class Container extends UIElement
 {
     /**
      * Create a container element.
-     * @param {Object} theme
-     * @param {PintarJS.UI.SidesProperties} theme.Container[skin].padding (Optional) Container padding (distance between internal elements and container sides).
-     * @param {PintarJS.UI.SizeModes} theme.Container[skin].paddingMode (Optional) Container padding mode.
-     * @param {String} theme.Container[skin].background (Optional) If defined, will create a panel as background with this skin.
      */
-    constructor(theme, skin)
+    constructor()
     {
         super();
 
-        // get options and create children list
-        var options = this.getOptionsFromTheme(theme, skin);
-        this.setBaseOptions(options);
+        // create children list
         this._children = [];
-        
-        // set padding
-        this.padding = options.padding || new SidesProperties(10, 10, 10, 10);
-        this.paddingMode = options.paddingMode || SizeModes.Pixels;
-
-        // set background
-        this._background = null;
-        if (options.background) {
-            this.background = new Panel(theme, options.background);
-        }
-    }
-
-    /**
-     * Get background element, or null if not set.
-     */
-    get background()
-    {
-        return this._background;
-    }
-
-    /**
-     * Set background element.
-     */
-    set background(backgroundElement)
-    {
-        if (this._background) { this._background._setParent(null); }
-        backgroundElement._setParent(this);
-        backgroundElement.ignoreParentPadding = true;
-        this._background = backgroundElement;
     }
 
     /**
@@ -106,7 +67,7 @@ class Container extends UIElement
     getInternalBoundingBox()
     {
         var ret = this.getBoundingBox();
-        var padding = this._convertSides(this.padding);
+        var padding = this.padding ? this._convertSides(this.padding) : {top: 0, bottom: 0, left: 0, right: 0};
         ret.x += padding.left;
         ret.y += padding.top;
         ret.width -= (padding.right + padding.left);
@@ -119,11 +80,6 @@ class Container extends UIElement
      */
     draw(pintar)
     {
-        // draw background
-        if (this.background) {
-            this.background.draw(pintar);
-        }
-
         // draw children
         for (var i = 0; i < this._children.length; ++i) {
             this._children[i].draw(pintar);

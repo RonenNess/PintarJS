@@ -1,23 +1,24 @@
 /**
  * file: panel.js
- * description: A graphical panel object.
+ * description: A container with graphics object.
  * author: Ronen Ness.
  * since: 2019.
  */
 "use strict";
 const PintarJS = require('./pintar');
+const Container = require('./container');
 const SlicedSprite = require('./sliced_sprite');
 
 
 /**
- * A drawable sprite that is sliced into 9-slices.
- * For more info, read about 9-slice scaling / 9-slice grid in general.
+ * A container with graphical background.
  */
-class Panel extends SlicedSprite
+class Panel extends Container
 {
     /**
-     * Create a panel sprite element.
+     * Create a panel element.
      * @param {Object} theme
+     * @param {PintarJS.UI.SidesProperties} theme.Panel[skin].padding (Optional) Container padding (distance between internal elements and container sides).
      * @param {PintarJS.Texture} theme.Panel[skin].texture Texture to use.
      * @param {PintarJS.Rectangle} theme.Panel[skin].externalSourceRect The entire source rect, including frame and fill.
      * @param {PintarJS.Rectangle} theme.Panel[skin].internalSourceRect The internal source rect, must be contained inside the whole source rect.
@@ -30,7 +31,19 @@ class Panel extends SlicedSprite
      */
     constructor(theme, skin, override)
     {
-        super(theme, skin || 'default', override);
+        super();
+        
+        // get options
+        var options = this.getOptionsFromTheme(theme, skin, override);
+        this.setBaseOptions(options);
+        
+        // set padding
+        this.padding = options.padding || new SidesProperties(10, 10, 10, 10);
+
+        // set background
+        this._background = new SlicedSprite(options);
+        this._background._setParent(this);
+        this._background.ignoreParentPadding = true;
     }
     
     /**
@@ -39,6 +52,31 @@ class Panel extends SlicedSprite
     get requiredOptions()
     {
         return ['texture', 'externalSourceRect', 'internalSourceRect'];
+    }
+       
+    /**
+     * Draw the UI element.
+     */
+    draw(pintar)
+    {
+        this._background.draw(pintar);
+        super.draw(pintar);
+    }
+
+    /**
+     * Update the UI element.
+     */
+    update(input)
+    {
+        // call base class update
+        super.update(input);
+        
+        // update background
+        if (this._background)
+        {
+            this._background.update(input);
+            this._background.size = this.size;
+        }
     }
 }
 

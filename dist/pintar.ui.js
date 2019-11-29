@@ -29,7 +29,7 @@ module.exports = {
  * since: 2019.
  */
 "use strict";
-const UIElement = require('./ui_element');
+const Container = require('./container');
 const PintarJS = require('./pintar');
 const SizeModes = require('./size_modes');
 const SlicedSprite = require('./sliced_sprite');
@@ -40,7 +40,7 @@ const Anchors = require('./anchors');
 /**
  * Implement a button element.
  */
-class Button extends UIElement
+class Button extends Container
 {
 
     /**
@@ -125,7 +125,7 @@ class Button extends UIElement
 }
 
 module.exports = Button; 
-},{"./anchors":1,"./paragraph":8,"./pintar":9,"./size_modes":13,"./sliced_sprite":14,"./ui_element":16}],3:[function(require,module,exports){
+},{"./anchors":1,"./container":3,"./paragraph":8,"./pintar":9,"./size_modes":13,"./sliced_sprite":14}],3:[function(require,module,exports){
 /**
  * file: container.js
  * description: Implement a container element.
@@ -134,11 +134,7 @@ module.exports = Button;
  */
 "use strict";
 const UIElement = require('./ui_element');
-const PintarJS = require('./pintar');
-const SidesProperties = require('./sides_properties');
-const SizeModes = require('./size_modes');
 const Anchors = require('./anchors');
-const Panel = require('./panel');
 
 
 /**
@@ -148,48 +144,13 @@ class Container extends UIElement
 {
     /**
      * Create a container element.
-     * @param {Object} theme
-     * @param {PintarJS.UI.SidesProperties} theme.Container[skin].padding (Optional) Container padding (distance between internal elements and container sides).
-     * @param {PintarJS.UI.SizeModes} theme.Container[skin].paddingMode (Optional) Container padding mode.
-     * @param {String} theme.Container[skin].background (Optional) If defined, will create a panel as background with this skin.
      */
-    constructor(theme, skin)
+    constructor()
     {
         super();
 
-        // get options and create children list
-        var options = this.getOptionsFromTheme(theme, skin);
-        this.setBaseOptions(options);
+        // create children list
         this._children = [];
-        
-        // set padding
-        this.padding = options.padding || new SidesProperties(10, 10, 10, 10);
-        this.paddingMode = options.paddingMode || SizeModes.Pixels;
-
-        // set background
-        this._background = null;
-        if (options.background) {
-            this.background = new Panel(theme, options.background);
-        }
-    }
-
-    /**
-     * Get background element, or null if not set.
-     */
-    get background()
-    {
-        return this._background;
-    }
-
-    /**
-     * Set background element.
-     */
-    set background(backgroundElement)
-    {
-        if (this._background) { this._background._setParent(null); }
-        backgroundElement._setParent(this);
-        backgroundElement.ignoreParentPadding = true;
-        this._background = backgroundElement;
     }
 
     /**
@@ -234,7 +195,7 @@ class Container extends UIElement
     getInternalBoundingBox()
     {
         var ret = this.getBoundingBox();
-        var padding = this._convertSides(this.padding);
+        var padding = this.padding ? this._convertSides(this.padding) : {top: 0, bottom: 0, left: 0, right: 0};
         ret.x += padding.left;
         ret.y += padding.top;
         ret.width -= (padding.right + padding.left);
@@ -247,11 +208,6 @@ class Container extends UIElement
      */
     draw(pintar)
     {
-        // draw background
-        if (this.background) {
-            this.background.draw(pintar);
-        }
-
         // draw children
         for (var i = 0; i < this._children.length; ++i) {
             this._children[i].draw(pintar);
@@ -323,7 +279,7 @@ class Container extends UIElement
 
 // export the container
 module.exports = Container; 
-},{"./anchors":1,"./panel":7,"./pintar":9,"./sides_properties":12,"./size_modes":13,"./ui_element":16}],4:[function(require,module,exports){
+},{"./anchors":1,"./ui_element":16}],4:[function(require,module,exports){
 /**
  * file: horizontal_line.js
  * description: Implement a horizontal line element.
@@ -648,24 +604,25 @@ module.exports = InputManager;
 },{"./pintar":9}],7:[function(require,module,exports){
 /**
  * file: panel.js
- * description: A graphical panel object.
+ * description: A container with graphics object.
  * author: Ronen Ness.
  * since: 2019.
  */
 "use strict";
 const PintarJS = require('./pintar');
+const Container = require('./container');
 const SlicedSprite = require('./sliced_sprite');
 
 
 /**
- * A drawable sprite that is sliced into 9-slices.
- * For more info, read about 9-slice scaling / 9-slice grid in general.
+ * A container with graphical background.
  */
-class Panel extends SlicedSprite
+class Panel extends Container
 {
     /**
-     * Create a panel sprite element.
+     * Create a panel element.
      * @param {Object} theme
+     * @param {PintarJS.UI.SidesProperties} theme.Panel[skin].padding (Optional) Container padding (distance between internal elements and container sides).
      * @param {PintarJS.Texture} theme.Panel[skin].texture Texture to use.
      * @param {PintarJS.Rectangle} theme.Panel[skin].externalSourceRect The entire source rect, including frame and fill.
      * @param {PintarJS.Rectangle} theme.Panel[skin].internalSourceRect The internal source rect, must be contained inside the whole source rect.
@@ -678,7 +635,19 @@ class Panel extends SlicedSprite
      */
     constructor(theme, skin, override)
     {
-        super(theme, skin || 'default', override);
+        super();
+        
+        // get options
+        var options = this.getOptionsFromTheme(theme, skin, override);
+        this.setBaseOptions(options);
+        
+        // set padding
+        this.padding = options.padding || new SidesProperties(10, 10, 10, 10);
+
+        // set background
+        this._background = new SlicedSprite(options);
+        this._background._setParent(this);
+        this._background.ignoreParentPadding = true;
     }
     
     /**
@@ -688,12 +657,37 @@ class Panel extends SlicedSprite
     {
         return ['texture', 'externalSourceRect', 'internalSourceRect'];
     }
+       
+    /**
+     * Draw the UI element.
+     */
+    draw(pintar)
+    {
+        this._background.draw(pintar);
+        super.draw(pintar);
+    }
+
+    /**
+     * Update the UI element.
+     */
+    update(input)
+    {
+        // call base class update
+        super.update(input);
+        
+        // update background
+        if (this._background)
+        {
+            this._background.update(input);
+            this._background.size = this.size;
+        }
+    }
 }
 
 
 // export the panel class
 module.exports = Panel;
-},{"./pintar":9,"./sliced_sprite":14}],8:[function(require,module,exports){
+},{"./container":3,"./pintar":9,"./sliced_sprite":14}],8:[function(require,module,exports){
 /**
  * file: paragraph.js
  * description: Implement a paragraph element.
@@ -831,7 +825,7 @@ module.exports = pintar;
  * since: 2019.
  */
 "use strict";
-const UIElement = require('./ui_element');
+const Container = require('./container');
 const PintarJS = require('./pintar');
 const SlicedSprite = require('./sliced_sprite');
 const Sprite = require('./sprite');
@@ -842,7 +836,7 @@ const Utils = require('./utils');
 /**
  * Implement a progressbar element.
  */
-class ProgressBar extends UIElement
+class ProgressBar extends Container
 {
     /**
      * Create a progressbar element.
@@ -1094,6 +1088,9 @@ class ProgressBar extends UIElement
             this._foregroundSprite.size = dest.getSize();
             this._foregroundSprite.draw(pintar);
          }
+
+         // draw children, if have any
+         super.draw(pintar);
     }
  
     /**
@@ -1123,7 +1120,7 @@ class ProgressBar extends UIElement
 }
 
 module.exports = ProgressBar; 
-},{"./anchors":1,"./pintar":9,"./size_modes":13,"./sliced_sprite":14,"./sprite":15,"./ui_element":16,"./utils":18}],11:[function(require,module,exports){
+},{"./anchors":1,"./container":3,"./pintar":9,"./size_modes":13,"./sliced_sprite":14,"./sprite":15,"./utils":18}],11:[function(require,module,exports){
 /**
  * file: root.js
  * description: Implement a UI root element.
@@ -1151,7 +1148,6 @@ class UIRoot extends Container
         super({UIRoot: { default: { }}});
         this.pintar = pintar;
         this.inputManager = inputManager || new InputManager(pintar);
-        this.padding.set(0, 0, 0, 0);
     }
 
     /**

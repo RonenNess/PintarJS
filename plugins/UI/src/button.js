@@ -5,7 +5,7 @@
  * since: 2019.
  */
 "use strict";
-const UIElement = require('./ui_element');
+const Container = require('./container');
 const PintarJS = require('./pintar');
 const SizeModes = require('./size_modes');
 const SlicedSprite = require('./sliced_sprite');
@@ -16,7 +16,7 @@ const Anchors = require('./anchors');
 /**
  * Implement a button element.
  */
-class Button extends UIElement
+class Button extends Container
 {
 
     /**
