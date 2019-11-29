@@ -42,6 +42,9 @@ class Paragraph extends UIElement
         // limit paragraph text to element width
         this.enableLineBreaking = true;
 
+        // should we center this paragraph's text vertically?
+        this.centerTextVertically = true;
+
         // create text
         this._textSprite = new PintarJS.TextSprite("");
         this._textSprite.useStyleCommands = Boolean(options.useStyleCommands);
@@ -54,6 +57,9 @@ class Paragraph extends UIElement
 
         // if true, set element height automatically from text
         this.autoSetHeight = true;
+
+        // if true, set element width automatically from text
+        this.autoSetWidth = false;
     }
 
     /**
@@ -101,14 +107,31 @@ class Paragraph extends UIElement
      */
     draw(pintar)
     {
-        // set position
+        // get position and size
         var destRect = this.getBoundingBox();
         var position = destRect.getPosition();
-        position.y += this._textSprite.fontSize;
+
+        // adjust vertical position
+        if (this.centerTextVertically) {
+            position.y += this._textSprite.calculatedLineHeight / 1.25;
+        }
+        else {
+            position.y += this._textSprite.calculatedLineHeight / 2;
+        }
+
+        // set text sprite
         this._textSprite.position = position;
 
         // set max width
-        this._textSprite.maxWidth = this.enableLineBreaking ? destRect.width : 0;
+        this._textSprite.maxWidth = (this.enableLineBreaking && !this.autoSetWidth) ? destRect.width : 0;
+
+        // adjust position for alignment
+        if (this.alignment == "center") {
+            this._textSprite.position.x += destRect.width / 2;
+        }
+        if (this.alignment == "right") {
+            this._textSprite.position.x += destRect.width;
+        }
 
         // draw text
         pintar.drawText(this._textSprite);
@@ -118,6 +141,13 @@ class Paragraph extends UIElement
         {
             this.size.yMode = SizeModes.Pixels;
             this.size.y = this._textSprite.calculatedHeight;
+        }
+
+        // set auto width
+        if (this.autoSetWidth) 
+        {
+            this.size.xMode = SizeModes.Pixels;
+            this.size.x = this._textSprite.calculatedWidth;
         }
     }
 }

@@ -272,6 +272,15 @@ class ProgressBar extends Container
          // draw children, if have any
          super.draw(pintar);
     }
+
+    /**
+     * Get the actual value this progressbar currently shows.
+     * Can differ from 'this.value' if animate is enabled.
+     */
+    get displayedValue()
+    {
+        return this._displayValue;
+    }
  
     /**
      * Update the UI element.

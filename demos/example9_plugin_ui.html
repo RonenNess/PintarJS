@@ -56,6 +56,9 @@
       const textureScale = 5;
       var fontsScale = textureScale / 5;
 
+      // font name to use
+      var fontName = "ui-font";
+
       // define the UI theme
       var UI_THEME = 
       {
@@ -71,7 +74,7 @@
             fillMode: PintarJS.UI.SlicedSprite.FillModes.Tiled,
             fillColor: PintarJS.Color.white(),
             frameColor: PintarJS.Color.white(),
-            padding: new PintarJS.UI.SidesProperties(30, 30, 35, 35),
+            padding: new PintarJS.UI.SidesProperties(30, 30, 30, 30),
           }
         },
 
@@ -132,7 +135,7 @@
         {
           // default paragraph
           default: {
-            font: "ui-font",
+            font: fontName,
             fontSize: 12 * fontsScale,
             fillColor: PintarJS.Color.white(),
             strokeColor: PintarJS.Color.black(),
@@ -143,7 +146,7 @@
 
           // paragraph for buttons
           buttons: {
-            font: "ui-font",
+            font: fontName,
             fontSize: 16 * fontsScale,
             fillColor: PintarJS.Color.white(),
             strokeColor: PintarJS.Color.black(),
@@ -154,7 +157,7 @@
 
           // headers
           header: {
-            font: "ui-font",
+            font: fontName,
             fontSize: 18 * fontsScale,
             fillColor: PintarJS.Color.yellow(),
             strokeColor: PintarJS.Color.black(),
@@ -165,7 +168,7 @@
 
           // small paragraph
           small: {
-            font: "ui-font",
+            font: fontName,
             fontSize: 9,
             fillColor: new PintarJS.Color(0.8, 0.8, 0.8, 1),
             strokeColor: PintarJS.Color.black(),
@@ -234,7 +237,7 @@
         // create a button element
         var button = new PintarJS.UI.Button(UI_THEME);
         button.anchor = PintarJS.UI.Anchors.Auto;
-        button.paragraph.text = "Hello World!";
+        button.paragraph.text = "Hello gjWorld!";
         container.addChild(button);           
       }
 
@@ -306,15 +309,22 @@
         // add text display
         var text = new PintarJS.UI.Paragraph(UI_THEME);
         text.anchor = PintarJS.UI.Anchors.Center;
-        text.text = "100";
+        text.text = "100%";
         text.alignment = "center";
         progressbar.addChild(text);
+
+        // update health orb text
+        setInterval(() => {
+          text.text = Math.round(progressbar.displayedValue * 100) + '%'
+        }, 50);
       }
 
       // set random values every few seconds for progress bars
-      setInterval(() => {
+      setInterval(() => 
+      {
         for (var i = 0; i < progressbars.length; ++i) {
-          progressbars[i].value = Math.random();
+          progressbar = progressbars[i];
+          progressbar.value = Math.random();
         }
       }, 5000);
 

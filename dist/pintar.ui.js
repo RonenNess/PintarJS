@@ -78,9 +78,9 @@ class Button extends Container
         // create button paragraph
         if (options.paragraphSkin) {
             this.paragraph = new Paragraph(theme, options.paragraphSkin);
-            this.paragraph.anchor = Anchors.Fixed;
+            this.paragraph._setParent(this);
+            this.paragraph.anchor = Anchors.Center;
             this.paragraph.alignment = "center";
-            this.paragraph.size.xMode = SizeModes.Pixels;
         }
 
         // create default sprite
@@ -115,10 +115,6 @@ class Button extends Container
         // draw text
         if (this.paragraph) 
         {
-            this.paragraph.offset = destRect.getPosition();
-            this.paragraph.offset.x += destRect.width / 2;
-            this.paragraph.offset.y += destRect.height / 2;
-            this.paragraph.size.x = destRect.width;
             this.paragraph.draw(pintar);
         }
     }
@@ -186,6 +182,18 @@ class Container extends UIElement
         {
             this._children.splice(index, 1);
             element._setParent(null);
+        }
+    }
+
+    /**
+     * Iterate the children of this container. You may add or remove elemnts during iteration.
+     * @param {*} callback Method to call with every child.
+     */
+    iterateChildren(callback)
+    {
+        for (var i = this._children.length-1; i >= 0; --i) {
+            var child = this._children[i];
+            if (child) callback(child);
         }
     }
 
@@ -732,6 +740,9 @@ class Paragraph extends UIElement
         // limit paragraph text to element width
         this.enableLineBreaking = true;
 
+        // should we center this paragraph's text vertically?
+        this.centerTextVertically = true;
+
         // create text
         this._textSprite = new PintarJS.TextSprite("");
         this._textSprite.useStyleCommands = Boolean(options.useStyleCommands);
@@ -744,6 +755,9 @@ class Paragraph extends UIElement
 
         // if true, set element height automatically from text
         this.autoSetHeight = true;
+
+        // if true, set element width automatically from text
+        this.autoSetWidth = false;
     }
 
     /**
@@ -791,14 +805,31 @@ class Paragraph extends UIElement
      */
     draw(pintar)
     {
-        // set position
+        // get position and size
         var destRect = this.getBoundingBox();
         var position = destRect.getPosition();
-        position.y += this._textSprite.fontSize;
+
+        // adjust vertical position
+        if (this.centerTextVertically) {
+            position.y += this._textSprite.calculatedLineHeight / 1.25;
+        }
+        else {
+            position.y += this._textSprite.calculatedLineHeight / 2;
+        }
+
+        // set text sprite
         this._textSprite.position = position;
 
         // set max width
-        this._textSprite.maxWidth = this.enableLineBreaking ? destRect.width : 0;
+        this._textSprite.maxWidth = (this.enableLineBreaking && !this.autoSetWidth) ? destRect.width : 0;
+
+        // adjust position for alignment
+        if (this.alignment == "center") {
+            this._textSprite.position.x += destRect.width / 2;
+        }
+        if (this.alignment == "right") {
+            this._textSprite.position.x += destRect.width;
+        }
 
         // draw text
         pintar.drawText(this._textSprite);
@@ -808,6 +839,13 @@ class Paragraph extends UIElement
         {
             this.size.yMode = SizeModes.Pixels;
             this.size.y = this._textSprite.calculatedHeight;
+        }
+
+        // set auto width
+        if (this.autoSetWidth) 
+        {
+            this.size.xMode = SizeModes.Pixels;
+            this.size.x = this._textSprite.calculatedWidth;
         }
     }
 }
@@ -1091,6 +1129,15 @@ class ProgressBar extends Container
 
          // draw children, if have any
          super.draw(pintar);
+    }
+
+    /**
+     * Get the actual value this progressbar currently shows.
+     * Can differ from 'this.value' if animate is enabled.
+     */
+    get displayedValue()
+    {
+        return this._displayValue;
     }
  
     /**
@@ -1789,6 +1836,14 @@ class UIElement
     }
 
     /**
+     * Get element type name.
+     */
+    get elementTypeName()
+    {
+        return this.constructor.name;
+    }
+
+    /**
      * Get options for object type and skin from theme.
      * @param {Object} theme Theme object.
      * @param {String} skin Skin to use for this specific element (or 'default' if not defined).
@@ -1797,7 +1852,7 @@ class UIElement
     getOptionsFromTheme(theme, skin, override)
     {
         // get class name
-        var elementName = this.constructor.name;
+        var elementName = this.elementTypeName;
 
         // get element definition from theme
         var options = theme[elementName];

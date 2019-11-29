@@ -43,6 +43,14 @@ class UIElement
     }
 
     /**
+     * Get element type name.
+     */
+    get elementTypeName()
+    {
+        return this.constructor.name;
+    }
+
+    /**
      * Get options for object type and skin from theme.
      * @param {Object} theme Theme object.
      * @param {String} skin Skin to use for this specific element (or 'default' if not defined).
@@ -51,7 +59,7 @@ class UIElement
     getOptionsFromTheme(theme, skin, override)
     {
         // get class name
-        var elementName = this.constructor.name;
+        var elementName = this.elementTypeName;
 
         // get element definition from theme
         var options = theme[elementName];

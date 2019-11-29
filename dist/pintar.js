@@ -4426,6 +4426,33 @@ class TextSprite extends Renderable
     }
 
     /**
+     * Get the actual width, in pixels, of this text sprite.
+     * Note: only available after drawing the text at least once, or calling getProcessedTextAndCommands().
+     */
+    get calculatedWidth()
+    {
+        return this._calculatedWidth || 0;
+    }
+
+    /**
+     * Get the actual height, in pixels, of a single line in this text sprite.
+     * Note: only available after drawing the text at least once, or calling getProcessedTextAndCommands().
+     */
+    get calculatedLineHeight()
+    {
+        return this._calculatedLineHeight || 0;
+    }
+
+    /**
+     * Get the actual height, in pixels, of this text sprite.
+     * Note: only available after drawing the text at least once, or calling getProcessedTextAndCommands().
+     */
+    get calculatedHeight()
+    {
+        return this._calculatedHeight || 0;
+    }
+
+    /**
      * Get text as an array of lines after breaking them based on maxWidth + list of style commands.
      * @param {Function(char, strokeWidth)} getCharSize Method to get a single character's size.
      */
@@ -4446,12 +4473,15 @@ class TextSprite extends Renderable
                 throw new Error("Internal error!");
             }
 
+            // update width
+            this._calculatedWidth = Math.max(this._calculatedWidth, currLine.totalWidth);
+
             // push line data
             ret.push(currLine);
             currLine = {styleCommands: {}, text: "", sizes: [], totalWidth: 0};
 
             // update height
-            this.calculatedHeight += this.calculatedLineHeight;
+            this._calculatedHeight += this._calculatedLineHeight;
         }
 
         // method to get value part of the command
@@ -4477,7 +4507,10 @@ class TextSprite extends Renderable
         var strokeWidth = this.strokeWidth;
 
         // reset actual heights
-        this.calculatedHeight = this.calculatedLineHeight = 0;
+        this._calculatedHeight = this._calculatedLineHeight = 0;
+
+        // reset actual width
+        this._calculatedWidth = 0;
 
         // parse lines and style commands
         for (var j = 0; j < this._text.length; ++j) 
@@ -4537,8 +4570,8 @@ class TextSprite extends Renderable
             var currCharSize = getCharSize(char, strokeWidth);
 
             // calculate line height
-            if (!this.calculatedLineHeight) {
-                this.calculatedLineHeight = currCharSize.withStroke.y;
+            if (!this._calculatedLineHeight) {
+                this._calculatedLineHeight = currCharSize.withStroke.y;
             }
 
             // check if need to break due to exceeding size
@@ -4641,7 +4674,7 @@ TextSprite.defaults = {
     font: "Arial",                              // default font to use when drawing text.
     fontSize: 30,                               // default font size.
     color: Color.black(),                       // default text color.
-    alignment: TextSprite.Alignments.Left,     // default text alignment.
+    alignment: TextSprite.Alignments.Left,      // default text alignment.
     strokeWidth: 0,                             // default text stroke width.
     strokeColor: Color.transparent(),           // default text stroke color.
     blendMode: BlendModes.AlphaBlend,           // default blending mode.

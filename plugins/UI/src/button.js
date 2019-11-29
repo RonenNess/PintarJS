@@ -54,9 +54,9 @@ class Button extends Container
         // create button paragraph
         if (options.paragraphSkin) {
             this.paragraph = new Paragraph(theme, options.paragraphSkin);
-            this.paragraph.anchor = Anchors.Fixed;
+            this.paragraph._setParent(this);
+            this.paragraph.anchor = Anchors.Center;
             this.paragraph.alignment = "center";
-            this.paragraph.size.xMode = SizeModes.Pixels;
         }
 
         // create default sprite
@@ -91,10 +91,6 @@ class Button extends Container
         // draw text
         if (this.paragraph) 
         {
-            this.paragraph.offset = destRect.getPosition();
-            this.paragraph.offset.x += destRect.width / 2;
-            this.paragraph.offset.y += destRect.height / 2;
-            this.paragraph.size.x = destRect.width;
             this.paragraph.draw(pintar);
         }
     }

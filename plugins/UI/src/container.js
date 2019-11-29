@@ -62,6 +62,18 @@ class Container extends UIElement
     }
 
     /**
+     * Iterate the children of this container. You may add or remove elemnts during iteration.
+     * @param {*} callback Method to call with every child.
+     */
+    iterateChildren(callback)
+    {
+        for (var i = this._children.length-1; i >= 0; --i) {
+            var child = this._children[i];
+            if (child) callback(child);
+        }
+    }
+
+    /**
      * Get this element's internal bounding rectangle, in pixels, with padding.
      */
     getInternalBoundingBox()
