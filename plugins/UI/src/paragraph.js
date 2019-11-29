@@ -73,6 +73,22 @@ class Paragraph extends UIElement
     }
 
     /**
+     * Get text alignment.
+     */
+    get alignment()
+    {
+        return this._textSprite.alignment;
+    }
+    
+    /**
+     * Set text alignment.
+     */
+    set alignment(val)
+    {
+        this._textSprite.alignment = val;
+    }
+
+    /**
      * Get required options for this element type.
      */
     get requiredOptions()

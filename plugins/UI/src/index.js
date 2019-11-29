@@ -11,6 +11,7 @@ var UI = {
     Panel: require('./panel'),
     Paragraph: require('./paragraph'),
     HorizontalLine: require('./horizontal_line'),
+    Button: require('./button'),
     Sprite: require('./sprite'),
     UIPoint: require('./ui_point'),
 };

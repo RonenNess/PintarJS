@@ -54,6 +54,7 @@
 
       // global texture scale
       const textureScale = 5;
+      var fontsScale = textureScale / 5;
 
       // define the UI theme
       var UI_THEME = 
@@ -147,7 +148,18 @@
           // default paragraph
           default: {
             font: "ui-font",
-            fontSize: 12,
+            fontSize: 12 * fontsScale,
+            fillColor: PintarJS.Color.white(),
+            strokeColor: PintarJS.Color.black(),
+            strokeWidth: 6,
+            useStyleCommands: true,
+            margin: new PintarJS.UI.SidesProperties(10, 8, 10, 8),
+          },
+
+          // paragraph for buttons
+          buttons: {
+            font: "ui-font",
+            fontSize: 16 * fontsScale,
             fillColor: PintarJS.Color.white(),
             strokeColor: PintarJS.Color.black(),
             strokeWidth: 6,
@@ -158,7 +170,7 @@
           // headers
           header: {
             font: "ui-font",
-            fontSize: 18,
+            fontSize: 18 * fontsScale,
             fillColor: PintarJS.Color.yellow(),
             strokeColor: PintarJS.Color.black(),
             strokeWidth: 8,
@@ -178,6 +190,17 @@
           },
         },
 
+        // Button
+        Button: 
+        {
+          default: {
+            texture: uiTexture,
+            externalSourceRect: new PintarJS.Rectangle(64, 16, 32, 16),
+            internalSourceRect: new PintarJS.Rectangle(64 + 5, 16 + 5, 32 - 10, 16 - 10),
+            paragraphSkin: "buttons",
+            textureScale: textureScale,   
+          }
+        }
       };
 
       // create root
@@ -218,12 +241,17 @@
         container.addChild(paragraph);
       }
 
-      // TEXTS
-      /*{
+      // BUTTONS
+      {
         // create example's container
-        var container = createContainer("Paragraphs:");
-
-      }*/
+        var container = createContainer("Buttons:");
+        
+        // create a button element
+        var button = new PintarJS.UI.Button(UI_THEME);
+        button.anchor = PintarJS.UI.Anchors.Auto;
+        button.paragraph.text = "Hello World!";
+        container.addChild(button);           
+      }
 
       // PROGRESS BARS
       var progressbars = [];

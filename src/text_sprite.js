@@ -78,8 +78,10 @@ class TextSprite extends Renderable
      */
     set alignment(val)
     {
-        this._alignment = val;
-        this._version++;
+        if (this._alignment !== val) {
+            this._alignment = val;
+            this._version++;
+        }
     }
 
     /**
@@ -114,8 +116,10 @@ class TextSprite extends Renderable
      */
     set strokeColor(val)
     {
-        this._strokeColor = val;
-        this._version++;
+        if (this._strokeColor !== val) {
+            this._strokeColor = val;
+            this._version++;
+        }
     }
 
     /**
