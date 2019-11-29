@@ -60,11 +60,37 @@ class Button extends Container
         }
 
         // create default sprite
-        this._sprite = new SlicedSprite({texture: options.texture, 
-            externalSourceRect: options.externalSourceRect, 
-            internalSourceRect: options.internalSourceRect, 
-            textureScale: textureScale});
-        this._sprite.anchor = Anchors.Fixed;
+        if (options.externalSourceRect) {
+            this._sprite = new SlicedSprite({texture: options.texture, 
+                externalSourceRect: options.externalSourceRect, 
+                internalSourceRect: options.internalSourceRect, 
+                textureScale: textureScale});
+            this._sprite.anchor = Anchors.Fixed;
+        }
+
+        // create sprite for hover
+        if (options.mouseHoverExternalSourceRect) {
+            this._spriteHover = new SlicedSprite({texture: options.texture, 
+                externalSourceRect: options.mouseHoverExternalSourceRect, 
+                internalSourceRect: options.mouseHoverInternalSourceRect, 
+                textureScale: textureScale});
+            this._spriteHover.anchor = Anchors.Fixed;
+        }
+        else {
+            this._spriteHover = this._sprite;
+        }
+        
+        // create sprite for down
+        if (options.mouseDownExternalSourceRect) {
+            this._spriteDown = new SlicedSprite({texture: options.texture, 
+                externalSourceRect: options.mouseDownExternalSourceRect, 
+                internalSourceRect: options.mouseDownInternalSourceRect, 
+                textureScale: textureScale});
+            this._spriteDown.anchor = Anchors.Fixed;
+        }
+        else {
+            this._spriteDown = this._spriteHover || this._sprite;
+        }
     }
 
     /**
@@ -76,6 +102,14 @@ class Button extends Container
     }
 
     /**
+     * Get if this element is / can be interactive.
+     */
+    get interactive()
+    {
+        return true;
+    }
+
+    /**
      * Draw the UI element.
      */
     draw(pintar)
@@ -83,10 +117,17 @@ class Button extends Container
         // get dest rect
         var destRect = this.getBoundingBox();
 
+        // decide which sprite to draw based on state
+        var sprite = this._sprite;
+        if (this._state.mouseDown) sprite = this._spriteDown;
+        else if (this._state.mouseHover) sprite = this._spriteHover;
+
         // draw button
-        this._sprite.offset = destRect.getPosition();
-        this._sprite.size = destRect.getSize();
-        this._sprite.draw(pintar);
+        if (sprite) {
+            sprite.offset = destRect.getPosition();
+            sprite.size = destRect.getSize();
+            sprite.draw(pintar);
+        }
 
         // draw text
         if (this.paragraph) 

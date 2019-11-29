@@ -11,6 +11,18 @@ const SizeModes = require('./size_modes');
 const Sides = require('./sides_properties');
 const UIPoint = require('./ui_point');
 
+/**
+ * State of a UI element.
+ */
+class UIElementState
+{
+    constructor()
+    {
+        this.mouseHover = false;
+        this.mouseDown = false;
+    }
+}
+
 
 /**
  * Base UI element.
@@ -28,6 +40,7 @@ class UIElement
         this.scale = 1;
         this.margin = new Sides(5, 5, 5, 5);
         this.ignoreParentPadding = false;
+        this._state = new UIElementState();
         this.__parent = null;
     }
 
@@ -194,6 +207,14 @@ class UIElement
     }
 
     /**
+     * Get if this element is / can be interactive.
+     */
+    get interactive()
+    {
+        return false;
+    }
+
+    /**
      * Draw the UI element.
      * @param {*} pintar Pintar instance to draw this element on.
      */
@@ -208,6 +229,20 @@ class UIElement
      */
     update(input)
     {
+        // not interactive? skip
+        if (!this.interactive) {
+            return;
+        }
+
+        // get dest rect
+        var dest = this.getBoundingBox();
+
+        // check if mouse hover
+        var mousePos = input.mousePosition;
+        this._state.mouseHover = mousePos.x >= dest.left && mousePos.x <= dest.right && mousePos.y >= dest.top && mousePos.y <= dest.bottom;
+
+        // check if mouse is down on element
+        this._state.mouseDown = this._state.mouseHover && input.leftMouseDown;
     }
 
     /**

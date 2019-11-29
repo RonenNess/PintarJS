@@ -185,6 +185,8 @@
             texture: uiTexture,
             externalSourceRect: new PintarJS.Rectangle(64, 16, 32, 16),
             internalSourceRect: new PintarJS.Rectangle(64 + 5, 16 + 5, 32 - 10, 16 - 10),
+            mouseHoverExternalSourceRect: new PintarJS.Rectangle(64, 48, 32, 16),
+            mouseHoverInternalSourceRect: new PintarJS.Rectangle(64 + 5, 48 + 5, 32 - 10, 16 - 10),
             paragraphSkin: "buttons",
             textureScale: textureScale,   
           }
@@ -237,7 +239,7 @@
         // create a button element
         var button = new PintarJS.UI.Button(UI_THEME);
         button.anchor = PintarJS.UI.Anchors.Auto;
-        button.paragraph.text = "Hello gjWorld!";
+        button.paragraph.text = "Hello World!";
         container.addChild(button);           
       }
 

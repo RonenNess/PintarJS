@@ -39,6 +39,9 @@ class InputManager
         // mouse wheel change
         this._mouseWheel = 0;
 
+        // starting position
+        this._mousePosition = new PintarJS.Point(0, 0);
+
         // mouse down
         this._mouseDownEventListener = (e) => {
             this._mouseButtons[e.button] = true;
