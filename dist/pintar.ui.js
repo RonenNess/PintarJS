@@ -176,7 +176,8 @@ class Button extends Container
         else if (this._state.mouseHover) sprite = this._spriteHover;
 
         // draw button
-        if (sprite) {
+        if (sprite) 
+        {
             sprite.offset = destRect.getPosition();
             sprite.size = destRect.getSize();
             sprite.draw(pintar);
@@ -889,6 +890,20 @@ class Paragraph extends UIElement
      */
     draw(pintar)
     {
+        // set auto height
+        if (this.autoSetHeight) 
+        {
+            this.size.yMode = SizeModes.Pixels;
+            this.size.y = this._textSprite.calculatedHeight;
+        }
+
+        // set auto width
+        if (this.autoSetWidth) 
+        {
+            this.size.xMode = SizeModes.Pixels;
+            this.size.x = this._textSprite.calculatedWidth;
+        }
+
         // get position and size
         var destRect = this.getBoundingBox();
         var position = destRect.getPosition();
@@ -917,20 +932,6 @@ class Paragraph extends UIElement
 
         // draw text
         pintar.drawText(this._textSprite);
-
-        // set auto height
-        if (this.autoSetHeight) 
-        {
-            this.size.yMode = SizeModes.Pixels;
-            this.size.y = this._textSprite.calculatedHeight;
-        }
-
-        // set auto width
-        if (this.autoSetWidth) 
-        {
-            this.size.xMode = SizeModes.Pixels;
-            this.size.x = this._textSprite.calculatedWidth;
-        }
     }
 }
 

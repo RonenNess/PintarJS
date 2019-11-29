@@ -152,7 +152,8 @@ class Button extends Container
         else if (this._state.mouseHover) sprite = this._spriteHover;
 
         // draw button
-        if (sprite) {
+        if (sprite) 
+        {
             sprite.offset = destRect.getPosition();
             sprite.size = destRect.getSize();
             sprite.draw(pintar);
