@@ -11,6 +11,7 @@ const SizeModes = require('./size_modes');
 const SlicedSprite = require('./sliced_sprite');
 const Paragraph = require('./paragraph');
 const Anchors = require('./anchors');
+const Cursors = require('./cursor_types');
 
 
 /**
@@ -136,6 +137,14 @@ class Button extends Container
     get interactive()
     {
         return true;
+    }
+     
+    /**
+     * Default cursor type for this element.
+     */
+    get _defaultCursor()
+    {
+        return Cursors.Pointer;
     }
 
     /**

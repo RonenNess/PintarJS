@@ -35,6 +35,7 @@ const SizeModes = require('./size_modes');
 const SlicedSprite = require('./sliced_sprite');
 const Paragraph = require('./paragraph');
 const Anchors = require('./anchors');
+const Cursors = require('./cursor_types');
 
 
 /**
@@ -161,6 +162,14 @@ class Button extends Container
     {
         return true;
     }
+     
+    /**
+     * Default cursor type for this element.
+     */
+    get _defaultCursor()
+    {
+        return Cursors.Pointer;
+    }
 
     /**
      * Draw the UI element.
@@ -202,7 +211,7 @@ class Button extends Container
 }
 
 module.exports = Button; 
-},{"./anchors":1,"./container":3,"./paragraph":8,"./pintar":9,"./size_modes":13,"./sliced_sprite":14}],3:[function(require,module,exports){
+},{"./anchors":1,"./container":3,"./cursor_types":4,"./paragraph":9,"./pintar":10,"./size_modes":14,"./sliced_sprite":15}],3:[function(require,module,exports){
 /**
  * file: container.js
  * description: Implement a container element.
@@ -368,7 +377,12 @@ class Container extends UIElement
 
 // export the container
 module.exports = Container; 
-},{"./anchors":1,"./ui_element":16}],4:[function(require,module,exports){
+},{"./anchors":1,"./ui_element":17}],4:[function(require,module,exports){
+module.exports = {
+    Default: "default",
+    Pointer: "pointer",
+}
+},{}],5:[function(require,module,exports){
 /**
  * file: horizontal_line.js
  * description: Implement a horizontal line element.
@@ -498,7 +512,7 @@ class HorizontalLine extends UIElement
 }
 
 module.exports = HorizontalLine; 
-},{"./pintar":9,"./size_modes":13,"./ui_element":16}],5:[function(require,module,exports){
+},{"./pintar":10,"./size_modes":14,"./ui_element":17}],6:[function(require,module,exports){
 var UI = {
     UIRoot: require('./root'),
     UIElement: require('./ui_element'),
@@ -515,11 +529,12 @@ var UI = {
     Button: require('./button'),
     Sprite: require('./sprite'),
     UIPoint: require('./ui_point'),
+    CursorTypes: require('./cursor_types'),
 };
 const pintar = require('./pintar');
 pintar.UI = UI;
 module.exports = UI;
-},{"./anchors":1,"./button":2,"./container":3,"./horizontal_line":4,"./input_manager":6,"./panel":7,"./paragraph":8,"./pintar":9,"./progress_bar":10,"./root":11,"./sides_properties":12,"./size_modes":13,"./sliced_sprite":14,"./sprite":15,"./ui_element":16,"./ui_point":17}],6:[function(require,module,exports){
+},{"./anchors":1,"./button":2,"./container":3,"./cursor_types":4,"./horizontal_line":5,"./input_manager":7,"./panel":8,"./paragraph":9,"./pintar":10,"./progress_bar":11,"./root":12,"./sides_properties":13,"./size_modes":14,"./sliced_sprite":15,"./sprite":16,"./ui_element":17,"./ui_point":18}],7:[function(require,module,exports){
 /**
  * file: input_manager.js
  * description: Define a basic input manager class.
@@ -563,6 +578,9 @@ class InputManager
 
         // starting position
         this._mousePosition = new PintarJS.Point(0, 0);
+
+        // current cursor type, can be set by elements when pointer on them
+        this.setCursorDefault();
 
         // mouse down
         this._mouseDownEventListener = (e) => {
@@ -626,6 +644,31 @@ class InputManager
     {
         this._mouseWheel = 0;
         this._mouseClicks[0] = this._mouseClicks[1] = this._mouseClicks[2] = false;
+        this.setCursorDefault();
+    }
+
+    /**
+     * Get cursor type.
+     */
+    get cursorType()
+    {
+        return this._cursorType;
+    }
+
+    /**
+     * Set cursor type to default for this frame.
+     */
+    setCursorDefault()
+    {
+        this._cursorType = "default";
+    }
+
+    /**
+     * Set cursor type for this frame.
+     */
+    setCursor(cursorType)
+    {
+        this._cursorType = cursorType;
     }
 
     /**
@@ -693,7 +736,7 @@ class InputManager
 }
 
 module.exports = InputManager; 
-},{"./pintar":9}],7:[function(require,module,exports){
+},{"./pintar":10}],8:[function(require,module,exports){
 /**
  * file: panel.js
  * description: A container with graphics object.
@@ -779,7 +822,7 @@ class Panel extends Container
 
 // export the panel class
 module.exports = Panel;
-},{"./container":3,"./pintar":9,"./sliced_sprite":14}],8:[function(require,module,exports){
+},{"./container":3,"./pintar":10,"./sliced_sprite":15}],9:[function(require,module,exports){
 /**
  * file: paragraph.js
  * description: Implement a paragraph element.
@@ -936,11 +979,11 @@ class Paragraph extends UIElement
 }
 
 module.exports = Paragraph; 
-},{"./pintar":9,"./size_modes":13,"./ui_element":16}],9:[function(require,module,exports){
+},{"./pintar":10,"./size_modes":14,"./ui_element":17}],10:[function(require,module,exports){
 var pintar = window.PintarJS || window.pintar;
 if (!pintar) { throw new Error("Missing PintarJS main object."); }
 module.exports = pintar;
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 /**
  * file: progress_bar.js
  * description: Implement a progress bar element.
@@ -1252,7 +1295,7 @@ class ProgressBar extends Container
 }
 
 module.exports = ProgressBar; 
-},{"./anchors":1,"./container":3,"./pintar":9,"./size_modes":13,"./sliced_sprite":14,"./sprite":15,"./utils":18}],11:[function(require,module,exports){
+},{"./anchors":1,"./container":3,"./pintar":10,"./size_modes":14,"./sliced_sprite":15,"./sprite":16,"./utils":19}],12:[function(require,module,exports){
 /**
  * file: root.js
  * description: Implement a UI root element.
@@ -1327,7 +1370,7 @@ class UIRoot extends Container
 }
 
 module.exports = UIRoot; 
-},{"./container":3,"./input_manager":6,"./pintar":9}],12:[function(require,module,exports){
+},{"./container":3,"./input_manager":7,"./pintar":10}],13:[function(require,module,exports){
 /**
  * file: sides.js
  * description: Implement a data structure for sides.
@@ -1380,7 +1423,7 @@ class SidesProperties
 
 
 module.exports = SidesProperties;
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 /**
  * file: size_modes.js
  * description: Define size modes we can set.
@@ -1393,7 +1436,7 @@ module.exports = {
     Pixels: 'px',
     Percents: '%'
 };
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 /**
  * file: sliced_sprite.js
  * description: A sliced sprite.
@@ -1762,7 +1805,7 @@ SlicedSprite.FillModes =
 
 // export SlicedSprite
 module.exports = SlicedSprite;
-},{"./pintar":9,"./ui_element":16}],15:[function(require,module,exports){
+},{"./pintar":10,"./ui_element":17}],16:[function(require,module,exports){
 /**
  * file: sprite.js
  * description: A UI sprite.
@@ -1875,7 +1918,7 @@ class Sprite extends UIElement
 
 // export sprite
 module.exports = Sprite;
-},{"./pintar":9,"./ui_element":16}],16:[function(require,module,exports){
+},{"./pintar":10,"./ui_element":17}],17:[function(require,module,exports){
 /**
  * file: ui_element.js
  * description: Base UI element class.
@@ -1888,6 +1931,7 @@ const Anchors = require('./anchors');
 const SizeModes = require('./size_modes');
 const Sides = require('./sides_properties');
 const UIPoint = require('./ui_point');
+const Cursors = require('./cursor_types');
 
 /**
  * State of a UI element.
@@ -1918,6 +1962,7 @@ class UIElement
         this.scale = 1;
         this.margin = new Sides(5, 5, 5, 5);
         this.ignoreParentPadding = false;
+        this.cursor = this._defaultCursor;
         this._state = new UIElementState();
         this.__parent = null;
     }
@@ -1940,8 +1985,17 @@ class UIElement
     setBaseOptions(options)
     {
         this.scale = options.scale || this.scale;
-        this.margin = options.margin || this.margin;
+        this.margin = (options.margin || this.margin).clone();
         this.anchor = options.anchor || this.anchor;
+        this.cursor = options.cursor || this.cursor;
+    }
+
+    /**
+     * Default cursor type for this element.
+     */
+    get _defaultCursor()
+    {
+        return Cursors.Default;
     }
 
     /**
@@ -2134,6 +2188,11 @@ class UIElement
         // check if mouse hover
         var mousePos = input.mousePosition;
         this._state.mouseHover = mousePos.x >= dest.left && mousePos.x <= dest.right && mousePos.y >= dest.top && mousePos.y <= dest.bottom;
+        
+        // if mouse hover, update cursor
+        if (this._state.mouseHover) {
+            input.setCursor(this.cursor);
+        }
 
         // check if mouse is down on element
         this._state.mouseDown = this._state.mouseHover && input.leftMouseDown;
@@ -2302,7 +2361,7 @@ UIElement.globalScale = 1;
 
 // export the base UI element object
 module.exports = UIElement; 
-},{"./anchors":1,"./pintar":9,"./sides_properties":12,"./size_modes":13,"./ui_point":17}],17:[function(require,module,exports){
+},{"./anchors":1,"./cursor_types":4,"./pintar":10,"./sides_properties":13,"./size_modes":14,"./ui_point":18}],18:[function(require,module,exports){
 /**
  * file: ui_point.js
  * description: A Point for UI elements position and size.
@@ -2372,7 +2431,7 @@ UIPoint.half = function()
 
 // export the UI point
 module.exports = UIPoint;
-},{"./pintar":9,"./size_modes":13}],18:[function(require,module,exports){
+},{"./pintar":10,"./size_modes":14}],19:[function(require,module,exports){
 /**
  * file: utils.js
  * description: Mixed utility methods.
@@ -2406,5 +2465,5 @@ module.exports = {
         return ret;
     },
 }
-},{}]},{},[5])(5)
+},{}]},{},[6])(6)
 });

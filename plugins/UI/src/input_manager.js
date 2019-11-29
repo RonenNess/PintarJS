@@ -42,6 +42,9 @@ class InputManager
         // starting position
         this._mousePosition = new PintarJS.Point(0, 0);
 
+        // current cursor type, can be set by elements when pointer on them
+        this.setCursorDefault();
+
         // mouse down
         this._mouseDownEventListener = (e) => {
             this._mouseButtons[e.button] = true;
@@ -104,6 +107,31 @@ class InputManager
     {
         this._mouseWheel = 0;
         this._mouseClicks[0] = this._mouseClicks[1] = this._mouseClicks[2] = false;
+        this.setCursorDefault();
+    }
+
+    /**
+     * Get cursor type.
+     */
+    get cursorType()
+    {
+        return this._cursorType;
+    }
+
+    /**
+     * Set cursor type to default for this frame.
+     */
+    setCursorDefault()
+    {
+        this._cursorType = "default";
+    }
+
+    /**
+     * Set cursor type for this frame.
+     */
+    setCursor(cursorType)
+    {
+        this._cursorType = cursorType;
     }
 
     /**

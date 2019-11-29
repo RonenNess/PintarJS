@@ -10,6 +10,7 @@ const Anchors = require('./anchors');
 const SizeModes = require('./size_modes');
 const Sides = require('./sides_properties');
 const UIPoint = require('./ui_point');
+const Cursors = require('./cursor_types');
 
 /**
  * State of a UI element.
@@ -40,6 +41,7 @@ class UIElement
         this.scale = 1;
         this.margin = new Sides(5, 5, 5, 5);
         this.ignoreParentPadding = false;
+        this.cursor = this._defaultCursor;
         this._state = new UIElementState();
         this.__parent = null;
     }
@@ -62,8 +64,17 @@ class UIElement
     setBaseOptions(options)
     {
         this.scale = options.scale || this.scale;
-        this.margin = options.margin || this.margin;
+        this.margin = (options.margin || this.margin).clone();
         this.anchor = options.anchor || this.anchor;
+        this.cursor = options.cursor || this.cursor;
+    }
+
+    /**
+     * Default cursor type for this element.
+     */
+    get _defaultCursor()
+    {
+        return Cursors.Default;
     }
 
     /**
@@ -256,6 +267,11 @@ class UIElement
         // check if mouse hover
         var mousePos = input.mousePosition;
         this._state.mouseHover = mousePos.x >= dest.left && mousePos.x <= dest.right && mousePos.y >= dest.top && mousePos.y <= dest.bottom;
+        
+        // if mouse hover, update cursor
+        if (this._state.mouseHover) {
+            input.setCursor(this.cursor);
+        }
 
         // check if mouse is down on element
         this._state.mouseDown = this._state.mouseHover && input.leftMouseDown;

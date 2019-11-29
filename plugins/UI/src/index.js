@@ -14,6 +14,7 @@ var UI = {
     Button: require('./button'),
     Sprite: require('./sprite'),
     UIPoint: require('./ui_point'),
+    CursorTypes: require('./cursor_types'),
 };
 const pintar = require('./pintar');
 pintar.UI = UI;
