@@ -177,31 +177,14 @@ class CanvasRenderer extends Renderer
         var posX = Math.round(textSprite.position.x - this._viewport.offset.x);
         var posY = Math.round(textSprite.position.y - this._viewport.offset.y);
 
-        // get the size, in pixels, of a specific character.
-        var charsSizeCache = {};
-        var getCharSize = (char, strokeWidth) => 
-        {
-            // if in cache return it
-            if (char in charsSizeCache) {
-                return charsSizeCache[char];
-            }
-
-            // calc actual size
-            var width = TextSprite.measureTextWidth(textSprite.font, textSprite.fontSize, char);
-            var height = TextSprite.measureTextHeight(textSprite.font, textSprite.fontSize, char);
-            var strokeExtra = 0;
-            var ret = {
-                base: new Point(width, height), 
-                withStroke: new Point(width + strokeExtra, height + strokeExtra),
-                width: width + strokeExtra,
-            };
-            charsSizeCache[char] = ret;
-            return ret;
-        }
-
         // get lines and data
-        var linesWithData = textSprite.getProcessedTextAndCommands(getCharSize);
+        var linesWithData = textSprite.getProcessedTextAndCommands();
         var lineHeight = textSprite.calculatedLineHeight;
+        
+        // apply line-height based offset
+        if (textSprite.lineHeightOffsetFactor) {
+            posY += textSprite.lineHeightOffsetFactor * textSprite.calculatedLineHeight;
+        }
 
         // draw stroke
         if (textSprite.strokeWidth) 

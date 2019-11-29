@@ -30,6 +30,8 @@ class Button extends Container
      * @param {PintarJS.Rectangle} theme.Button[skin].mouseDownExternalSourceRect The entire source rect, including frame and fill, of the button - when mouse presses it.
      * @param {PintarJS.Rectangle} theme.Button[skin].mouseDownInternalSourceRect The internal source rect of the button - when mouse presses it (must be contained inside the external source rect).
      * @param {String} theme.Button[skin].paragraphSkin Skin to use for button's paragraph.
+     * @param {String} theme.Button[skin].mouseHoverParagraphSkin Skin to use for button's paragraph when mouse hovers over button.
+     * @param {String} theme.Button[skin].mouseDownParagraphSkin Skin to use for button's paragraph when mouse is down over button.
      * @param {Number} theme.Button[skin].textureScale (Optional) Texture scale for button. 
      */
     constructor(theme, skin, override)
@@ -51,12 +53,39 @@ class Button extends Container
         this.size.y = options.externalSourceRect.height * textureScale;
         this.size.yMode = SizeModes.Pixels;
 
-        // create button paragraph
+        // button text
+        this.text = null;
+
+        // init button paragraph properties
+        var initParagraph = (paragraph) => {
+            paragraph._setParent(this);
+            paragraph.anchor = Anchors.Center;
+            paragraph.alignment = "center";
+            paragraph._copyStateFrom(this);            
+        }
+
+        // create button paragraph for default state
         if (options.paragraphSkin) {
-            this.paragraph = new Paragraph(theme, options.paragraphSkin);
-            this.paragraph._setParent(this);
-            this.paragraph.anchor = Anchors.Center;
-            this.paragraph.alignment = "center";
+            this._paragraph = new Paragraph(theme, options.paragraphSkin);
+            initParagraph(this._paragraph);
+        }
+
+        // create button paragraph for mouse hover
+        if (options.mouseHoverParagraphSkin) {
+            this._paragraphHover = new Paragraph(theme, options.mouseHoverParagraphSkin);
+            initParagraph(this._paragraphHover);
+        }
+        else {
+            this._paragraphHover = this._paragraph;
+        }
+
+        // create button paragraph for mouse down
+        if (options.mouseDownParagraphSkin) {
+            this._paragraphDown = new Paragraph(theme, options.mouseDownParagraphSkin);
+            initParagraph(this._paragraphDown);
+        }
+        else {
+            this._paragraphDown = this._paragraphHover || this._paragraph;
         }
 
         // create default sprite
@@ -130,9 +159,19 @@ class Button extends Container
         }
 
         // draw text
-        if (this.paragraph) 
+        if (this.text) 
         {
-            this.paragraph.draw(pintar);
+            // decide which text to draw based on state
+            var paragraph = this._paragraph;
+            if (this._state.mouseDown) paragraph = this._paragraphDown;
+            else if (this._state.mouseHover) paragraph = this._paragraphHover;
+
+            // draw text
+            if (paragraph) 
+            {
+                paragraph.text = this.text;
+                paragraph.draw(pintar);
+            }
         }
     }
 }

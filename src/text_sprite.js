@@ -36,6 +36,10 @@ class TextSprite extends Renderable
         this.maxWidth = null;
         this.strokeColor = (options.strokeColor || TextSprite.defaults.strokeColor).clone();
         this.useStyleCommands = TextSprite.defaults.useStyleCommands;
+        this.tracking = TextSprite.defaults.tracking;
+        
+        // optional offset to add on Y axis based on actual line height
+        this.lineHeightOffsetFactor = TextSprite.defaults.lineHeightOffsetFactor;
 
         // reset version after init
         this._version = 0;
@@ -245,40 +249,63 @@ class TextSprite extends Renderable
 
     /**
      * Get the actual width, in pixels, of this text sprite.
-     * Note: only available after drawing the text at least once, or calling getProcessedTextAndCommands().
+     * Note: if need to calculate / update, this will call getProcessedTextAndCommands() internally.
      */
     get calculatedWidth()
     {
+        if (!this._cachedLinesAndCommands) { this.getProcessedTextAndCommands(); }
         return this._calculatedWidth || 0;
     }
 
     /**
      * Get the actual height, in pixels, of a single line in this text sprite.
-     * Note: only available after drawing the text at least once, or calling getProcessedTextAndCommands().
+     * Note: if need to calculate / update, this will call getProcessedTextAndCommands() internally.
      */
     get calculatedLineHeight()
     {
+        if (!this._cachedLinesAndCommands) { this.getProcessedTextAndCommands(); }
         return this._calculatedLineHeight || 0;
     }
 
     /**
      * Get the actual height, in pixels, of this text sprite.
-     * Note: only available after drawing the text at least once, or calling getProcessedTextAndCommands().
+     * Note: if need to calculate / update, this will call getProcessedTextAndCommands() internally.
      */
     get calculatedHeight()
     {
+        if (!this._cachedLinesAndCommands) { this.getProcessedTextAndCommands(); }
         return this._calculatedHeight || 0;
     }
 
     /**
      * Get text as an array of lines after breaking them based on maxWidth + list of style commands.
-     * @param {Function(char, strokeWidth)} getCharSize Method to get a single character's size.
      */
-    getProcessedTextAndCommands(getCharSize)
+    getProcessedTextAndCommands()
     {
         // got cached? return it
         if (this._cachedLinesAndCommands) {
             return this._cachedLinesAndCommands;
+        }
+
+        // get the size, in pixels, of a specific character.
+        var charsSizeCache = {};
+        var getCharSize = (char) => 
+        {
+            // if in cache return it
+            if (char in charsSizeCache) {
+                return charsSizeCache[char];
+            }
+
+            // calc actual size
+            var width = TextSprite.measureTextWidth(this.font, this.fontSize, char);
+            var height = TextSprite.measureTextHeight(this.font, this.fontSize, char);
+            var ret = {
+                base: new Point(width, height), 
+                absoluteDistance: new Point(width + this.tracking , height),
+                width: width + this.tracking,
+            };
+            charsSizeCache[char] = ret;
+            return ret;
         }
 
         // ret list + method to finish line
@@ -389,11 +416,11 @@ class TextSprite extends Renderable
 
             // calculate line height
             if (!this._calculatedLineHeight) {
-                this._calculatedLineHeight = currCharSize.withStroke.y;
+                this._calculatedLineHeight = currCharSize.absoluteDistance.y;
             }
 
             // check if need to break due to exceeding size
-            if (this.maxWidth && currLine.totalWidth >= this.maxWidth - currCharSize.withStroke.x) 
+            if (this.maxWidth && currLine.totalWidth >= this.maxWidth - currCharSize.absoluteDistance.x) 
             {
                 // break line, but store it first
                 var prevLine = currLine;
@@ -497,6 +524,8 @@ TextSprite.defaults = {
     strokeColor: Color.transparent(),           // default text stroke color.
     blendMode: BlendModes.AlphaBlend,           // default blending mode.
     useStyleCommands: false,                    // default if sprite texts should use style commands.
+    lineHeightOffsetFactor: 0,                  // default offset based on line calculated height.
+    tracking: 0,                                // default extra spacing between characters.
 };
 
 /**

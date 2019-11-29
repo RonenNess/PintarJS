@@ -278,7 +278,7 @@ Color.fromHex = function(colorHex)
     }
     var parsed = hexToColor(colorHex);
     if (!parsed) { throw new PintarConsole.Error("Invalid hex value to parse!"); }
-    return new Color(parsed.r / 255.0, parsed.g / 255.0, parsed.b / 255.0, 1);
+    return new Color(parsed.r, parsed.g, parsed.b, 1);
 }
 
 /**

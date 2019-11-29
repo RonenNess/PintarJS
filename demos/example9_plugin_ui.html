@@ -155,6 +155,28 @@
             margin: new PintarJS.UI.SidesProperties(10, 8, 10, 8),
           },
 
+          // paragraph for buttons hover
+          buttonsHover: {
+            font: fontName,
+            fontSize: 16 * fontsScale,
+            fillColor: PintarJS.Color.white(),
+            strokeColor: PintarJS.Color.fromHex("#d27d2c"),
+            strokeWidth: 6,
+            useStyleCommands: true,
+            margin: new PintarJS.UI.SidesProperties(10, 8, 10, 8),
+          },
+
+          // paragraph for buttons down
+          buttonsDown: {
+            font: fontName,
+            fontSize: 16 * fontsScale,
+            fillColor: new PintarJS.Color(0.9, 0.9, 0.9, 1),
+            strokeColor: PintarJS.Color.black(),
+            strokeWidth: 6,
+            useStyleCommands: true,
+            margin: new PintarJS.UI.SidesProperties(10, 8, 10, 8),
+          },
+
           // headers
           header: {
             font: fontName,
@@ -185,9 +207,13 @@
             texture: uiTexture,
             externalSourceRect: new PintarJS.Rectangle(64, 16, 32, 16),
             internalSourceRect: new PintarJS.Rectangle(64 + 5, 16 + 5, 32 - 10, 16 - 10),
+            mouseDownExternalSourceRect: new PintarJS.Rectangle(64, 32, 32, 16),
+            mouseDownInternalSourceRect: new PintarJS.Rectangle(64 + 5, 32 + 5, 32 - 10, 16 - 10),
             mouseHoverExternalSourceRect: new PintarJS.Rectangle(64, 48, 32, 16),
             mouseHoverInternalSourceRect: new PintarJS.Rectangle(64 + 5, 48 + 5, 32 - 10, 16 - 10),
             paragraphSkin: "buttons",
+            mouseHoverParagraphSkin: "buttonsHover",
+            mouseDownParagraphSkin: "buttonsDown",
             textureScale: textureScale,   
           }
         }
@@ -239,7 +265,7 @@
         // create a button element
         var button = new PintarJS.UI.Button(UI_THEME);
         button.anchor = PintarJS.UI.Anchors.Auto;
-        button.paragraph.text = "Hello World!";
+        button.text = "Hello World!";
         container.addChild(button);           
       }
 

@@ -301,7 +301,7 @@ Color.fromHex = function(colorHex)
     }
     var parsed = hexToColor(colorHex);
     if (!parsed) { throw new PintarConsole.Error("Invalid hex value to parse!"); }
-    return new Color(parsed.r / 255.0, parsed.g / 255.0, parsed.b / 255.0, 1);
+    return new Color(parsed.r, parsed.g, parsed.b, 1);
 }
 
 /**
@@ -1308,31 +1308,14 @@ class CanvasRenderer extends Renderer
         var posX = Math.round(textSprite.position.x - this._viewport.offset.x);
         var posY = Math.round(textSprite.position.y - this._viewport.offset.y);
 
-        // get the size, in pixels, of a specific character.
-        var charsSizeCache = {};
-        var getCharSize = (char, strokeWidth) => 
-        {
-            // if in cache return it
-            if (char in charsSizeCache) {
-                return charsSizeCache[char];
-            }
-
-            // calc actual size
-            var width = TextSprite.measureTextWidth(textSprite.font, textSprite.fontSize, char);
-            var height = TextSprite.measureTextHeight(textSprite.font, textSprite.fontSize, char);
-            var strokeExtra = 0;
-            var ret = {
-                base: new Point(width, height), 
-                withStroke: new Point(width + strokeExtra, height + strokeExtra),
-                width: width + strokeExtra,
-            };
-            charsSizeCache[char] = ret;
-            return ret;
-        }
-
         // get lines and data
-        var linesWithData = textSprite.getProcessedTextAndCommands(getCharSize);
+        var linesWithData = textSprite.getProcessedTextAndCommands();
         var lineHeight = textSprite.calculatedLineHeight;
+        
+        // apply line-height based offset
+        if (textSprite.lineHeightOffsetFactor) {
+            posY += textSprite.lineHeightOffsetFactor * textSprite.calculatedLineHeight;
+        }
 
         // draw stroke
         if (textSprite.strokeWidth) 
@@ -1800,7 +1783,7 @@ const Renderer = require('./../renderer');
 const PintarConsole = require('./../../console');
 const Point = require('./../../point');
 const Sprite = require('./../../sprite');
-const Color = require('./../../color');
+const TextSprite = require('./../../text_sprite');
 const BlendModes = require('../../blend_modes');
 const Viewport = require('./../../viewport');
 const Rectangle = require('./../../rectangle');
@@ -2100,33 +2083,8 @@ class WebGlRenderer extends Renderer
         // calc ratio between font texture and text sprite size
         var ratio = (textSprite.fontSize / fontTexture.fontSize);
 
-        // get the size, in pixels, of a specific character.
-        var charsSizeCache = {};
-        var getCharSize = (char, strokeWidth) => 
-        {
-            // if in cache return it
-            if (char in charsSizeCache) {
-                return charsSizeCache[char];
-            }
-
-            // get source rect
-            var srcRect = fontTexture.getSourceRect(char);
-
-            // calc actual size
-            var width = Math.ceil(ratio * srcRect.width);
-            var height = Math.ceil(ratio * srcRect.height);
-            var strokeExtra = strokeWidth / 5;
-            var ret = {
-                base: new Point(width, height), 
-                withStroke: new Point(width + strokeExtra, height + strokeExtra),
-                width: width + strokeExtra - 1 * ratio,
-            };
-            charsSizeCache[char] = ret;
-            return ret;
-        }
-
         // get text lines and style commands
-        var lines = textSprite.getProcessedTextAndCommands(getCharSize);
+        var lines = textSprite.getProcessedTextAndCommands();
 
         // method to draw text - prepare all params and just wait for the actual drawing, which is via a function
         var drawText = (drawSpriteMethod) => 
@@ -2208,14 +2166,20 @@ class WebGlRenderer extends Renderer
                     sprite.width = size.base.x;
                     sprite.height = size.base.y;
                     sprite.smoothingEnabled = this.smoothText;
+
+                    // apply line-height based offset
+                    if (textSprite.lineHeightOffsetFactor) {
+                        position.y += textSprite.lineHeightOffsetFactor * textSprite.calculatedLineHeight;
+                    }
+
+                    // set sprite position
                     sprite.position.set(position.x, position.y);
 
                     // actually draw sprite
                     drawSpriteMethod(sprite, position, fillColor, strokeWidth, strokeColor);
 
-
                     // update offset
-                    offset += size.withStroke.x - 1 * ratio;
+                    offset += size.absoluteDistance.x - 1 * ratio;
                 }
             }
         };
@@ -2503,7 +2467,7 @@ class WebGlRenderer extends Renderer
 
 // export WebGlRenderer
 module.exports = WebGlRenderer;
-},{"../../blend_modes":1,"./../../color":2,"./../../console":3,"./../../point":5,"./../../rectangle":6,"./../../sprite":18,"./../../viewport":21,"./../renderer":11,"./font_texture":12,"./shaders":14,"./webgl_utils":17}],16:[function(require,module,exports){
+},{"../../blend_modes":1,"./../../console":3,"./../../point":5,"./../../rectangle":6,"./../../sprite":18,"./../../text_sprite":19,"./../../viewport":21,"./../renderer":11,"./font_texture":12,"./shaders":14,"./webgl_utils":17}],16:[function(require,module,exports){
 /**
  * file: webgl.js
  * description: Implement webgl renderer.
@@ -4218,6 +4182,10 @@ class TextSprite extends Renderable
         this.maxWidth = null;
         this.strokeColor = (options.strokeColor || TextSprite.defaults.strokeColor).clone();
         this.useStyleCommands = TextSprite.defaults.useStyleCommands;
+        this.tracking = TextSprite.defaults.tracking;
+        
+        // optional offset to add on Y axis based on actual line height
+        this.lineHeightOffsetFactor = TextSprite.defaults.lineHeightOffsetFactor;
 
         // reset version after init
         this._version = 0;
@@ -4427,40 +4395,63 @@ class TextSprite extends Renderable
 
     /**
      * Get the actual width, in pixels, of this text sprite.
-     * Note: only available after drawing the text at least once, or calling getProcessedTextAndCommands().
+     * Note: if need to calculate / update, this will call getProcessedTextAndCommands() internally.
      */
     get calculatedWidth()
     {
+        if (!this._cachedLinesAndCommands) { this.getProcessedTextAndCommands(); }
         return this._calculatedWidth || 0;
     }
 
     /**
      * Get the actual height, in pixels, of a single line in this text sprite.
-     * Note: only available after drawing the text at least once, or calling getProcessedTextAndCommands().
+     * Note: if need to calculate / update, this will call getProcessedTextAndCommands() internally.
      */
     get calculatedLineHeight()
     {
+        if (!this._cachedLinesAndCommands) { this.getProcessedTextAndCommands(); }
         return this._calculatedLineHeight || 0;
     }
 
     /**
      * Get the actual height, in pixels, of this text sprite.
-     * Note: only available after drawing the text at least once, or calling getProcessedTextAndCommands().
+     * Note: if need to calculate / update, this will call getProcessedTextAndCommands() internally.
      */
     get calculatedHeight()
     {
+        if (!this._cachedLinesAndCommands) { this.getProcessedTextAndCommands(); }
         return this._calculatedHeight || 0;
     }
 
     /**
      * Get text as an array of lines after breaking them based on maxWidth + list of style commands.
-     * @param {Function(char, strokeWidth)} getCharSize Method to get a single character's size.
      */
-    getProcessedTextAndCommands(getCharSize)
+    getProcessedTextAndCommands()
     {
         // got cached? return it
         if (this._cachedLinesAndCommands) {
             return this._cachedLinesAndCommands;
+        }
+
+        // get the size, in pixels, of a specific character.
+        var charsSizeCache = {};
+        var getCharSize = (char) => 
+        {
+            // if in cache return it
+            if (char in charsSizeCache) {
+                return charsSizeCache[char];
+            }
+
+            // calc actual size
+            var width = TextSprite.measureTextWidth(this.font, this.fontSize, char);
+            var height = TextSprite.measureTextHeight(this.font, this.fontSize, char);
+            var ret = {
+                base: new Point(width, height), 
+                absoluteDistance: new Point(width + this.tracking , height),
+                width: width + this.tracking,
+            };
+            charsSizeCache[char] = ret;
+            return ret;
         }
 
         // ret list + method to finish line
@@ -4571,11 +4562,11 @@ class TextSprite extends Renderable
 
             // calculate line height
             if (!this._calculatedLineHeight) {
-                this._calculatedLineHeight = currCharSize.withStroke.y;
+                this._calculatedLineHeight = currCharSize.absoluteDistance.y;
             }
 
             // check if need to break due to exceeding size
-            if (this.maxWidth && currLine.totalWidth >= this.maxWidth - currCharSize.withStroke.x) 
+            if (this.maxWidth && currLine.totalWidth >= this.maxWidth - currCharSize.absoluteDistance.x) 
             {
                 // break line, but store it first
                 var prevLine = currLine;
@@ -4679,6 +4670,8 @@ TextSprite.defaults = {
     strokeColor: Color.transparent(),           // default text stroke color.
     blendMode: BlendModes.AlphaBlend,           // default blending mode.
     useStyleCommands: false,                    // default if sprite texts should use style commands.
+    lineHeightOffsetFactor: 0,                  // default offset based on line calculated height.
+    tracking: 0,                                // default extra spacing between characters.
 };
 
 /**

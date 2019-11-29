@@ -25,7 +25,6 @@ class Paragraph extends UIElement
      * @param {Number} theme.Paragraph[skin].strokeWidth (Optional) Text stroke width.
      * @param {PintarJS.TextAlignment} theme.Paragraph[skin].alignment (Optional) Text alignment.
      * @param {Boolean} theme.Paragraph[skin].useStyleCommands (Optional) Should we enable style commands?
-     *  
      */
     constructor(theme, skin, override)
     {
@@ -75,7 +74,9 @@ class Paragraph extends UIElement
      */
     set text(text)
     {
-        this._textSprite.text = text;
+        if (this._textSprite.text !== text) {
+            this._textSprite.text = text;
+        }
     }
 
     /**
@@ -113,13 +114,13 @@ class Paragraph extends UIElement
 
         // adjust vertical position
         if (this.centerTextVertically) {
-            position.y += this._textSprite.calculatedLineHeight / 1.25;
+            this._textSprite.lineHeightOffsetFactor = 1 / 1.25;
         }
         else {
-            position.y += this._textSprite.calculatedLineHeight / 2;
+            this._textSprite.lineHeightOffsetFactor = 1 / 2;
         }
 
-        // set text sprite
+        // set text sprite position
         this._textSprite.position = position;
 
         // set max width

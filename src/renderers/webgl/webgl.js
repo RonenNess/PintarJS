@@ -9,7 +9,7 @@ const Renderer = require('./../renderer');
 const PintarConsole = require('./../../console');
 const Point = require('./../../point');
 const Sprite = require('./../../sprite');
-const Color = require('./../../color');
+const TextSprite = require('./../../text_sprite');
 const BlendModes = require('../../blend_modes');
 const Viewport = require('./../../viewport');
 const Rectangle = require('./../../rectangle');
@@ -309,33 +309,8 @@ class WebGlRenderer extends Renderer
         // calc ratio between font texture and text sprite size
         var ratio = (textSprite.fontSize / fontTexture.fontSize);
 
-        // get the size, in pixels, of a specific character.
-        var charsSizeCache = {};
-        var getCharSize = (char, strokeWidth) => 
-        {
-            // if in cache return it
-            if (char in charsSizeCache) {
-                return charsSizeCache[char];
-            }
-
-            // get source rect
-            var srcRect = fontTexture.getSourceRect(char);
-
-            // calc actual size
-            var width = Math.ceil(ratio * srcRect.width);
-            var height = Math.ceil(ratio * srcRect.height);
-            var strokeExtra = strokeWidth / 5;
-            var ret = {
-                base: new Point(width, height), 
-                withStroke: new Point(width + strokeExtra, height + strokeExtra),
-                width: width + strokeExtra - 1 * ratio,
-            };
-            charsSizeCache[char] = ret;
-            return ret;
-        }
-
         // get text lines and style commands
-        var lines = textSprite.getProcessedTextAndCommands(getCharSize);
+        var lines = textSprite.getProcessedTextAndCommands();
 
         // method to draw text - prepare all params and just wait for the actual drawing, which is via a function
         var drawText = (drawSpriteMethod) => 
@@ -417,14 +392,20 @@ class WebGlRenderer extends Renderer
                     sprite.width = size.base.x;
                     sprite.height = size.base.y;
                     sprite.smoothingEnabled = this.smoothText;
+
+                    // apply line-height based offset
+                    if (textSprite.lineHeightOffsetFactor) {
+                        position.y += textSprite.lineHeightOffsetFactor * textSprite.calculatedLineHeight;
+                    }
+
+                    // set sprite position
                     sprite.position.set(position.x, position.y);
 
                     // actually draw sprite
                     drawSpriteMethod(sprite, position, fillColor, strokeWidth, strokeColor);
 
-
                     // update offset
-                    offset += size.withStroke.x - 1 * ratio;
+                    offset += size.absoluteDistance.x - 1 * ratio;
                 }
             }
         };

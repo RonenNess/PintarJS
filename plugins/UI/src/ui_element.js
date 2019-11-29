@@ -45,6 +45,17 @@ class UIElement
     }
 
     /**
+     * Copy state from another UI element.
+     * When copying state, update will not calculate new state, the other element will determine it for us.
+     * @param {*} other Other element to copy state from, or null to cancel state sharing.
+     */
+    _copyStateFrom(other)
+    {
+        this._state = other ? other._state : null;
+        this._copiedState = Boolean(other);
+    }
+
+    /**
      * Set base element theme-related options.
      * @param {Object} options.
      */
@@ -231,6 +242,11 @@ class UIElement
     {
         // not interactive? skip
         if (!this.interactive) {
+            return;
+        }
+
+        // if copying another element's state, skip
+        if (this._copiedState) {
             return;
         }
 

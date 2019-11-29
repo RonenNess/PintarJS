@@ -54,6 +54,8 @@ class Button extends Container
      * @param {PintarJS.Rectangle} theme.Button[skin].mouseDownExternalSourceRect The entire source rect, including frame and fill, of the button - when mouse presses it.
      * @param {PintarJS.Rectangle} theme.Button[skin].mouseDownInternalSourceRect The internal source rect of the button - when mouse presses it (must be contained inside the external source rect).
      * @param {String} theme.Button[skin].paragraphSkin Skin to use for button's paragraph.
+     * @param {String} theme.Button[skin].mouseHoverParagraphSkin Skin to use for button's paragraph when mouse hovers over button.
+     * @param {String} theme.Button[skin].mouseDownParagraphSkin Skin to use for button's paragraph when mouse is down over button.
      * @param {Number} theme.Button[skin].textureScale (Optional) Texture scale for button. 
      */
     constructor(theme, skin, override)
@@ -75,12 +77,39 @@ class Button extends Container
         this.size.y = options.externalSourceRect.height * textureScale;
         this.size.yMode = SizeModes.Pixels;
 
-        // create button paragraph
+        // button text
+        this.text = null;
+
+        // init button paragraph properties
+        var initParagraph = (paragraph) => {
+            paragraph._setParent(this);
+            paragraph.anchor = Anchors.Center;
+            paragraph.alignment = "center";
+            paragraph._copyStateFrom(this);            
+        }
+
+        // create button paragraph for default state
         if (options.paragraphSkin) {
-            this.paragraph = new Paragraph(theme, options.paragraphSkin);
-            this.paragraph._setParent(this);
-            this.paragraph.anchor = Anchors.Center;
-            this.paragraph.alignment = "center";
+            this._paragraph = new Paragraph(theme, options.paragraphSkin);
+            initParagraph(this._paragraph);
+        }
+
+        // create button paragraph for mouse hover
+        if (options.mouseHoverParagraphSkin) {
+            this._paragraphHover = new Paragraph(theme, options.mouseHoverParagraphSkin);
+            initParagraph(this._paragraphHover);
+        }
+        else {
+            this._paragraphHover = this._paragraph;
+        }
+
+        // create button paragraph for mouse down
+        if (options.mouseDownParagraphSkin) {
+            this._paragraphDown = new Paragraph(theme, options.mouseDownParagraphSkin);
+            initParagraph(this._paragraphDown);
+        }
+        else {
+            this._paragraphDown = this._paragraphHover || this._paragraph;
         }
 
         // create default sprite
@@ -113,7 +142,7 @@ class Button extends Container
             this._spriteDown.anchor = Anchors.Fixed;
         }
         else {
-            this._spriteDown = this._sprite;
+            this._spriteDown = this._spriteHover || this._sprite;
         }
     }
 
@@ -154,9 +183,19 @@ class Button extends Container
         }
 
         // draw text
-        if (this.paragraph) 
+        if (this.text) 
         {
-            this.paragraph.draw(pintar);
+            // decide which text to draw based on state
+            var paragraph = this._paragraph;
+            if (this._state.mouseDown) paragraph = this._paragraphDown;
+            else if (this._state.mouseHover) paragraph = this._paragraphHover;
+
+            // draw text
+            if (paragraph) 
+            {
+                paragraph.text = this.text;
+                paragraph.draw(pintar);
+            }
         }
     }
 }
@@ -767,7 +806,6 @@ class Paragraph extends UIElement
      * @param {Number} theme.Paragraph[skin].strokeWidth (Optional) Text stroke width.
      * @param {PintarJS.TextAlignment} theme.Paragraph[skin].alignment (Optional) Text alignment.
      * @param {Boolean} theme.Paragraph[skin].useStyleCommands (Optional) Should we enable style commands?
-     *  
      */
     constructor(theme, skin, override)
     {
@@ -817,7 +855,9 @@ class Paragraph extends UIElement
      */
     set text(text)
     {
-        this._textSprite.text = text;
+        if (this._textSprite.text !== text) {
+            this._textSprite.text = text;
+        }
     }
 
     /**
@@ -855,13 +895,13 @@ class Paragraph extends UIElement
 
         // adjust vertical position
         if (this.centerTextVertically) {
-            position.y += this._textSprite.calculatedLineHeight / 1.25;
+            this._textSprite.lineHeightOffsetFactor = 1 / 1.25;
         }
         else {
-            position.y += this._textSprite.calculatedLineHeight / 2;
+            this._textSprite.lineHeightOffsetFactor = 1 / 2;
         }
 
-        // set text sprite
+        // set text sprite position
         this._textSprite.position = position;
 
         // set max width
@@ -1882,6 +1922,17 @@ class UIElement
     }
 
     /**
+     * Copy state from another UI element.
+     * When copying state, update will not calculate new state, the other element will determine it for us.
+     * @param {*} other Other element to copy state from, or null to cancel state sharing.
+     */
+    _copyStateFrom(other)
+    {
+        this._state = other ? other._state : null;
+        this._copiedState = Boolean(other);
+    }
+
+    /**
      * Set base element theme-related options.
      * @param {Object} options.
      */
@@ -2068,6 +2119,11 @@ class UIElement
     {
         // not interactive? skip
         if (!this.interactive) {
+            return;
+        }
+
+        // if copying another element's state, skip
+        if (this._copiedState) {
             return;
         }
 
