@@ -278,7 +278,8 @@
         // create a button element
         var button = new PintarJS.UI.Button(UI_THEME);
         button.anchor = PintarJS.UI.Anchors.Auto;
-        button.text = "Hello World!";
+        button.text = "Don't Click Me!";
+        button.onMouseReleased = (btn, input) => { alert("Why would you do this? :("); }
         container.addChild(button);           
       }
 

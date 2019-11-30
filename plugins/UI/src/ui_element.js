@@ -22,6 +22,14 @@ class UIElementState
         this.mouseHover = false;
         this.mouseDown = false;
     }
+
+    clone()
+    {
+        var ret = new UIElementState();
+        ret.mouseHover = this.mouseHover;
+        ret.mouseDown = this.mouseDown;
+        return ret;
+    }
 }
 
 
@@ -35,6 +43,7 @@ class UIElement
      */
     constructor()
     {
+        // set all basic properties
         this.offset = UIPoint.zero();
         this.size = new UIPoint(100, 'px', 100, 'px');
         this.anchor = Anchors.Auto;
@@ -43,18 +52,31 @@ class UIElement
         this.ignoreParentPadding = false;
         this.cursor = this._defaultCursor;
         this._state = new UIElementState();
+        this._prevState = new UIElementState();
         this.__parent = null;
+
+        // set default interactive mode
+        this.interactive = this.isNaturallyInteractive;
+
+        // callbacks users can register to
+        // every callback is called with (this, inputManager)
+        this.onMouseEnter = null;
+        this.onMouseLeave = null;
+        this.whileMouseHover = null;
+        this.onMousePressed = null;
+        this.onMouseReleased = null;
+        this.whileMouseDown = null;
     }
 
     /**
      * Copy state from another UI element.
      * When copying state, update will not calculate new state, the other element will determine it for us.
+     * Events will still trigger.
      * @param {*} other Other element to copy state from, or null to cancel state sharing.
      */
     _copyStateFrom(other)
     {
-        this._state = other ? other._state : null;
-        this._copiedState = Boolean(other);
+        this.__copyStateFrom = other;
     }
 
     /**
@@ -229,9 +251,10 @@ class UIElement
     }
 
     /**
-     * Get if this element is / can be interactive.
+     * Get if this element is interactive by default.
+     * Elements that are not interactive will not trigger events or run the update loop.
      */
-    get interactive()
+    get isNaturallyInteractive()
     {
         return false;
     }
@@ -246,10 +269,28 @@ class UIElement
     }
 
     /**
+     * Trigger registered events based on current state and previous state.
+     */
+    _triggerEvents(InputManager)
+    {
+        // trigger callbacks
+        if (this.onMouseEnter && !this._prevState.mouseHover && this._state.mouseHover) { this.onMouseEnter(this, InputManager); }
+        if (this.onMouseLeave && this._prevState.mouseHover && !this._state.mouseHover) { this.onMouseLeave(this, InputManager); }
+        if (this.whileMouseHover && this._state.mouseHover) { this.whileMouseHover(this, InputManager); }
+        if (this.onMousePressed && !this._prevState.mouseDown && this._state.mouseDown) { this.onMousePressed(this, InputManager); }
+        if (this.onMouseReleased && this._prevState.mouseDown && !this._state.mouseDown && this._state.mouseHover) { this.onMouseReleased(this, InputManager); }
+        if (this.whileMouseDown && this._state.mouseDown) { this.whileMouseDown(this, InputManager); }
+
+        // set new previous state
+        this._prevState = this._state.clone();
+    }
+
+    /**
      * Update the UI element.
      * @param {InputManager} input A class that implements the 'InputManager' API.
+     * @param {UIElementState} forceState If provided, this element will copy this state, no questions asked.
      */
-    update(input)
+    update(input, forceState)
     {
         // not interactive? skip
         if (!this.interactive) {
@@ -257,7 +298,9 @@ class UIElement
         }
 
         // if copying another element's state, skip
-        if (this._copiedState) {
+        if (this.__copyStateFrom || forceState) {
+            this._state = forceState ? forceState.clone() : this.__copyStateFrom._state.clone();
+            this._triggerEvents(input);
             return;
         }
 
@@ -275,6 +318,9 @@ class UIElement
 
         // check if mouse is down on element
         this._state.mouseDown = this._state.mouseHover && input.leftMouseDown;
+
+        // trigger events based on new state
+        this._triggerEvents(input);
     }
 
     /**

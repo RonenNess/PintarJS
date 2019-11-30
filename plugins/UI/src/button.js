@@ -61,8 +61,7 @@ class Button extends Container
         var initParagraph = (paragraph) => {
             paragraph._setParent(this);
             paragraph.anchor = Anchors.Center;
-            paragraph.alignment = "center";
-            paragraph._copyStateFrom(this);            
+            paragraph.alignment = "center";          
         }
 
         // create button paragraph for default state
@@ -124,6 +123,14 @@ class Button extends Container
     }
 
     /**
+     * If true, this element will pass self-state to children, making them copy it.
+     */
+    get forceSelfStateOnChildren()
+    {
+        return true;
+    }
+
+    /**
      * Get required options for this element type.
      */
     get requiredOptions()
@@ -132,9 +139,10 @@ class Button extends Container
     }
 
     /**
-     * Get if this element is / can be interactive.
+     * Get if this element is interactive by default.
+     * Elements that are not interactive will not trigger events or run the update loop.
      */
-    get interactive()
+    get isNaturallyInteractive()
     {
         return true;
     }

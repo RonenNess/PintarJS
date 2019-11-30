@@ -88,30 +88,34 @@ class Container extends UIElement
     }
 
     /**
+     * If true, this element will pass self-state to children, making them copy it.
+     */
+    get forceSelfStateOnChildren()
+    {
+        return false;
+    }
+
+    /**
      * Draw the UI element.
      */
     draw(pintar)
     {
         // draw children
-        for (var i = 0; i < this._children.length; ++i) {
+        for (var i = 0; i < this._children.length; ++i) 
+        {
             this._children[i].draw(pintar);
         }
     }
 
     /**
      * Update the UI element.
+     * @param {InputManager} input A class that implements the 'InputManager' API.
+     * @param {UIElementState} forceState If provided, this element will copy this state, no questions asked.
      */
-    update(input)
+    update(input, forceState)
     {
         // call base class update
-        super.update(input);
-        
-        // update background
-        if (this.background)
-        {
-            this.background.update(input);
-            this.background.size = this.size;
-        }
+        super.update(input, forceState);
 
         // update children
         var lastElement = null;
@@ -155,7 +159,7 @@ class Container extends UIElement
             }
 
             // update child element
-            element.update(input);
+            element.update(input, forceState || (this.forceSelfStateOnChildren ? this._state : null));
             lastElement = element;
         }
     }

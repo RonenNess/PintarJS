@@ -285,11 +285,12 @@ class ProgressBar extends Container
     /**
      * Update the UI element.
      * @param {InputManager} input A class that implements the 'InputManager' API.
+     * @param {UIElementState} forceState If provided, this element will copy this state, no questions asked.
      */
-    update(input)
+    update(input, forceState)
     {
         // call base update
-        super.update(input);
+        super.update(input, forceState);
 
         // update display value
         if (this._displayValue != this.value)

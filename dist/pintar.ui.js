@@ -85,8 +85,7 @@ class Button extends Container
         var initParagraph = (paragraph) => {
             paragraph._setParent(this);
             paragraph.anchor = Anchors.Center;
-            paragraph.alignment = "center";
-            paragraph._copyStateFrom(this);            
+            paragraph.alignment = "center";          
         }
 
         // create button paragraph for default state
@@ -148,6 +147,14 @@ class Button extends Container
     }
 
     /**
+     * If true, this element will pass self-state to children, making them copy it.
+     */
+    get forceSelfStateOnChildren()
+    {
+        return true;
+    }
+
+    /**
      * Get required options for this element type.
      */
     get requiredOptions()
@@ -156,9 +163,10 @@ class Button extends Container
     }
 
     /**
-     * Get if this element is / can be interactive.
+     * Get if this element is interactive by default.
+     * Elements that are not interactive will not trigger events or run the update loop.
      */
-    get interactive()
+    get isNaturallyInteractive()
     {
         return true;
     }
@@ -302,30 +310,34 @@ class Container extends UIElement
     }
 
     /**
+     * If true, this element will pass self-state to children, making them copy it.
+     */
+    get forceSelfStateOnChildren()
+    {
+        return false;
+    }
+
+    /**
      * Draw the UI element.
      */
     draw(pintar)
     {
         // draw children
-        for (var i = 0; i < this._children.length; ++i) {
+        for (var i = 0; i < this._children.length; ++i) 
+        {
             this._children[i].draw(pintar);
         }
     }
 
     /**
      * Update the UI element.
+     * @param {InputManager} input A class that implements the 'InputManager' API.
+     * @param {UIElementState} forceState If provided, this element will copy this state, no questions asked.
      */
-    update(input)
+    update(input, forceState)
     {
         // call base class update
-        super.update(input);
-        
-        // update background
-        if (this.background)
-        {
-            this.background.update(input);
-            this.background.size = this.size;
-        }
+        super.update(input, forceState);
 
         // update children
         var lastElement = null;
@@ -369,7 +381,7 @@ class Container extends UIElement
             }
 
             // update child element
-            element.update(input);
+            element.update(input, forceState || (this.forceSelfStateOnChildren ? this._state : null));
             lastElement = element;
         }
     }
@@ -804,16 +816,18 @@ class Panel extends Container
 
     /**
      * Update the UI element.
+     * @param {InputManager} input A class that implements the 'InputManager' API.
+     * @param {UIElementState} forceState If provided, this element will copy this state, no questions asked.
      */
-    update(input)
+    update(input, forceState)
     {
         // call base class update
-        super.update(input);
+        super.update(input, forceState);
         
         // update background
         if (this._background)
         {
-            this._background.update(input);
+            this._background.update(input, forceState);
             this._background.size = this.size;
         }
     }
@@ -1271,11 +1285,12 @@ class ProgressBar extends Container
     /**
      * Update the UI element.
      * @param {InputManager} input A class that implements the 'InputManager' API.
+     * @param {UIElementState} forceState If provided, this element will copy this state, no questions asked.
      */
-    update(input)
+    update(input, forceState)
     {
         // call base update
-        super.update(input);
+        super.update(input, forceState);
 
         // update display value
         if (this._displayValue != this.value)
@@ -1943,6 +1958,14 @@ class UIElementState
         this.mouseHover = false;
         this.mouseDown = false;
     }
+
+    clone()
+    {
+        var ret = new UIElementState();
+        ret.mouseHover = this.mouseHover;
+        ret.mouseDown = this.mouseDown;
+        return ret;
+    }
 }
 
 
@@ -1956,6 +1979,7 @@ class UIElement
      */
     constructor()
     {
+        // set all basic properties
         this.offset = UIPoint.zero();
         this.size = new UIPoint(100, 'px', 100, 'px');
         this.anchor = Anchors.Auto;
@@ -1964,18 +1988,31 @@ class UIElement
         this.ignoreParentPadding = false;
         this.cursor = this._defaultCursor;
         this._state = new UIElementState();
+        this._prevState = new UIElementState();
         this.__parent = null;
+
+        // set default interactive mode
+        this.interactive = this.isNaturallyInteractive;
+
+        // callbacks users can register to
+        // every callback is called with (this, inputManager)
+        this.onMouseEnter = null;
+        this.onMouseLeave = null;
+        this.whileMouseHover = null;
+        this.onMousePressed = null;
+        this.onMouseReleased = null;
+        this.whileMouseDown = null;
     }
 
     /**
      * Copy state from another UI element.
      * When copying state, update will not calculate new state, the other element will determine it for us.
+     * Events will still trigger.
      * @param {*} other Other element to copy state from, or null to cancel state sharing.
      */
     _copyStateFrom(other)
     {
-        this._state = other ? other._state : null;
-        this._copiedState = Boolean(other);
+        this.__copyStateFrom = other;
     }
 
     /**
@@ -2150,9 +2187,10 @@ class UIElement
     }
 
     /**
-     * Get if this element is / can be interactive.
+     * Get if this element is interactive by default.
+     * Elements that are not interactive will not trigger events or run the update loop.
      */
-    get interactive()
+    get isNaturallyInteractive()
     {
         return false;
     }
@@ -2167,10 +2205,28 @@ class UIElement
     }
 
     /**
+     * Trigger registered events based on current state and previous state.
+     */
+    _triggerEvents(InputManager)
+    {
+        // trigger callbacks
+        if (this.onMouseEnter && !this._prevState.mouseHover && this._state.mouseHover) { this.onMouseEnter(this, InputManager); }
+        if (this.onMouseLeave && this._prevState.mouseHover && !this._state.mouseHover) { this.onMouseLeave(this, InputManager); }
+        if (this.whileMouseHover && this._state.mouseHover) { this.whileMouseHover(this, InputManager); }
+        if (this.onMousePressed && !this._prevState.mouseDown && this._state.mouseDown) { this.onMousePressed(this, InputManager); }
+        if (this.onMouseReleased && this._prevState.mouseDown && !this._state.mouseDown && this._state.mouseHover) { this.onMouseReleased(this, InputManager); }
+        if (this.whileMouseDown && this._state.mouseDown) { this.whileMouseDown(this, InputManager); }
+
+        // set new previous state
+        this._prevState = this._state.clone();
+    }
+
+    /**
      * Update the UI element.
      * @param {InputManager} input A class that implements the 'InputManager' API.
+     * @param {UIElementState} forceState If provided, this element will copy this state, no questions asked.
      */
-    update(input)
+    update(input, forceState)
     {
         // not interactive? skip
         if (!this.interactive) {
@@ -2178,7 +2234,9 @@ class UIElement
         }
 
         // if copying another element's state, skip
-        if (this._copiedState) {
+        if (this.__copyStateFrom || forceState) {
+            this._state = forceState ? forceState.clone() : this.__copyStateFrom._state.clone();
+            this._triggerEvents(input);
             return;
         }
 
@@ -2196,6 +2254,9 @@ class UIElement
 
         // check if mouse is down on element
         this._state.mouseDown = this._state.mouseHover && input.leftMouseDown;
+
+        // trigger events based on new state
+        this._triggerEvents(input);
     }
 
     /**

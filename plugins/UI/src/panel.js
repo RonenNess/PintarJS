@@ -65,16 +65,18 @@ class Panel extends Container
 
     /**
      * Update the UI element.
+     * @param {InputManager} input A class that implements the 'InputManager' API.
+     * @param {UIElementState} forceState If provided, this element will copy this state, no questions asked.
      */
-    update(input)
+    update(input, forceState)
     {
         // call base class update
-        super.update(input);
+        super.update(input, forceState);
         
         // update background
         if (this._background)
         {
-            this._background.update(input);
+            this._background.update(input, forceState);
             this._background.size = this.size;
         }
     }
