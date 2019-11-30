@@ -19,13 +19,13 @@
     <div style="font-family: ui-font; position:fixed; top: -1000px;">.</div>
 
     <!-- container and canvas -->
-    <div class="container container-int">
+    <div class="container container-int"  style="cursor: none !important;">
       <br />
       <h1>Example 9: UI plugin</h1>
       <p>PintarJS comes with an optional UI plugin. <br />
 	       Here are some examples of built-in UI elements.</p> <br /><br />
 
-      <canvas></canvas>
+      <canvas style="cursor: none;"></canvas>
     </div>
 
     <script>
@@ -72,6 +72,7 @@
             textureScale: textureScale,
             defaultSourceRect: new PintarJS.Rectangle(65, 3, 8, 8),
             pointerSourceRect: new PintarJS.Rectangle(65 + 8 + 1, 3, 8, 8),
+            pointerDownSourceRect: new PintarJS.Rectangle(65 + 16 + 2, 3, 8, 8),
           }
         },
 
@@ -250,6 +251,10 @@
       var marginX = 10;
       var positionX = marginX;
       var containersHeight = 480;
+
+      // set cursor
+      var cursor = new PintarJS.UI.Cursor(UI_THEME);
+      root.setCursor(cursor);
 
       // function to create a container for an example
       var createContainer = (title) => {

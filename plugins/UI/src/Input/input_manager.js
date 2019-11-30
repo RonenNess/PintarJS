@@ -94,6 +94,9 @@ class InputManager
      */
     startUpdate()
     {
+        // reset cursor type
+        this.setCursorDefault();
+
         // calculate delta time
         var timeNow = (new Date()).getTime();
         this._deltaTime = this._prevTime ? ((timeNow - this._prevTime) / 1000.0) : 0.1;
@@ -106,8 +109,7 @@ class InputManager
     endUpdate()
     {
         this._mouseWheel = 0;
-        this._mouseClicks[0] = this._mouseClicks[1] = this._mouseClicks[2] = false;
-        this.setCursorDefault();
+        this._mouseClicks[0] = this._mouseClicks[1] = this._mouseClicks[2] = false;  
     }
 
     /**

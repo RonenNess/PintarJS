@@ -410,6 +410,7 @@ const PintarJS = require('../pintar');
 const Sprite = require('./sprite');
 const Anchors = require('../anchors');
 const Cursors = require('../cursor_types');
+const SizeModes = require('../size_modes');
 
 
 /**
@@ -417,11 +418,14 @@ const Cursors = require('../cursor_types');
  */
 class Cursor extends UIElement
 {
-
     /**
      * Create a button element.
      * @param {Object} theme
      * @param {PintarJS.Texture} theme.Cursor[skin].texture Texture to use.
+     * @param {PintarJS.Rectangle} theme.Cursor[skin].defaultSourceRect Source rect to use for default cursor.
+     * @param {PintarJS.Rectangle} theme.Cursor[skin].defaultDownSourceRect Source rect to use for default cursor when mouse button is pressed.
+     * @param {PintarJS.Rectangle} theme.Cursor[skin].pointerSourceRect Source rect to use for pointer cursor.
+     * @param {PintarJS.Rectangle} theme.Cursor[skin].pointerDownSourceRect Source rect to use for pointer cursor when mouse button is pressed.
      * @param {Number} theme.Cursor[skin].textureScale (Optional) Texture scale for button. 
      * @param {String} skin Element skin to use from theme.
      * @param {Object} override Optional override options (can override any of the theme properties listed above).
@@ -433,7 +437,32 @@ class Cursor extends UIElement
         // get options from theme and skin type
         var options = this.getOptionsFromTheme(theme, skin, override);
         this.setBaseOptions(options);
+
+        // store params
+        this._textureScale = options.textureScale || 1;
+        this._texture = options.texture;
+
+        // store source rects
+        this._sourceRects = {}
+        for (var key in Cursors) 
+        {
+            // get cursor type
+            var cursorType = Cursors[key];
+
+            // check if got source rect for type
+            var sourceRect = options[Cursors[key] + "SourceRect"];
+            if (sourceRect) 
+            { 
+                // set cursor type
+                this._sourceRects[Cursors[key]] = sourceRect;
+
+                // also load for down state, if set
+                sourceRect.downState = options[Cursors[key] + "DownSourceRect"];
+            }
+        }
         
+        // set default cursor type
+        this.setCursorType(Cursors.Default);
     }
 
     /**
@@ -441,7 +470,38 @@ class Cursor extends UIElement
      */
     get requiredOptions()
     {
-        return ["texture"];
+        return ["texture", "defaultSourceRect"];
+    }
+
+    /**
+     * Get source rect for a given cursor type.
+     */
+    _getSourceRect(cursorType)
+    {
+        return this._sourceRects[cursorType] || this._sourceRects[Cursors.Default];
+    }
+
+    /**
+     * Set the cursor type to display. Called internally by the UI root element.
+     * @param {CursorTypes} cursor Cursor type to show.
+     */
+    setCursorType(cursor)
+    {
+        // update cursor sprite if needed
+        if (this._cursorType !== cursor) 
+        {
+            var prevOffset = this._sprite ? this._sprite.offset : {x:0, y:0};
+            this._sourceRect = this._getSourceRect(cursor);
+            this._sprite = new Sprite({texture: this._texture, 
+                sourceRect: this._sourceRect, 
+                textureScale: this._textureScale});
+            this._sprite.offset.xMode = this._sprite.offset.yMode = SizeModes.Pixels;
+            this._sprite.offset.set(prevOffset.x, prevOffset.y);
+            this._sprite.anchor = Anchors.Fixed;
+        }
+
+        // store new type
+        this._cursorType = cursor;
     }
 
     /**
@@ -449,12 +509,32 @@ class Cursor extends UIElement
      */
     draw(pintar)
     {
-        
+        this._sprite.draw(pintar);
+    }
+    
+    /**
+     * Update the UI element.
+     * @param {InputManager} input A class that implements the 'InputManager' API.
+     * @param {UIElementState} forceState If provided, this element will copy this state, no questions asked.
+     */
+    update(input, forceState)
+    {
+        // call base and set offset
+        super.update(input, forceState);
+        this._sprite.offset = input.mousePosition;
+
+        // check if need to set down state
+        if (input.leftMouseDown && this._sourceRect.downState) {
+            this._sprite.sourceRectangle = this._sourceRect.downState;
+        }
+        else {
+            this._sprite.sourceRectangle = this._sourceRect;
+        }
     }
 }
 
 module.exports = Cursor; 
-},{"../anchors":1,"../cursor_types":2,"../pintar":16,"./sprite":12,"./ui_element":13}],6:[function(require,module,exports){
+},{"../anchors":1,"../cursor_types":2,"../pintar":16,"../size_modes":18,"./sprite":12,"./ui_element":13}],6:[function(require,module,exports){
 /**
  * file: horizontal_line.js
  * description: Implement a horizontal line element.
@@ -1153,6 +1233,7 @@ module.exports = ProgressBar;
 const Container = require('./container');
 const PintarJS = require('../pintar');
 const InputManager = require('../input/input_manager');
+const Cursor = require('./cursor');
 
 
 /**
@@ -1181,6 +1262,18 @@ class UIRoot extends Container
     }
 
     /**
+     * Set cursor element to show.
+     * @param {Cursor} cursor New cursor element.
+     */
+    setCursor(cursor)
+    {
+        if (cursor.constructor !== Cursor) {
+            throw new Error("Cursor must be a 'Cursor' element instance!");
+        }
+        this._cursor = cursor;
+    }
+
+    /**
      * Get this element's bounding rectangle, in pixels.
      * @returns {PintarJS.Rectangle} Bounding box, in pixels.
      */
@@ -1202,7 +1295,13 @@ class UIRoot extends Container
      */
     draw(pintar)
     {
+        // draw UI elements
         super.draw(this.pintar);
+
+        // draw cursor
+        if (this._cursor) {
+            this._cursor.draw(this.pintar);
+        }
     }
 
     /**
@@ -1210,14 +1309,21 @@ class UIRoot extends Container
      */
     update(input)
     {
+        // update UI
         this.inputManager.startUpdate();
         super.update(this.inputManager);
         this.inputManager.endUpdate()
+
+        // set cursor type
+        if (this._cursor) {
+            this._cursor.update(this.inputManager);
+            this._cursor.setCursorType(this.inputManager.cursorType);
+        }
     }
 }
 
 module.exports = UIRoot; 
-},{"../input/input_manager":15,"../pintar":16,"./container":4}],11:[function(require,module,exports){
+},{"../input/input_manager":15,"../pintar":16,"./container":4,"./cursor":5}],11:[function(require,module,exports){
 /**
  * file: sliced_sprite.js
  * description: A sliced sprite.
@@ -2311,6 +2417,9 @@ class InputManager
      */
     startUpdate()
     {
+        // reset cursor type
+        this.setCursorDefault();
+
         // calculate delta time
         var timeNow = (new Date()).getTime();
         this._deltaTime = this._prevTime ? ((timeNow - this._prevTime) / 1000.0) : 0.1;
@@ -2323,8 +2432,7 @@ class InputManager
     endUpdate()
     {
         this._mouseWheel = 0;
-        this._mouseClicks[0] = this._mouseClicks[1] = this._mouseClicks[2] = false;
-        this.setCursorDefault();
+        this._mouseClicks[0] = this._mouseClicks[1] = this._mouseClicks[2] = false;  
     }
 
     /**

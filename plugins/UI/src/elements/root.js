@@ -8,6 +8,7 @@
 const Container = require('./container');
 const PintarJS = require('../pintar');
 const InputManager = require('../input/input_manager');
+const Cursor = require('./cursor');
 
 
 /**
@@ -36,6 +37,18 @@ class UIRoot extends Container
     }
 
     /**
+     * Set cursor element to show.
+     * @param {Cursor} cursor New cursor element.
+     */
+    setCursor(cursor)
+    {
+        if (cursor.constructor !== Cursor) {
+            throw new Error("Cursor must be a 'Cursor' element instance!");
+        }
+        this._cursor = cursor;
+    }
+
+    /**
      * Get this element's bounding rectangle, in pixels.
      * @returns {PintarJS.Rectangle} Bounding box, in pixels.
      */
@@ -57,7 +70,13 @@ class UIRoot extends Container
      */
     draw(pintar)
     {
+        // draw UI elements
         super.draw(this.pintar);
+
+        // draw cursor
+        if (this._cursor) {
+            this._cursor.draw(this.pintar);
+        }
     }
 
     /**
@@ -65,9 +84,16 @@ class UIRoot extends Container
      */
     update(input)
     {
+        // update UI
         this.inputManager.startUpdate();
         super.update(this.inputManager);
         this.inputManager.endUpdate()
+
+        // set cursor type
+        if (this._cursor) {
+            this._cursor.update(this.inputManager);
+            this._cursor.setCursorType(this.inputManager.cursorType);
+        }
     }
 }
 
