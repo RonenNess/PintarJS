@@ -216,6 +216,7 @@
         // Button
         Button: 
         {
+          // default button
           default: {
             texture: uiTexture,
             externalSourceRect: new PintarJS.Rectangle(64, 16, 32, 16),
@@ -228,6 +229,16 @@
             mouseHoverParagraphSkin: "buttonsHover",
             mouseDownParagraphSkin: "buttonsDown",
             textureScale: textureScale,   
+          },
+
+          // a button that is just text
+          textOnly: {
+            texture: uiTexture,
+            paragraphSkin: "buttons",
+            mouseHoverParagraphSkin: "buttonsHover",
+            mouseDownParagraphSkin: "buttonsDown",
+            textureScale: textureScale,
+            heightInPixels: 60,
           }
         }
       };
@@ -280,7 +291,14 @@
         button.anchor = PintarJS.UI.Anchors.Auto;
         button.text = "Don't Click Me!";
         button.onMouseReleased = (btn, input) => { alert("Why would you do this? :("); }
-        container.addChild(button);           
+        container.addChild(button);
+
+        // create a button element with text only
+        button = new PintarJS.UI.Button(UI_THEME, "textOnly");
+        button.anchor = PintarJS.UI.Anchors.Auto;
+        button.text = "Text-only button";
+        button.onMouseReleased = (btn, input) => { alert("I don't know what you expected."); }
+        container.addChild(button);    
       }
 
       // PROGRESS BARS

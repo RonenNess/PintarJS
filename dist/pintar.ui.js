@@ -58,6 +58,7 @@ class Button extends Container
      * @param {String} theme.Button[skin].mouseHoverParagraphSkin Skin to use for button's paragraph when mouse hovers over button.
      * @param {String} theme.Button[skin].mouseDownParagraphSkin Skin to use for button's paragraph when mouse is down over button.
      * @param {Number} theme.Button[skin].textureScale (Optional) Texture scale for button. 
+     * @param {Number} theme.Button[skin].heightInPixels (Optional) Button default height in pixels. 
      */
     constructor(theme, skin, override)
     {
@@ -75,7 +76,7 @@ class Button extends Container
         var textureScale = (options.textureScale || 1);
 
         // set height
-        this.size.y = options.externalSourceRect.height * textureScale;
+        this.size.y = options.heightInPixels || (options.externalSourceRect ? (options.externalSourceRect.height * textureScale) : 100);
         this.size.yMode = SizeModes.Pixels;
 
         // button text
@@ -159,7 +160,7 @@ class Button extends Container
      */
     get requiredOptions()
     {
-        return ["texture", "externalSourceRect", "internalSourceRect"];
+        return [];
     }
 
     /**
