@@ -5,9 +5,9 @@
  * since: 2019.
  */
 "use strict";
-const Container = require('./elements/container');
-const PintarJS = require('./pintar');
-const InputManager = require('./input_manager');
+const Container = require('./container');
+const PintarJS = require('../pintar');
+const InputManager = require('../input/input_manager');
 
 
 /**

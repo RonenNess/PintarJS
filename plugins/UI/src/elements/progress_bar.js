@@ -6,12 +6,12 @@
  */
 "use strict";
 const Container = require('./container');
-const PintarJS = require('./pintar');
+const PintarJS = require('../pintar');
 const SlicedSprite = require('./sliced_sprite');
 const Sprite = require('./sprite');
-const Anchors = require('./anchors');
-const SizeModes = require('./size_modes');
-const Utils = require('./utils');
+const Anchors = require('../anchors');
+const SizeModes = require('../size_modes');
+const Utils = require('../utils');
 
 /**
  * Implement a progressbar element.

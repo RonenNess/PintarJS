@@ -6,7 +6,7 @@
  */
 "use strict";
 const UIElement = require('./ui_element');
-const Anchors = require('./anchors');
+const Anchors = require('../anchors');
 
 
 /**

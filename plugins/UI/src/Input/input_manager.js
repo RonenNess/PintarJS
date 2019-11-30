@@ -5,7 +5,7 @@
  * since: 2019.
  */
 "use strict";
-const PintarJS = require('./pintar');
+const PintarJS = require('../pintar');
 
 
 /**

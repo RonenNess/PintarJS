@@ -6,12 +6,12 @@
  */
 "use strict";
 const Container = require('./container');
-const PintarJS = require('./pintar');
-const SizeModes = require('./size_modes');
+const PintarJS = require('../pintar');
+const SizeModes = require('../size_modes');
 const SlicedSprite = require('./sliced_sprite');
 const Paragraph = require('./paragraph');
-const Anchors = require('./anchors');
-const Cursors = require('./cursor_types');
+const Anchors = require('../anchors');
+const Cursors = require('../cursor_types');
 
 
 /**
@@ -33,8 +33,10 @@ class Button extends Container
      * @param {String} theme.Button[skin].paragraphSkin Skin to use for button's paragraph.
      * @param {String} theme.Button[skin].mouseHoverParagraphSkin Skin to use for button's paragraph when mouse hovers over button.
      * @param {String} theme.Button[skin].mouseDownParagraphSkin Skin to use for button's paragraph when mouse is down over button.
-     * @param {Number} theme.Button[skin].textureScale (Optional) Texture scale for button. 
      * @param {Number} theme.Button[skin].heightInPixels (Optional) Button default height in pixels. 
+     * @param {Number} theme.Button[skin].textureScale (Optional) Texture scale for button. 
+     * @param {String} skin Element skin to use from theme.
+     * @param {Object} override Optional override options (can override any of the theme properties listed above).
      */
     constructor(theme, skin, override)
     {

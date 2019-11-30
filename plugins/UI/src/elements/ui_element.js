@@ -5,12 +5,12 @@
  * since: 2019.
  */
 "use strict";
-const PintarJS = require('./pintar');
-const Anchors = require('./anchors');
-const SizeModes = require('./size_modes');
-const Sides = require('./sides_properties');
-const UIPoint = require('./ui_point');
-const Cursors = require('./cursor_types');
+const PintarJS = require('../pintar');
+const Anchors = require('../anchors');
+const SizeModes = require('../size_modes');
+const Sides = require('../sides_properties');
+const UIPoint = require('../ui_point');
+const Cursors = require('../cursor_types');
 
 /**
  * State of a UI element.

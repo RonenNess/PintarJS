@@ -1,18 +1,22 @@
 var UI = {
-    UIRoot: require('./root'),
-    UIElement: require('./ui_element'),
-    ProgressBar: require('./progress_bar'),
-    InputManager: require('./input_manager'),
-    Container: require('./container'),
+
+    UIRoot: require('./elements/root'),
+    UIElement: require('./elements/ui_element'),
+    ProgressBar: require('./elements/progress_bar'),
+    Container: require('./elements/container'),
+    Panel: require('./elements/panel'),
+    Paragraph: require('./elements/paragraph'),
+    HorizontalLine: require('./elements/horizontal_line'),
+    Button: require('./elements/button'),
+    Sprite: require('./elements/sprite'),
+    SlicedSprite: require('./elements/sliced_sprite'),
+    Cursor: require('./elements/cursor'),
+
+    InputManager: require('./input/input_manager'),
+
     Anchors: require('./anchors'),
-    SlicedSprite: require('./sliced_sprite'),
     SizeModes: require('./size_modes'),
     SidesProperties: require('./sides_properties'),
-    Panel: require('./panel'),
-    Paragraph: require('./paragraph'),
-    HorizontalLine: require('./horizontal_line'),
-    Button: require('./button'),
-    Sprite: require('./sprite'),
     UIPoint: require('./ui_point'),
     CursorTypes: require('./cursor_types'),
 };

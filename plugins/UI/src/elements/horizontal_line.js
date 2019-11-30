@@ -6,8 +6,8 @@
  */
 "use strict";
 const UIElement = require('./ui_element');
-const PintarJS = require('./pintar');
-const SizeModes = require('./size_modes');
+const PintarJS = require('../pintar');
+const SizeModes = require('../size_modes');
 
 
 /**

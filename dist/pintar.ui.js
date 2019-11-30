@@ -22,6 +22,11 @@ module.exports = {
     Fixed: 'Fixed',
 };
 },{}],2:[function(require,module,exports){
+module.exports = {
+    Default: "default",
+    Pointer: "pointer",
+}
+},{}],3:[function(require,module,exports){
 /**
  * file: button.js
  * description: Implement a button element.
@@ -30,12 +35,12 @@ module.exports = {
  */
 "use strict";
 const Container = require('./container');
-const PintarJS = require('./pintar');
-const SizeModes = require('./size_modes');
+const PintarJS = require('../pintar');
+const SizeModes = require('../size_modes');
 const SlicedSprite = require('./sliced_sprite');
 const Paragraph = require('./paragraph');
-const Anchors = require('./anchors');
-const Cursors = require('./cursor_types');
+const Anchors = require('../anchors');
+const Cursors = require('../cursor_types');
 
 
 /**
@@ -57,8 +62,10 @@ class Button extends Container
      * @param {String} theme.Button[skin].paragraphSkin Skin to use for button's paragraph.
      * @param {String} theme.Button[skin].mouseHoverParagraphSkin Skin to use for button's paragraph when mouse hovers over button.
      * @param {String} theme.Button[skin].mouseDownParagraphSkin Skin to use for button's paragraph when mouse is down over button.
-     * @param {Number} theme.Button[skin].textureScale (Optional) Texture scale for button. 
      * @param {Number} theme.Button[skin].heightInPixels (Optional) Button default height in pixels. 
+     * @param {Number} theme.Button[skin].textureScale (Optional) Texture scale for button. 
+     * @param {String} skin Element skin to use from theme.
+     * @param {Object} override Optional override options (can override any of the theme properties listed above).
      */
     constructor(theme, skin, override)
     {
@@ -220,7 +227,7 @@ class Button extends Container
 }
 
 module.exports = Button; 
-},{"./anchors":1,"./container":3,"./cursor_types":4,"./paragraph":9,"./pintar":10,"./size_modes":14,"./sliced_sprite":15}],3:[function(require,module,exports){
+},{"../anchors":1,"../cursor_types":2,"../pintar":16,"../size_modes":18,"./container":4,"./paragraph":8,"./sliced_sprite":11}],4:[function(require,module,exports){
 /**
  * file: container.js
  * description: Implement a container element.
@@ -229,7 +236,7 @@ module.exports = Button;
  */
 "use strict";
 const UIElement = require('./ui_element');
-const Anchors = require('./anchors');
+const Anchors = require('../anchors');
 
 
 /**
@@ -390,12 +397,64 @@ class Container extends UIElement
 
 // export the container
 module.exports = Container; 
-},{"./anchors":1,"./ui_element":17}],4:[function(require,module,exports){
-module.exports = {
-    Default: "default",
-    Pointer: "pointer",
+},{"../anchors":1,"./ui_element":13}],5:[function(require,module,exports){
+/**
+ * file: cursor.js
+ * description: Implement a cursor element.
+ * author: Ronen Ness.
+ * since: 2019.
+ */
+"use strict";
+const UIElement = require('./ui_element');
+const PintarJS = require('../pintar');
+const Sprite = require('./sprite');
+const Anchors = require('../anchors');
+const Cursors = require('../cursor_types');
+
+
+/**
+ * Implement a cursor element.
+ */
+class Cursor extends UIElement
+{
+
+    /**
+     * Create a button element.
+     * @param {Object} theme
+     * @param {PintarJS.Texture} theme.Cursor[skin].texture Texture to use.
+     * @param {Number} theme.Cursor[skin].textureScale (Optional) Texture scale for button. 
+     * @param {String} skin Element skin to use from theme.
+     * @param {Object} override Optional override options (can override any of the theme properties listed above).
+     */
+    constructor(theme, skin, override)
+    {
+        super();
+
+        // get options from theme and skin type
+        var options = this.getOptionsFromTheme(theme, skin, override);
+        this.setBaseOptions(options);
+        
+    }
+
+    /**
+     * Get required options for this element type.
+     */
+    get requiredOptions()
+    {
+        return ["texture"];
+    }
+
+    /**
+     * Draw the UI element.
+     */
+    draw(pintar)
+    {
+        
+    }
 }
-},{}],5:[function(require,module,exports){
+
+module.exports = Cursor; 
+},{"../anchors":1,"../cursor_types":2,"../pintar":16,"./sprite":12,"./ui_element":13}],6:[function(require,module,exports){
 /**
  * file: horizontal_line.js
  * description: Implement a horizontal line element.
@@ -404,8 +463,8 @@ module.exports = {
  */
 "use strict";
 const UIElement = require('./ui_element');
-const PintarJS = require('./pintar');
-const SizeModes = require('./size_modes');
+const PintarJS = require('../pintar');
+const SizeModes = require('../size_modes');
 
 
 /**
@@ -525,231 +584,7 @@ class HorizontalLine extends UIElement
 }
 
 module.exports = HorizontalLine; 
-},{"./pintar":10,"./size_modes":14,"./ui_element":17}],6:[function(require,module,exports){
-var UI = {
-    UIRoot: require('./root'),
-    UIElement: require('./ui_element'),
-    ProgressBar: require('./progress_bar'),
-    InputManager: require('./input_manager'),
-    Container: require('./container'),
-    Anchors: require('./anchors'),
-    SlicedSprite: require('./sliced_sprite'),
-    SizeModes: require('./size_modes'),
-    SidesProperties: require('./sides_properties'),
-    Panel: require('./panel'),
-    Paragraph: require('./paragraph'),
-    HorizontalLine: require('./horizontal_line'),
-    Button: require('./button'),
-    Sprite: require('./sprite'),
-    UIPoint: require('./ui_point'),
-    CursorTypes: require('./cursor_types'),
-};
-const pintar = require('./pintar');
-pintar.UI = UI;
-module.exports = UI;
-},{"./anchors":1,"./button":2,"./container":3,"./cursor_types":4,"./horizontal_line":5,"./input_manager":7,"./panel":8,"./paragraph":9,"./pintar":10,"./progress_bar":11,"./root":12,"./sides_properties":13,"./size_modes":14,"./sliced_sprite":15,"./sprite":16,"./ui_element":17,"./ui_point":18}],7:[function(require,module,exports){
-/**
- * file: input_manager.js
- * description: Define a basic input manager class.
- * author: Ronen Ness.
- * since: 2019.
- */
-"use strict";
-const PintarJS = require('./pintar');
-
-
-/**
- * Provides input for the UI.
- */
-class InputManager
-{
-    /**
-     * Create the input manager.
-     * @param {PintarJS} pintar PintarJS instance.
-     */
-    constructor(pintar)
-    {
-        // store canvas and init callbacks
-        var canvas = this._canvas = pintar._canvas;
-
-        // mouse buttons states
-        this._mouseButtons = {
-            0: false,
-            1: false, 
-            2: false,
-        };
-
-        // mouse click states
-        this._mouseClicks = {
-            0: false,
-            1: false, 
-            2: false,
-        };
-
-        // mouse wheel change
-        this._mouseWheel = 0;
-
-        // starting position
-        this._mousePosition = new PintarJS.Point(0, 0);
-
-        // current cursor type, can be set by elements when pointer on them
-        this.setCursorDefault();
-
-        // mouse down
-        this._mouseDownEventListener = (e) => {
-            this._mouseButtons[e.button] = true;
-        };
-        canvas.addEventListener("mousedown", this._mouseDownEventListener);
-        
-        // mouse up
-        this._mouseUpEventListener = (e) => {
-            if (this._mouseButtons[e.button]) { this._mouseClicks[e.button] = true; }
-            this._mouseButtons[e.button] = false;
-        };
-        canvas.addEventListener("mouseup", this._mouseUpEventListener);
-
-        // mouse leave
-        this._mouseLeaveEventListener = (e) => {
-            this._mouseButtons[0] = this._mouseButtons[1] = this._mouseButtons[2] = false;
-        };
-        canvas.addEventListener("mouseleave", this._mouseLeaveEventListener);
-
-        // mouse wheel
-        this._mouseWheelEventListener = (e) => {
-            this._mouseWheel = e.deltaY;
-        };
-        canvas.addEventListener("mousewheel", this._mouseWheelEventListener);
-        
-        // mouse move
-        this._mouseMoveEventListener = (e) => {
-            this._mousePosition = new PintarJS.Point(e.offsetX, e.offsetY);
-        };
-        canvas.addEventListener("mousemove", this._mouseMoveEventListener);
-    }
-
-    /**
-     * Cleanup the input manager (remove callbacks).
-     */
-    cleanup()
-    {
-        canvas.removeEventListener("mousedown", this._mouseDownEventListener);
-        canvas.removeEventListener("mouseup", this._mouseUpEventListener);
-        canvas.removeEventListener("mouseleave", this._mouseLeaveEventListener);
-        canvas.removeEventListener("mousewheel", this._mouseWheelEventListener);
-        canvas.removeEventListener("mousemove", this._mouseMoveEventListener);
-    }
-
-    /**
-     * Called at the begining of every update frame.
-     */
-    startUpdate()
-    {
-        // calculate delta time
-        var timeNow = (new Date()).getTime();
-        this._deltaTime = this._prevTime ? ((timeNow - this._prevTime) / 1000.0) : 0.1;
-        this._prevTime = timeNow;
-    }
-
-    /**
-     * Called at the end of every update frame.
-     */
-    endUpdate()
-    {
-        this._mouseWheel = 0;
-        this._mouseClicks[0] = this._mouseClicks[1] = this._mouseClicks[2] = false;
-        this.setCursorDefault();
-    }
-
-    /**
-     * Get cursor type.
-     */
-    get cursorType()
-    {
-        return this._cursorType;
-    }
-
-    /**
-     * Set cursor type to default for this frame.
-     */
-    setCursorDefault()
-    {
-        this._cursorType = "default";
-    }
-
-    /**
-     * Set cursor type for this frame.
-     */
-    setCursor(cursorType)
-    {
-        this._cursorType = cursorType;
-    }
-
-    /**
-     * Return mouse position.
-     * @returns {PintarJS.Point} Point with {x,y} position.
-     */
-    get mousePosition()
-    {
-        return this._mousePosition.clone();
-    }
-
-    /**
-     * Return if left mouse button is down.
-     * @returns {Boolean} left mouse button status.
-     */
-    get leftMouseDown()
-    {
-        return this._mouseButtons[0];
-    }
-    
-    /**
-     * Return if right mouse button is down.
-     * @returns {Boolean} right mouse button status.
-     */
-    get rightMouseDown()
-    {
-        return this._mouseButtons[2];
-    }
-    
-    /**
-     * Return if left mouse button was released this frame.
-     * @returns {Boolean} if left mouse button was released this frame.
-     */
-    get leftMouseClick()
-    {
-        return this._mouseClick[0];
-    }
-    
-    /**
-     * Return if right mouse button was released this frame.
-     * @returns {Boolean} if right mouse button was released this frame.
-     */
-    get rightMouseClick()
-    {
-        return this._mouseClick[2];
-    }
-
-    /**
-     * Return mouse wheel change.
-     * @returns {Number} mouse wheel change, or 0 if not scrolling.
-     */
-    get mouseWheelChange()
-    {
-        return this._mouseWheel;
-    }
-
-    /**
-     * Return delta time between previous frame and current frame.
-     * @returns {Number} delta time, in seconds.
-     */
-    get deltaTime()
-    {
-        return this._deltaTime;
-    }
-}
-
-module.exports = InputManager; 
-},{"./pintar":10}],8:[function(require,module,exports){
+},{"../pintar":16,"../size_modes":18,"./ui_element":13}],7:[function(require,module,exports){
 /**
  * file: panel.js
  * description: A container with graphics object.
@@ -757,7 +592,7 @@ module.exports = InputManager;
  * since: 2019.
  */
 "use strict";
-const PintarJS = require('./pintar');
+const PintarJS = require('../pintar');
 const Container = require('./container');
 const SlicedSprite = require('./sliced_sprite');
 
@@ -837,7 +672,7 @@ class Panel extends Container
 
 // export the panel class
 module.exports = Panel;
-},{"./container":3,"./pintar":10,"./sliced_sprite":15}],9:[function(require,module,exports){
+},{"../pintar":16,"./container":4,"./sliced_sprite":11}],8:[function(require,module,exports){
 /**
  * file: paragraph.js
  * description: Implement a paragraph element.
@@ -846,8 +681,8 @@ module.exports = Panel;
  */
 "use strict";
 const UIElement = require('./ui_element');
-const PintarJS = require('./pintar');
-const SizeModes = require('./size_modes');
+const PintarJS = require('../pintar');
+const SizeModes = require('../size_modes');
 
 
 /**
@@ -994,11 +829,7 @@ class Paragraph extends UIElement
 }
 
 module.exports = Paragraph; 
-},{"./pintar":10,"./size_modes":14,"./ui_element":17}],10:[function(require,module,exports){
-var pintar = window.PintarJS || window.pintar;
-if (!pintar) { throw new Error("Missing PintarJS main object."); }
-module.exports = pintar;
-},{}],11:[function(require,module,exports){
+},{"../pintar":16,"../size_modes":18,"./ui_element":13}],9:[function(require,module,exports){
 /**
  * file: progress_bar.js
  * description: Implement a progress bar element.
@@ -1007,12 +838,12 @@ module.exports = pintar;
  */
 "use strict";
 const Container = require('./container');
-const PintarJS = require('./pintar');
+const PintarJS = require('../pintar');
 const SlicedSprite = require('./sliced_sprite');
 const Sprite = require('./sprite');
-const Anchors = require('./anchors');
-const SizeModes = require('./size_modes');
-const Utils = require('./utils');
+const Anchors = require('../anchors');
+const SizeModes = require('../size_modes');
+const Utils = require('../utils');
 
 /**
  * Implement a progressbar element.
@@ -1311,7 +1142,7 @@ class ProgressBar extends Container
 }
 
 module.exports = ProgressBar; 
-},{"./anchors":1,"./container":3,"./pintar":10,"./size_modes":14,"./sliced_sprite":15,"./sprite":16,"./utils":19}],12:[function(require,module,exports){
+},{"../anchors":1,"../pintar":16,"../size_modes":18,"../utils":20,"./container":4,"./sliced_sprite":11,"./sprite":12}],10:[function(require,module,exports){
 /**
  * file: root.js
  * description: Implement a UI root element.
@@ -1320,8 +1151,8 @@ module.exports = ProgressBar;
  */
 "use strict";
 const Container = require('./container');
-const PintarJS = require('./pintar');
-const InputManager = require('./input_manager');
+const PintarJS = require('../pintar');
+const InputManager = require('../input/input_manager');
 
 
 /**
@@ -1386,73 +1217,7 @@ class UIRoot extends Container
 }
 
 module.exports = UIRoot; 
-},{"./container":3,"./input_manager":7,"./pintar":10}],13:[function(require,module,exports){
-/**
- * file: sides.js
- * description: Implement a data structure for sides.
- * author: Ronen Ness.
- * since: 2019.
- */
-"use strict";
-
-/**
- * Implement a simple data structure to hold value for all sides - top, left, bottom, right.
- */
-class SidesProperties
-{
-    /**
-     * Create the sides data.
-     */
-    constructor(left, right, top, bottom)
-    {
-        this.left = left || 0;
-        this.right = right || 0;
-        this.top = top || 0;
-        this.bottom = bottom || 0;
-        this.leftMode = this.rightMode = this.topMode = this.bottomMode = 'px';
-    }
-
-    /**
-     * Set values.
-     */
-    set(left, right, top, bottom)
-    {
-        this.left = left;
-        this.right = right;
-        this.top = top;
-        this.bottom = bottom;
-    }
-
-    /**
-     * Clone and return sides data.
-     */
-    clone()
-    {
-        var ret = new SidesProperties(this.left, this.right, this.top, this.bottom);
-        ret.leftMode = this.leftMode;
-        ret.rightMode = this.rightMode;
-        ret.topMode = this.topMode;
-        ret.bottomMode = this.bottomMode;
-        return ret;
-    }
-}
-
-
-module.exports = SidesProperties;
-},{}],14:[function(require,module,exports){
-/**
- * file: size_modes.js
- * description: Define size modes we can set.
- * author: Ronen Ness.
- * since: 2019.
- */
-"use strict";
-
-module.exports = {
-    Pixels: 'px',
-    Percents: '%'
-};
-},{}],15:[function(require,module,exports){
+},{"../input/input_manager":15,"../pintar":16,"./container":4}],11:[function(require,module,exports){
 /**
  * file: sliced_sprite.js
  * description: A sliced sprite.
@@ -1460,7 +1225,7 @@ module.exports = {
  * since: 2019.
  */
 "use strict";
-const PintarJS = require('./pintar');
+const PintarJS = require('../pintar');
 const UIElement = require('./ui_element');
 
 
@@ -1821,7 +1586,7 @@ SlicedSprite.FillModes =
 
 // export SlicedSprite
 module.exports = SlicedSprite;
-},{"./pintar":10,"./ui_element":17}],16:[function(require,module,exports){
+},{"../pintar":16,"./ui_element":13}],12:[function(require,module,exports){
 /**
  * file: sprite.js
  * description: A UI sprite.
@@ -1829,7 +1594,7 @@ module.exports = SlicedSprite;
  * since: 2019.
  */
 "use strict";
-const PintarJS = require('./pintar');
+const PintarJS = require('../pintar');
 const UIElement = require('./ui_element');
 
 
@@ -1934,7 +1699,7 @@ class Sprite extends UIElement
 
 // export sprite
 module.exports = Sprite;
-},{"./pintar":10,"./ui_element":17}],17:[function(require,module,exports){
+},{"../pintar":16,"./ui_element":13}],13:[function(require,module,exports){
 /**
  * file: ui_element.js
  * description: Base UI element class.
@@ -1942,12 +1707,12 @@ module.exports = Sprite;
  * since: 2019.
  */
 "use strict";
-const PintarJS = require('./pintar');
-const Anchors = require('./anchors');
-const SizeModes = require('./size_modes');
-const Sides = require('./sides_properties');
-const UIPoint = require('./ui_point');
-const Cursors = require('./cursor_types');
+const PintarJS = require('../pintar');
+const Anchors = require('../anchors');
+const SizeModes = require('../size_modes');
+const Sides = require('../sides_properties');
+const UIPoint = require('../ui_point');
+const Cursors = require('../cursor_types');
 
 /**
  * State of a UI element.
@@ -2423,7 +2188,305 @@ UIElement.globalScale = 1;
 
 // export the base UI element object
 module.exports = UIElement; 
-},{"./anchors":1,"./cursor_types":4,"./pintar":10,"./sides_properties":13,"./size_modes":14,"./ui_point":18}],18:[function(require,module,exports){
+},{"../anchors":1,"../cursor_types":2,"../pintar":16,"../sides_properties":17,"../size_modes":18,"../ui_point":19}],14:[function(require,module,exports){
+var UI = {
+
+    UIRoot: require('./elements/root'),
+    UIElement: require('./elements/ui_element'),
+    ProgressBar: require('./elements/progress_bar'),
+    Container: require('./elements/container'),
+    Panel: require('./elements/panel'),
+    Paragraph: require('./elements/paragraph'),
+    HorizontalLine: require('./elements/horizontal_line'),
+    Button: require('./elements/button'),
+    Sprite: require('./elements/sprite'),
+    SlicedSprite: require('./elements/sliced_sprite'),
+    Cursor: require('./elements/cursor'),
+
+    InputManager: require('./input/input_manager'),
+
+    Anchors: require('./anchors'),
+    SizeModes: require('./size_modes'),
+    SidesProperties: require('./sides_properties'),
+    UIPoint: require('./ui_point'),
+    CursorTypes: require('./cursor_types'),
+};
+const pintar = require('./pintar');
+pintar.UI = UI;
+module.exports = UI;
+},{"./anchors":1,"./cursor_types":2,"./elements/button":3,"./elements/container":4,"./elements/cursor":5,"./elements/horizontal_line":6,"./elements/panel":7,"./elements/paragraph":8,"./elements/progress_bar":9,"./elements/root":10,"./elements/sliced_sprite":11,"./elements/sprite":12,"./elements/ui_element":13,"./input/input_manager":15,"./pintar":16,"./sides_properties":17,"./size_modes":18,"./ui_point":19}],15:[function(require,module,exports){
+/**
+ * file: input_manager.js
+ * description: Define a basic input manager class.
+ * author: Ronen Ness.
+ * since: 2019.
+ */
+"use strict";
+const PintarJS = require('../pintar');
+
+
+/**
+ * Provides input for the UI.
+ */
+class InputManager
+{
+    /**
+     * Create the input manager.
+     * @param {PintarJS} pintar PintarJS instance.
+     */
+    constructor(pintar)
+    {
+        // store canvas and init callbacks
+        var canvas = this._canvas = pintar._canvas;
+
+        // mouse buttons states
+        this._mouseButtons = {
+            0: false,
+            1: false, 
+            2: false,
+        };
+
+        // mouse click states
+        this._mouseClicks = {
+            0: false,
+            1: false, 
+            2: false,
+        };
+
+        // mouse wheel change
+        this._mouseWheel = 0;
+
+        // starting position
+        this._mousePosition = new PintarJS.Point(0, 0);
+
+        // current cursor type, can be set by elements when pointer on them
+        this.setCursorDefault();
+
+        // mouse down
+        this._mouseDownEventListener = (e) => {
+            this._mouseButtons[e.button] = true;
+        };
+        canvas.addEventListener("mousedown", this._mouseDownEventListener);
+        
+        // mouse up
+        this._mouseUpEventListener = (e) => {
+            if (this._mouseButtons[e.button]) { this._mouseClicks[e.button] = true; }
+            this._mouseButtons[e.button] = false;
+        };
+        canvas.addEventListener("mouseup", this._mouseUpEventListener);
+
+        // mouse leave
+        this._mouseLeaveEventListener = (e) => {
+            this._mouseButtons[0] = this._mouseButtons[1] = this._mouseButtons[2] = false;
+        };
+        canvas.addEventListener("mouseleave", this._mouseLeaveEventListener);
+
+        // mouse wheel
+        this._mouseWheelEventListener = (e) => {
+            this._mouseWheel = e.deltaY;
+        };
+        canvas.addEventListener("mousewheel", this._mouseWheelEventListener);
+        
+        // mouse move
+        this._mouseMoveEventListener = (e) => {
+            this._mousePosition = new PintarJS.Point(e.offsetX, e.offsetY);
+        };
+        canvas.addEventListener("mousemove", this._mouseMoveEventListener);
+    }
+
+    /**
+     * Cleanup the input manager (remove callbacks).
+     */
+    cleanup()
+    {
+        canvas.removeEventListener("mousedown", this._mouseDownEventListener);
+        canvas.removeEventListener("mouseup", this._mouseUpEventListener);
+        canvas.removeEventListener("mouseleave", this._mouseLeaveEventListener);
+        canvas.removeEventListener("mousewheel", this._mouseWheelEventListener);
+        canvas.removeEventListener("mousemove", this._mouseMoveEventListener);
+    }
+
+    /**
+     * Called at the begining of every update frame.
+     */
+    startUpdate()
+    {
+        // calculate delta time
+        var timeNow = (new Date()).getTime();
+        this._deltaTime = this._prevTime ? ((timeNow - this._prevTime) / 1000.0) : 0.1;
+        this._prevTime = timeNow;
+    }
+
+    /**
+     * Called at the end of every update frame.
+     */
+    endUpdate()
+    {
+        this._mouseWheel = 0;
+        this._mouseClicks[0] = this._mouseClicks[1] = this._mouseClicks[2] = false;
+        this.setCursorDefault();
+    }
+
+    /**
+     * Get cursor type.
+     */
+    get cursorType()
+    {
+        return this._cursorType;
+    }
+
+    /**
+     * Set cursor type to default for this frame.
+     */
+    setCursorDefault()
+    {
+        this._cursorType = "default";
+    }
+
+    /**
+     * Set cursor type for this frame.
+     */
+    setCursor(cursorType)
+    {
+        this._cursorType = cursorType;
+    }
+
+    /**
+     * Return mouse position.
+     * @returns {PintarJS.Point} Point with {x,y} position.
+     */
+    get mousePosition()
+    {
+        return this._mousePosition.clone();
+    }
+
+    /**
+     * Return if left mouse button is down.
+     * @returns {Boolean} left mouse button status.
+     */
+    get leftMouseDown()
+    {
+        return this._mouseButtons[0];
+    }
+    
+    /**
+     * Return if right mouse button is down.
+     * @returns {Boolean} right mouse button status.
+     */
+    get rightMouseDown()
+    {
+        return this._mouseButtons[2];
+    }
+    
+    /**
+     * Return if left mouse button was released this frame.
+     * @returns {Boolean} if left mouse button was released this frame.
+     */
+    get leftMouseClick()
+    {
+        return this._mouseClick[0];
+    }
+    
+    /**
+     * Return if right mouse button was released this frame.
+     * @returns {Boolean} if right mouse button was released this frame.
+     */
+    get rightMouseClick()
+    {
+        return this._mouseClick[2];
+    }
+
+    /**
+     * Return mouse wheel change.
+     * @returns {Number} mouse wheel change, or 0 if not scrolling.
+     */
+    get mouseWheelChange()
+    {
+        return this._mouseWheel;
+    }
+
+    /**
+     * Return delta time between previous frame and current frame.
+     * @returns {Number} delta time, in seconds.
+     */
+    get deltaTime()
+    {
+        return this._deltaTime;
+    }
+}
+
+module.exports = InputManager; 
+},{"../pintar":16}],16:[function(require,module,exports){
+var pintar = window.PintarJS || window.pintar;
+if (!pintar) { throw new Error("Missing PintarJS main object."); }
+module.exports = pintar;
+},{}],17:[function(require,module,exports){
+/**
+ * file: sides.js
+ * description: Implement a data structure for sides.
+ * author: Ronen Ness.
+ * since: 2019.
+ */
+"use strict";
+
+/**
+ * Implement a simple data structure to hold value for all sides - top, left, bottom, right.
+ */
+class SidesProperties
+{
+    /**
+     * Create the sides data.
+     */
+    constructor(left, right, top, bottom)
+    {
+        this.left = left || 0;
+        this.right = right || 0;
+        this.top = top || 0;
+        this.bottom = bottom || 0;
+        this.leftMode = this.rightMode = this.topMode = this.bottomMode = 'px';
+    }
+
+    /**
+     * Set values.
+     */
+    set(left, right, top, bottom)
+    {
+        this.left = left;
+        this.right = right;
+        this.top = top;
+        this.bottom = bottom;
+    }
+
+    /**
+     * Clone and return sides data.
+     */
+    clone()
+    {
+        var ret = new SidesProperties(this.left, this.right, this.top, this.bottom);
+        ret.leftMode = this.leftMode;
+        ret.rightMode = this.rightMode;
+        ret.topMode = this.topMode;
+        ret.bottomMode = this.bottomMode;
+        return ret;
+    }
+}
+
+
+module.exports = SidesProperties;
+},{}],18:[function(require,module,exports){
+/**
+ * file: size_modes.js
+ * description: Define size modes we can set.
+ * author: Ronen Ness.
+ * since: 2019.
+ */
+"use strict";
+
+module.exports = {
+    Pixels: 'px',
+    Percents: '%'
+};
+},{}],19:[function(require,module,exports){
 /**
  * file: ui_point.js
  * description: A Point for UI elements position and size.
@@ -2493,7 +2556,7 @@ UIPoint.half = function()
 
 // export the UI point
 module.exports = UIPoint;
-},{"./pintar":10,"./size_modes":14}],19:[function(require,module,exports){
+},{"./pintar":16,"./size_modes":18}],20:[function(require,module,exports){
 /**
  * file: utils.js
  * description: Mixed utility methods.
@@ -2527,5 +2590,5 @@ module.exports = {
         return ret;
     },
 }
-},{}]},{},[6])(6)
+},{}]},{},[14])(14)
 });
