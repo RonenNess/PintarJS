@@ -64,6 +64,7 @@ class Button extends Container
      * @param {String} theme.Button[skin].mouseDownParagraphSkin Skin to use for button's paragraph when mouse is down over button.
      * @param {Number} theme.Button[skin].heightInPixels (Optional) Button default height in pixels. 
      * @param {Number} theme.Button[skin].textureScale (Optional) Texture scale for button. 
+     * @param {Number} theme.Button[skin].toggleMode (Optional) If true, this button will behave like a checkbox and be toggleable. 
      * @param {String} skin Element skin to use from theme.
      * @param {Object} override Optional override options (can override any of the theme properties listed above).
      */
@@ -88,6 +89,10 @@ class Button extends Container
 
         // button text
         this.text = null;
+
+        // for toggle mode
+        this.isChecked = false;
+        this.toggleModeEnabled = options.toggleMode || false;
 
         // init button paragraph properties
         var initParagraph = (paragraph) => {
@@ -155,6 +160,28 @@ class Button extends Container
     }
 
     /**
+     * Called when mouse is released on element.
+     */
+    _onMouseReleased(input)
+    {
+        super._onMouseReleased(input);
+        if (this.toggleModeEnabled) {
+            this.toggle();
+        }
+    }
+
+    /**
+     * Toggle value, only useable when in toggle mode.
+     */
+    toggle()
+    {
+        if (!this.toggleModeEnabled) {
+            throw new Error("Cannot toggle button that's not in toggle mode!");
+        }
+        this.isChecked = !this.isChecked;
+    }
+
+    /**
      * If true, this element will pass self-state to children, making them copy it.
      */
     get forceSelfStateOnChildren()
@@ -197,7 +224,7 @@ class Button extends Container
 
         // decide which sprite to draw based on state
         var sprite = this._sprite;
-        if (this._state.mouseDown) sprite = this._spriteDown;
+        if (this.isChecked || this._state.mouseDown) sprite = this._spriteDown;
         else if (this._state.mouseHover) sprite = this._spriteHover;
 
         // draw button
@@ -223,6 +250,14 @@ class Button extends Container
                 paragraph.draw(pintar);
             }
         }
+    }
+
+    /**
+     * Get this button value.
+     */
+    _getValue()
+    {
+        return this.isChecked;
     }
 }
 
@@ -1874,6 +1909,7 @@ class UIElement
         this.onMousePressed = null;
         this.onMouseReleased = null;
         this.whileMouseDown = null;
+        this.afterValueChanged = null;
     }
 
     /**
@@ -1940,15 +1976,28 @@ class UIElement
         }
 
         // apply override values
-        if (override) {
+        if (override) 
+        {
             var temp = {};
-            for (var key in options)
-            {
+            for (var key in options) {
                 temp[key] = options[key];
             }
-            for (var key in override)
-            {
+            for (var key in override) {
                 temp[key] = override[key];
+            }
+            options = temp;
+        }
+
+        // do inheritance
+        if (options.extends) 
+        {
+            var temp = {};
+            var base = theme[elementName][options.extends];
+            for (var key in base) {
+                temp[key] = base[key];
+            }
+            for (var key in options) {
+                temp[key] = options[key];
             }
             options = temp;
         }
@@ -2079,18 +2128,89 @@ class UIElement
     /**
      * Trigger registered events based on current state and previous state.
      */
-    _triggerEvents(InputManager)
+    _triggerEvents(input)
     {
         // trigger callbacks
-        if (this.onMouseEnter && !this._prevState.mouseHover && this._state.mouseHover) { this.onMouseEnter(this, InputManager); }
-        if (this.onMouseLeave && this._prevState.mouseHover && !this._state.mouseHover) { this.onMouseLeave(this, InputManager); }
-        if (this.whileMouseHover && this._state.mouseHover) { this.whileMouseHover(this, InputManager); }
-        if (this.onMousePressed && !this._prevState.mouseDown && this._state.mouseDown) { this.onMousePressed(this, InputManager); }
-        if (this.onMouseReleased && this._prevState.mouseDown && !this._state.mouseDown && this._state.mouseHover) { this.onMouseReleased(this, InputManager); }
-        if (this.whileMouseDown && this._state.mouseDown) { this.whileMouseDown(this, InputManager); }
+        if (!this._prevState.mouseHover && this._state.mouseHover) { this._onMouseEnter(input); }
+        if (this._prevState.mouseHover && !this._state.mouseHover) { this._onMouseLeave(input); }
+        if (this._state.mouseHover) { this._whileMouseHover(input); }
+        if (!this._prevState.mouseDown && this._state.mouseDown) { this._onMousePressed(input); }
+        if (this._prevState.mouseDown && !this._state.mouseDown && this._state.mouseHover) { this._onMouseReleased(input); }
+        if (this._state.mouseDown) { this._whileMouseDown(input); }
+        
+        // trigger value changed events
+        var newVal = this._getValue();
+        if (newVal !== this._prevVal) {
+            this._afterValueChanged(input);
+            this._prevVal = newVal;
+        }
 
         // set new previous state
         this._prevState = this._state.clone();
+    }
+
+    /**
+     * Called when mouse enter element.
+     */
+    _onMouseEnter(input)
+    {
+        if (this.onMouseEnter) { this.onMouseEnter(this, input); }
+    }
+
+    /**
+     * Called when mouse leave element.
+     */
+    _onMouseLeave(input)
+    {
+        if (this.onMouseLeave) { this.onMouseLeave(this, input); }
+    }
+
+    /**
+     * Called while mouse hover on element.
+     */
+    _whileMouseHover(input)
+    {
+        if (this.whileMouseHover) { this.whileMouseHover(this, input); }
+    }
+
+    /**
+     * Called when mouse is pressed on element.
+     */
+    _onMousePressed(input)
+    {
+        if (this.onMousePressed) { this.onMousePressed(this, input); }
+    }
+
+    /**
+     * Called when mouse is released on element.
+     */
+    _onMouseReleased(input)
+    {
+        if (this.onMouseReleased) { this.onMouseReleased(this, input); }
+    }
+
+    /**
+     * Called while mouse is down over element.
+     */
+    _whileMouseDown(input)
+    {
+        if (this.whileMouseDown) { this.whileMouseDown(this, input); }
+    }
+
+    /**
+     * Called after this element's value was changed, for elements that have values.
+     */
+    _afterValueChanged(input)
+    {
+        if (this.afterValueChanged) { this.afterValueChanged(this, input); }
+    }
+
+    /**
+     * For elements that have a changeable value, this returns the current valut for internal usage.
+     */
+    _getValue()
+    {
+        return undefined;
     }
 
     /**

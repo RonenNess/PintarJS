@@ -232,6 +232,12 @@
             textureScale: textureScale,   
           },
 
+          // toggle button
+          toggle: {
+            extends: 'default',
+            toggleMode: true,
+          },
+
           // a button that is just text
           textOnly: {
             texture: uiTexture,
@@ -303,7 +309,27 @@
         button.anchor = PintarJS.UI.Anchors.Auto;
         button.text = "Text-only button";
         button.onMouseReleased = (btn, input) => { alert("I don't know what you expected."); }
-        container.addChild(button);    
+        container.addChild(button);
+
+        // toggle button text
+        container.addChild(new PintarJS.UI.HorizontalLine(UI_THEME));
+        var toggleDesc = new PintarJS.UI.Paragraph(UI_THEME);
+        toggleDesc.text = "Buttons can behave like checkboxes and be toggled. Check out this button for example:"
+        container.addChild(toggleDesc);
+
+        // create a toggle button
+        var toggleButton = new PintarJS.UI.Button(UI_THEME, "toggle");
+        toggleButton.anchor = PintarJS.UI.Anchors.Auto;
+        toggleButton.text = "Toggle Button";
+        container.addChild(toggleButton);
+
+        // register to toggle button changed event
+        var btnState = new PintarJS.UI.Paragraph(UI_THEME);
+        toggleButton.afterValueChanged = () => {
+          btnState.text = "Toggle Value: " + toggleButton.isChecked;
+        }
+        toggleButton.afterValueChanged();
+        container.addChild(btnState);
       }
 
       // PROGRESS BARS

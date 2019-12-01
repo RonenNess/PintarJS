@@ -35,6 +35,7 @@ class Button extends Container
      * @param {String} theme.Button[skin].mouseDownParagraphSkin Skin to use for button's paragraph when mouse is down over button.
      * @param {Number} theme.Button[skin].heightInPixels (Optional) Button default height in pixels. 
      * @param {Number} theme.Button[skin].textureScale (Optional) Texture scale for button. 
+     * @param {Number} theme.Button[skin].toggleMode (Optional) If true, this button will behave like a checkbox and be toggleable. 
      * @param {String} skin Element skin to use from theme.
      * @param {Object} override Optional override options (can override any of the theme properties listed above).
      */
@@ -59,6 +60,10 @@ class Button extends Container
 
         // button text
         this.text = null;
+
+        // for toggle mode
+        this.isChecked = false;
+        this.toggleModeEnabled = options.toggleMode || false;
 
         // init button paragraph properties
         var initParagraph = (paragraph) => {
@@ -126,6 +131,28 @@ class Button extends Container
     }
 
     /**
+     * Called when mouse is released on element.
+     */
+    _onMouseReleased(input)
+    {
+        super._onMouseReleased(input);
+        if (this.toggleModeEnabled) {
+            this.toggle();
+        }
+    }
+
+    /**
+     * Toggle value, only useable when in toggle mode.
+     */
+    toggle()
+    {
+        if (!this.toggleModeEnabled) {
+            throw new Error("Cannot toggle button that's not in toggle mode!");
+        }
+        this.isChecked = !this.isChecked;
+    }
+
+    /**
      * If true, this element will pass self-state to children, making them copy it.
      */
     get forceSelfStateOnChildren()
@@ -168,7 +195,7 @@ class Button extends Container
 
         // decide which sprite to draw based on state
         var sprite = this._sprite;
-        if (this._state.mouseDown) sprite = this._spriteDown;
+        if (this.isChecked || this._state.mouseDown) sprite = this._spriteDown;
         else if (this._state.mouseHover) sprite = this._spriteHover;
 
         // draw button
@@ -194,6 +221,14 @@ class Button extends Container
                 paragraph.draw(pintar);
             }
         }
+    }
+
+    /**
+     * Get this button value.
+     */
+    _getValue()
+    {
+        return this.isChecked;
     }
 }
 
