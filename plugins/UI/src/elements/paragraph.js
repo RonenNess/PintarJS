@@ -151,6 +151,14 @@ class Paragraph extends UIElement
         // draw text
         pintar.drawText(this._textSprite);
     }
+
+    /**
+     * Get this element value.
+     */
+    _getValue()
+    {
+        return this.text;
+    }
 }
 
 module.exports = Paragraph; 

@@ -941,6 +941,14 @@ class Paragraph extends UIElement
         // draw text
         pintar.drawText(this._textSprite);
     }
+
+    /**
+     * Get this element value.
+     */
+    _getValue()
+    {
+        return this.text;
+    }
 }
 
 module.exports = Paragraph; 
@@ -1227,6 +1235,14 @@ class ProgressBar extends Container
     get displayedValue()
     {
         return this._displayValue;
+    }
+
+    /**
+     * Get this element value.
+     */
+    _getValue()
+    {
+        return this.value;
     }
  
     /**

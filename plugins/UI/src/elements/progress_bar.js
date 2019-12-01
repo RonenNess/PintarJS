@@ -281,6 +281,14 @@ class ProgressBar extends Container
     {
         return this._displayValue;
     }
+
+    /**
+     * Get this element value.
+     */
+    _getValue()
+    {
+        return this.value;
+    }
  
     /**
      * Update the UI element.
