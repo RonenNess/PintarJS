@@ -26,6 +26,8 @@ class UIRoot extends Container
         super({UIRoot: { default: { }}});
         this.pintar = pintar;
         this.inputManager = inputManager || new InputManager(pintar);
+        this.size = null;
+        this.offset = null;
     }
 
     /**
@@ -63,6 +65,23 @@ class UIRoot extends Container
     getInternalBoundingBox()
     {
         return this.pintar.canvasRect;
+    }
+        
+    /**
+     * Get size in pixels.
+     */
+    getSizeInPixels()
+    {
+        var rect = this.pintar.canvasRect;
+        return new PintarJS.Point(rect.width, rect.height);
+    }
+
+    /**
+     * Get offset in pixels.
+     */
+    getOffsetInPixels()
+    {
+        return new PintarJS.Point(0, 0);
     }
 
     /**

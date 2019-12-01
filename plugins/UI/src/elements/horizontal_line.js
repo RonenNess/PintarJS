@@ -91,7 +91,7 @@ class HorizontalLine extends UIElement
             this._leftEdgeSprite.position.set(destRect.x, destRect.y);
             pintar.drawSprite(this._leftEdgeSprite);
             widthLeft -= this._leftEdgeSprite.size.x;
-            offsetX += this._leftEdgeSprite.size.x
+            offsetX += this._leftEdgeSprite.size.x;
         }
         // draw right edge
         if (this._rightEdgeSprite)
@@ -120,7 +120,7 @@ class HorizontalLine extends UIElement
                 }
                 pintar.drawSprite(this._middleSprite);
                 widthLeft -= this._middleSprite.size.x;
-                offsetX += this._middleSprite.size.x
+                offsetX += this._middleSprite.size.x;
             }
         }
     }

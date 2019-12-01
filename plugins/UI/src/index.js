@@ -7,6 +7,7 @@ var UI = {
     Panel: require('./elements/panel'),
     Paragraph: require('./elements/paragraph'),
     HorizontalLine: require('./elements/horizontal_line'),
+    VerticalLine: require('./elements/vertical_line'),
     Button: require('./elements/button'),
     Sprite: require('./elements/sprite'),
     SlicedSprite: require('./elements/sliced_sprite'),

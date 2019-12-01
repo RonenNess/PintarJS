@@ -19,6 +19,7 @@ module.exports = {
     BottomCenterRight: 'BottomCenterRight',
     Auto: 'Auto',
     AutoInline: 'AutoInline',
+    AutoInlineNoBreak: 'AutoInlineNoBreak',
     Fixed: 'Fixed',
 };
 },{}],2:[function(require,module,exports){
@@ -262,7 +263,7 @@ class Button extends Container
 }
 
 module.exports = Button; 
-},{"../anchors":1,"../cursor_types":2,"../pintar":16,"../size_modes":18,"./container":4,"./paragraph":8,"./sliced_sprite":11}],4:[function(require,module,exports){
+},{"../anchors":1,"../cursor_types":2,"../pintar":17,"../size_modes":19,"./container":4,"./paragraph":8,"./sliced_sprite":11}],4:[function(require,module,exports){
 /**
  * file: container.js
  * description: Implement a container element.
@@ -272,7 +273,7 @@ module.exports = Button;
 "use strict";
 const UIElement = require('./ui_element');
 const Anchors = require('../anchors');
-
+const SidesProperties = require('../sides_properties');
 
 /**
  * Implement a container element to hold other elements.
@@ -288,6 +289,7 @@ class Container extends UIElement
 
         // create children list
         this._children = [];
+        this.padding = new SidesProperties(0, 0, 0, 0);
     }
 
     /**
@@ -381,6 +383,7 @@ class Container extends UIElement
     {
         // call base class update
         super.update(input, forceState);
+        var selfSize = this.getSizeInPixels();
 
         // update children
         var lastElement = null;
@@ -391,13 +394,12 @@ class Container extends UIElement
 
             // if auto-inline anchor, arrange it
             var needToSetAuto = false;
-            if (element.anchor === Anchors.AutoInline)
+            if ((element.anchor === Anchors.AutoInline) || (element.anchor === Anchors.AutoInlineNoBreak))
             {
                 if (lastElement) {
                     var marginX = Math.max(element.margin.left, lastElement.margin.right);
-                    var marginY = Math.max(element.margin.top, lastElement.margin.bottom);
-                    element.offset.set(lastElement.offset.x + lastElement.size.x + marginX, lastElement.offset.y + lastElement.size.y + marginY);
-                    if (element.offset.x > this.size.x) {
+                    element.offset.set(lastElement.offset.x + lastElement.size.x + marginX, lastElement.offset.y);
+                    if ((element.anchor === Anchors.AutoInline) && (element.getBoundingBox().right >= selfSize.x)) {
                         needToSetAuto = true;
                     }
                 }
@@ -432,7 +434,7 @@ class Container extends UIElement
 
 // export the container
 module.exports = Container; 
-},{"../anchors":1,"./ui_element":13}],5:[function(require,module,exports){
+},{"../anchors":1,"../sides_properties":18,"./ui_element":13}],5:[function(require,module,exports){
 /**
  * file: cursor.js
  * description: Implement a cursor element.
@@ -569,7 +571,7 @@ class Cursor extends UIElement
 }
 
 module.exports = Cursor; 
-},{"../anchors":1,"../cursor_types":2,"../pintar":16,"../size_modes":18,"./sprite":12,"./ui_element":13}],6:[function(require,module,exports){
+},{"../anchors":1,"../cursor_types":2,"../pintar":17,"../size_modes":19,"./sprite":12,"./ui_element":13}],6:[function(require,module,exports){
 /**
  * file: horizontal_line.js
  * description: Implement a horizontal line element.
@@ -663,7 +665,7 @@ class HorizontalLine extends UIElement
             this._leftEdgeSprite.position.set(destRect.x, destRect.y);
             pintar.drawSprite(this._leftEdgeSprite);
             widthLeft -= this._leftEdgeSprite.size.x;
-            offsetX += this._leftEdgeSprite.size.x
+            offsetX += this._leftEdgeSprite.size.x;
         }
         // draw right edge
         if (this._rightEdgeSprite)
@@ -692,14 +694,14 @@ class HorizontalLine extends UIElement
                 }
                 pintar.drawSprite(this._middleSprite);
                 widthLeft -= this._middleSprite.size.x;
-                offsetX += this._middleSprite.size.x
+                offsetX += this._middleSprite.size.x;
             }
         }
     }
 }
 
 module.exports = HorizontalLine; 
-},{"../pintar":16,"../size_modes":18,"./ui_element":13}],7:[function(require,module,exports){
+},{"../pintar":17,"../size_modes":19,"./ui_element":13}],7:[function(require,module,exports){
 /**
  * file: panel.js
  * description: A container with graphics object.
@@ -787,7 +789,7 @@ class Panel extends Container
 
 // export the panel class
 module.exports = Panel;
-},{"../pintar":16,"./container":4,"./sliced_sprite":11}],8:[function(require,module,exports){
+},{"../pintar":17,"./container":4,"./sliced_sprite":11}],8:[function(require,module,exports){
 /**
  * file: paragraph.js
  * description: Implement a paragraph element.
@@ -952,7 +954,7 @@ class Paragraph extends UIElement
 }
 
 module.exports = Paragraph; 
-},{"../pintar":16,"../size_modes":18,"./ui_element":13}],9:[function(require,module,exports){
+},{"../pintar":17,"../size_modes":19,"./ui_element":13}],9:[function(require,module,exports){
 /**
  * file: progress_bar.js
  * description: Implement a progress bar element.
@@ -1273,7 +1275,7 @@ class ProgressBar extends Container
 }
 
 module.exports = ProgressBar; 
-},{"../anchors":1,"../pintar":16,"../size_modes":18,"../utils":20,"./container":4,"./sliced_sprite":11,"./sprite":12}],10:[function(require,module,exports){
+},{"../anchors":1,"../pintar":17,"../size_modes":19,"../utils":21,"./container":4,"./sliced_sprite":11,"./sprite":12}],10:[function(require,module,exports){
 /**
  * file: root.js
  * description: Implement a UI root element.
@@ -1302,6 +1304,8 @@ class UIRoot extends Container
         super({UIRoot: { default: { }}});
         this.pintar = pintar;
         this.inputManager = inputManager || new InputManager(pintar);
+        this.size = null;
+        this.offset = null;
     }
 
     /**
@@ -1340,6 +1344,23 @@ class UIRoot extends Container
     {
         return this.pintar.canvasRect;
     }
+        
+    /**
+     * Get size in pixels.
+     */
+    getSizeInPixels()
+    {
+        var rect = this.pintar.canvasRect;
+        return new PintarJS.Point(rect.width, rect.height);
+    }
+
+    /**
+     * Get offset in pixels.
+     */
+    getOffsetInPixels()
+    {
+        return new PintarJS.Point(0, 0);
+    }
 
     /**
      * Draw the UI element.
@@ -1374,7 +1395,7 @@ class UIRoot extends Container
 }
 
 module.exports = UIRoot; 
-},{"../input/input_manager":15,"../pintar":16,"./container":4,"./cursor":5}],11:[function(require,module,exports){
+},{"../input/input_manager":16,"../pintar":17,"./container":4,"./cursor":5}],11:[function(require,module,exports){
 /**
  * file: sliced_sprite.js
  * description: A sliced sprite.
@@ -1743,7 +1764,7 @@ SlicedSprite.FillModes =
 
 // export SlicedSprite
 module.exports = SlicedSprite;
-},{"../pintar":16,"./ui_element":13}],12:[function(require,module,exports){
+},{"../pintar":17,"./ui_element":13}],12:[function(require,module,exports){
 /**
  * file: sprite.js
  * description: A UI sprite.
@@ -1856,7 +1877,7 @@ class Sprite extends UIElement
 
 // export sprite
 module.exports = Sprite;
-},{"../pintar":16,"./ui_element":13}],13:[function(require,module,exports){
+},{"../pintar":17,"./ui_element":13}],13:[function(require,module,exports){
 /**
  * file: ui_element.js
  * description: Base UI element class.
@@ -2430,7 +2451,137 @@ UIElement.globalScale = 1;
 
 // export the base UI element object
 module.exports = UIElement; 
-},{"../anchors":1,"../cursor_types":2,"../pintar":16,"../sides_properties":17,"../size_modes":18,"../ui_point":19}],14:[function(require,module,exports){
+},{"../anchors":1,"../cursor_types":2,"../pintar":17,"../sides_properties":18,"../size_modes":19,"../ui_point":20}],14:[function(require,module,exports){
+/**
+ * file: vertical_line.js
+ * description: Implement a vertical line element.
+ * author: Ronen Ness.
+ * since: 2019.
+ */
+"use strict";
+const UIElement = require('./ui_element');
+const PintarJS = require('../pintar');
+const SizeModes = require('../size_modes');
+
+
+/**
+ * Implement a vertical line element.
+ */
+class VerticalLine extends UIElement
+{
+    /**
+     * Create a horizontal line element.
+     * @param {Object} theme
+     * @param {PintarJS.Texture} theme.VerticalLine[skin].texture Texture to use.
+     * @param {PintarJS.Rectangle} theme.VerticalLine[skin].middleSourceRect The source rect of the line center part (repeating).
+     * @param {PintarJS.Rectangle} theme.VerticalLine[skin].topEdgeSourceRect The source rect of the line top edge.
+     * @param {PintarJS.Rectangle} theme.VerticalLine[skin].bottomEdgeSourceRect The source rect of the line bottom edge.
+     * @param {Number} theme.VerticalLine[skin].textureScale (Optional) Texture scale for horizontal line. 
+     */
+    constructor(theme, skin, override)
+    {
+        super();
+
+        // get options from theme and skin type
+        var options = this.getOptionsFromTheme(theme, skin, override);
+        this.setBaseOptions(options);
+
+        // get texture scale
+        var textureScale = (options.textureScale || 1);
+
+        // set default width
+        this.size.x = options.middleSourceRect.width * textureScale;
+        this.size.xMode = SizeModes.Pixels;
+
+        // set default height
+        this.size.y = options.middleSourceRect.height * textureScale * 2;
+        this.size.yMode = SizeModes.Pixels;
+
+        // create top edge
+        var topSideSourceRect = options.topEdgeSourceRect;
+        if (topSideSourceRect)
+        {
+            this._topEdgeSprite = new PintarJS.Sprite(options.texture);
+            this._topEdgeSprite.sourceRectangle = topSideSourceRect;
+            this._topEdgeSprite.size.set(topSideSourceRect.width * textureScale, topSideSourceRect.height * textureScale);
+        }
+        // create bottom edge
+        var bottomSideSourceRect = options.bottomEdgeSourceRect;
+        if (bottomSideSourceRect)
+        {
+            this._bottomEdgeSprite = new PintarJS.Sprite(options.texture);
+            this._bottomEdgeSprite.sourceRectangle = bottomSideSourceRect;
+            this._bottomEdgeSprite.size.set(bottomSideSourceRect.width * textureScale, bottomSideSourceRect.height * textureScale);
+        }
+        // create center part
+        this._middleSprite = new PintarJS.Sprite(options.texture);
+        this._textureScale = options.textureScale;
+        this._middleSourceRect = options.middleSourceRect;
+    }
+
+    /**
+     * Get required options for this element type.
+     */
+    get requiredOptions()
+    {
+        return ["texture", "middleSourceRect"];
+    }
+
+    /**
+     * Draw the UI element.
+     */
+    draw(pintar)
+    {
+        // get dest rect
+        var destRect = this.getBoundingBox();
+
+        // height left to draw for center part
+        var heightLeft = destRect.height;
+        var offsetY = 0;
+
+        // draw top edge
+        if (this._topEdgeSprite)
+        {
+            this._topEdgeSprite.position.set(destRect.x, destRect.y);
+            pintar.drawSprite(this._topEdgeSprite);
+            heightLeft -= this._topEdgeSprite.size.y;
+            offsetY += this._topEdgeSprite.size.y;
+        }
+        // draw bottom edge
+        if (this._bottomEdgeSprite)
+        {
+            this._bottomEdgeSprite.position.set(destRect.x, destRect.bottom - this._bottomEdgeSprite.height);
+            pintar.drawSprite(this._bottomEdgeSprite);
+            heightLeft -= this._bottomEdgeSprite.size.y;
+        }
+
+        // draw center parts
+        if (this._middleSprite)
+        {
+            // reset middle part properties
+            this._middleSprite.sourceRectangle = this._middleSourceRect.clone();
+            this._middleSprite.size.set(this._middleSourceRect.width * this._textureScale, this._middleSourceRect.height * this._textureScale);
+
+            // draw middle parts
+            while (heightLeft > 0)
+            {
+                this._middleSprite.position.set(destRect.x, destRect.y + offsetY);
+                if (this._middleSprite.size.y > heightLeft)
+                {
+                    var toCut = this._middleSprite.size.y - heightLeft;
+                    this._middleSprite.size.y -= toCut;
+                    this._middleSprite.sourceRectangle.height -= toCut / this._textureScale;
+                }
+                pintar.drawSprite(this._middleSprite);
+                heightLeft -= this._middleSprite.size.y;
+                offsetY += this._middleSprite.size.y;
+            }
+        }
+    }
+}
+
+module.exports = VerticalLine; 
+},{"../pintar":17,"../size_modes":19,"./ui_element":13}],15:[function(require,module,exports){
 var UI = {
 
     UIRoot: require('./elements/root'),
@@ -2440,6 +2591,7 @@ var UI = {
     Panel: require('./elements/panel'),
     Paragraph: require('./elements/paragraph'),
     HorizontalLine: require('./elements/horizontal_line'),
+    VerticalLine: require('./elements/vertical_line'),
     Button: require('./elements/button'),
     Sprite: require('./elements/sprite'),
     SlicedSprite: require('./elements/sliced_sprite'),
@@ -2456,7 +2608,7 @@ var UI = {
 const pintar = require('./pintar');
 pintar.UI = UI;
 module.exports = UI;
-},{"./anchors":1,"./cursor_types":2,"./elements/button":3,"./elements/container":4,"./elements/cursor":5,"./elements/horizontal_line":6,"./elements/panel":7,"./elements/paragraph":8,"./elements/progress_bar":9,"./elements/root":10,"./elements/sliced_sprite":11,"./elements/sprite":12,"./elements/ui_element":13,"./input/input_manager":15,"./pintar":16,"./sides_properties":17,"./size_modes":18,"./ui_point":19}],15:[function(require,module,exports){
+},{"./anchors":1,"./cursor_types":2,"./elements/button":3,"./elements/container":4,"./elements/cursor":5,"./elements/horizontal_line":6,"./elements/panel":7,"./elements/paragraph":8,"./elements/progress_bar":9,"./elements/root":10,"./elements/sliced_sprite":11,"./elements/sprite":12,"./elements/ui_element":13,"./elements/vertical_line":14,"./input/input_manager":16,"./pintar":17,"./sides_properties":18,"./size_modes":19,"./ui_point":20}],16:[function(require,module,exports){
 /**
  * file: input_manager.js
  * description: Define a basic input manager class.
@@ -2660,11 +2812,11 @@ class InputManager
 }
 
 module.exports = InputManager; 
-},{"../pintar":16}],16:[function(require,module,exports){
+},{"../pintar":17}],17:[function(require,module,exports){
 var pintar = window.PintarJS || window.pintar;
 if (!pintar) { throw new Error("Missing PintarJS main object."); }
 module.exports = pintar;
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 /**
  * file: sides.js
  * description: Implement a data structure for sides.
@@ -2717,7 +2869,7 @@ class SidesProperties
 
 
 module.exports = SidesProperties;
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 /**
  * file: size_modes.js
  * description: Define size modes we can set.
@@ -2730,7 +2882,7 @@ module.exports = {
     Pixels: 'px',
     Percents: '%'
 };
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 /**
  * file: ui_point.js
  * description: A Point for UI elements position and size.
@@ -2800,7 +2952,7 @@ UIPoint.half = function()
 
 // export the UI point
 module.exports = UIPoint;
-},{"./pintar":16,"./size_modes":18}],20:[function(require,module,exports){
+},{"./pintar":17,"./size_modes":19}],21:[function(require,module,exports){
 /**
  * file: utils.js
  * description: Mixed utility methods.
@@ -2834,5 +2986,5 @@ module.exports = {
         return ret;
     },
 }
-},{}]},{},[14])(14)
+},{}]},{},[15])(15)
 });

@@ -18,5 +18,6 @@ module.exports = {
     BottomCenterRight: 'BottomCenterRight',
     Auto: 'Auto',
     AutoInline: 'AutoInline',
+    AutoInlineNoBreak: 'AutoInlineNoBreak',
     Fixed: 'Fixed',
 };

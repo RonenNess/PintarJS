@@ -267,10 +267,9 @@
 
         // create container
         var container = new PintarJS.UI.Panel(UI_THEME);
-        container.anchor = PintarJS.UI.Anchors.CenterLeft;
+        container.anchor = PintarJS.UI.Anchors.AutoInlineNoBreak;
         container.size.set(370, containersHeight);
-        container.offset.x = positionX;
-        positionX += 370 + marginX;
+        container.margin.set(10, 10, 10, 10);
         root.addChild(container);
 
         // add title
@@ -288,7 +287,7 @@
         // create example's container
         var container = createContainer("Welcome to Pintar.UI !");
         var paragraph = new PintarJS.UI.Paragraph(UI_THEME, "default");
-        paragraph.text = "This is a basic {{fc:yellow}}Pintar.UI{{res}} demo. The UI theme you see before you was created for this demo (and you can use it for any purpose if you like), but know that {{fc:yellow}}Pintar.UI{{res}} is very flexible and can work with any texture and theme -- you just need to define it as seen in this page's code.\n\nTo see more UI elements, scroll to the right.\n\nTo learn more, check out this page source or visit:\n{{fc:yellow}}github.com/RonenNess/PintarJS{{res}}";
+        paragraph.text = "This is a basic {{fc:yellow}}Pintar.UI{{res}} demo. The UI theme you see before you was created for this demo (and you can use it for any purpose if you like), but know that {{fc:yellow}}Pintar.UI{{res}} is very flexible and can work with any texture and theme -- you just need to define it as seen in this page's code.\n\nTo see more UI elements, {{fc:yellow}}scroll to the right{{res}} using the scrollbar on the bottom.\n\nTo learn more, check out this page source or visit:\n{{fc:yellow}}github.com/RonenNess/PintarJS{{res}}";
         container.addChild(paragraph);
       }
 

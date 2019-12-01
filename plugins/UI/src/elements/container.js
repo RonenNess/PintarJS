@@ -7,7 +7,7 @@
 "use strict";
 const UIElement = require('./ui_element');
 const Anchors = require('../anchors');
-
+const SidesProperties = require('../sides_properties');
 
 /**
  * Implement a container element to hold other elements.
@@ -23,6 +23,7 @@ class Container extends UIElement
 
         // create children list
         this._children = [];
+        this.padding = new SidesProperties(0, 0, 0, 0);
     }
 
     /**
@@ -116,6 +117,7 @@ class Container extends UIElement
     {
         // call base class update
         super.update(input, forceState);
+        var selfSize = this.getSizeInPixels();
 
         // update children
         var lastElement = null;
@@ -126,13 +128,12 @@ class Container extends UIElement
 
             // if auto-inline anchor, arrange it
             var needToSetAuto = false;
-            if (element.anchor === Anchors.AutoInline)
+            if ((element.anchor === Anchors.AutoInline) || (element.anchor === Anchors.AutoInlineNoBreak))
             {
                 if (lastElement) {
                     var marginX = Math.max(element.margin.left, lastElement.margin.right);
-                    var marginY = Math.max(element.margin.top, lastElement.margin.bottom);
-                    element.offset.set(lastElement.offset.x + lastElement.size.x + marginX, lastElement.offset.y + lastElement.size.y + marginY);
-                    if (element.offset.x > this.size.x) {
+                    element.offset.set(lastElement.offset.x + lastElement.size.x + marginX, lastElement.offset.y);
+                    if ((element.anchor === Anchors.AutoInline) && (element.getBoundingBox().right >= selfSize.x)) {
                         needToSetAuto = true;
                     }
                 }
