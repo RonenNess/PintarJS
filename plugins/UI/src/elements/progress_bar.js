@@ -80,7 +80,7 @@ class ProgressBar extends Container
             this._backgroundSprite = new SlicedSprite({texture: options.texture, 
                 externalSourceRect: options.backgroundExternalSourceRect, 
                 internalSourceRect: options.backgroundInternalSourceRect, 
-                textureScale: textureScale});
+                textureScale: textureScale}, '_');
         }
         else
         {
@@ -102,7 +102,7 @@ class ProgressBar extends Container
             this._fillSprite = new SlicedSprite({texture: options.texture, 
                 externalSourceRect: options.fillExternalSourceRect, 
                 internalSourceRect: options.fillInternalSourceRect, 
-                textureScale: textureScale});
+                textureScale: textureScale}, '_');
         }
         // no fill??
         else
@@ -129,7 +129,7 @@ class ProgressBar extends Container
             this._foregroundSprite = new SlicedSprite({texture: options.texture, 
                 externalSourceRect: options.foregroundExternalSourceRect, 
                 internalSourceRect: options.foregroundInternalSourceRect, 
-                textureScale: textureScale});
+                textureScale: textureScale}, '_');
         }
         // set other foreground sprite properties
         if (this._foregroundSprite) {

@@ -64,7 +64,7 @@ class Button extends Container
      * @param {String} theme.Button[skin].mouseHoverParagraphSkin Skin to use for button's paragraph when mouse hovers over button.
      * @param {String} theme.Button[skin].mouseDownParagraphSkin Skin to use for button's paragraph when mouse is down over button.
      * @param {Number} theme.Button[skin].heightInPixels (Optional) Button default height in pixels. 
-     * @param {Number} theme.Button[skin].textureScale (Optional) Texture scale for button. 
+     * @param {Number} theme.Button[skin].textureScale (Optional) Texture scale of the button. 
      * @param {Number} theme.Button[skin].toggleMode (Optional) If true, this button will behave like a checkbox and be toggleable. 
      * @param {String} skin Element skin to use from theme.
      * @param {Object} override Optional override options (can override any of the theme properties listed above).
@@ -131,7 +131,7 @@ class Button extends Container
             this._sprite = new SlicedSprite({texture: options.texture, 
                 externalSourceRect: options.externalSourceRect, 
                 internalSourceRect: options.internalSourceRect, 
-                textureScale: textureScale});
+                textureScale: textureScale}, '_');
             this._sprite.anchor = Anchors.Fixed;
         }
 
@@ -140,7 +140,7 @@ class Button extends Container
             this._spriteHover = new SlicedSprite({texture: options.texture, 
                 externalSourceRect: options.mouseHoverExternalSourceRect, 
                 internalSourceRect: options.mouseHoverInternalSourceRect, 
-                textureScale: textureScale});
+                textureScale: textureScale}, '_');
             this._spriteHover.anchor = Anchors.Fixed;
         }
         else {
@@ -152,7 +152,7 @@ class Button extends Container
             this._spriteDown = new SlicedSprite({texture: options.texture, 
                 externalSourceRect: options.mouseDownExternalSourceRect, 
                 internalSourceRect: options.mouseDownInternalSourceRect, 
-                textureScale: textureScale});
+                textureScale: textureScale}, '_');
             this._spriteDown.anchor = Anchors.Fixed;
         }
         else {
@@ -263,7 +263,7 @@ class Button extends Container
 }
 
 module.exports = Button; 
-},{"../anchors":1,"../cursor_types":2,"../pintar":17,"../size_modes":19,"./container":4,"./paragraph":8,"./sliced_sprite":11}],4:[function(require,module,exports){
+},{"../anchors":1,"../cursor_types":2,"../pintar":18,"../size_modes":20,"./container":4,"./paragraph":8,"./sliced_sprite":11}],4:[function(require,module,exports){
 /**
  * file: container.js
  * description: Implement a container element.
@@ -434,7 +434,7 @@ class Container extends UIElement
 
 // export the container
 module.exports = Container; 
-},{"../anchors":1,"../sides_properties":18,"./ui_element":13}],5:[function(require,module,exports){
+},{"../anchors":1,"../sides_properties":19,"./ui_element":14}],5:[function(require,module,exports){
 /**
  * file: cursor.js
  * description: Implement a cursor element.
@@ -571,7 +571,7 @@ class Cursor extends UIElement
 }
 
 module.exports = Cursor; 
-},{"../anchors":1,"../cursor_types":2,"../pintar":17,"../size_modes":19,"./sprite":12,"./ui_element":13}],6:[function(require,module,exports){
+},{"../anchors":1,"../cursor_types":2,"../pintar":18,"../size_modes":20,"./sprite":13,"./ui_element":14}],6:[function(require,module,exports){
 /**
  * file: horizontal_line.js
  * description: Implement a horizontal line element.
@@ -594,8 +594,8 @@ class HorizontalLine extends UIElement
      * @param {Object} theme
      * @param {PintarJS.Texture} theme.HorizontalLine[skin].texture Texture to use.
      * @param {PintarJS.Rectangle} theme.HorizontalLine[skin].middleSourceRect The source rect of the line center part (repeating).
-     * @param {PintarJS.Rectangle} theme.HorizontalLine[skin].leftEdgeSourceRect The source rect of the line left side edge.
-     * @param {PintarJS.Rectangle} theme.HorizontalLine[skin].rightEdgeSourceRect The source rect of the line right side edge.
+     * @param {PintarJS.Rectangle} theme.HorizontalLine[skin].startEdgeSourceRect The source rect of the line left side edge.
+     * @param {PintarJS.Rectangle} theme.HorizontalLine[skin].endEdgeSourceRect The source rect of the line right side edge.
      * @param {Number} theme.HorizontalLine[skin].textureScale (Optional) Texture scale for horizontal line. 
      */
     constructor(theme, skin, override)
@@ -618,7 +618,7 @@ class HorizontalLine extends UIElement
         this.size.yMode = SizeModes.Pixels;
 
         // create left-side edge
-        var leftSideSourceRect = options.leftEdgeSourceRect;
+        var leftSideSourceRect = options.startEdgeSourceRect;
         if (leftSideSourceRect)
         {
             this._leftEdgeSprite = new PintarJS.Sprite(options.texture);
@@ -626,7 +626,7 @@ class HorizontalLine extends UIElement
             this._leftEdgeSprite.size.set(leftSideSourceRect.width * textureScale, leftSideSourceRect.height * textureScale);
         }
         // create right-side edge
-        var rightSideSourceRect = options.rightEdgeSourceRect;
+        var rightSideSourceRect = options.endEdgeSourceRect;
         if (rightSideSourceRect)
         {
             this._rightEdgeSprite = new PintarJS.Sprite(options.texture);
@@ -701,7 +701,7 @@ class HorizontalLine extends UIElement
 }
 
 module.exports = HorizontalLine; 
-},{"../pintar":17,"../size_modes":19,"./ui_element":13}],7:[function(require,module,exports){
+},{"../pintar":18,"../size_modes":20,"./ui_element":14}],7:[function(require,module,exports){
 /**
  * file: panel.js
  * description: A container with graphics object.
@@ -745,7 +745,7 @@ class Panel extends Container
         this.padding = options.padding || new SidesProperties(10, 10, 10, 10);
 
         // set background
-        this._background = new SlicedSprite(options);
+        this._background = new SlicedSprite(options, '_');
         this._background._setParent(this);
         this._background.ignoreParentPadding = true;
     }
@@ -789,7 +789,7 @@ class Panel extends Container
 
 // export the panel class
 module.exports = Panel;
-},{"../pintar":17,"./container":4,"./sliced_sprite":11}],8:[function(require,module,exports){
+},{"../pintar":18,"./container":4,"./sliced_sprite":11}],8:[function(require,module,exports){
 /**
  * file: paragraph.js
  * description: Implement a paragraph element.
@@ -954,7 +954,7 @@ class Paragraph extends UIElement
 }
 
 module.exports = Paragraph; 
-},{"../pintar":17,"../size_modes":19,"./ui_element":13}],9:[function(require,module,exports){
+},{"../pintar":18,"../size_modes":20,"./ui_element":14}],9:[function(require,module,exports){
 /**
  * file: progress_bar.js
  * description: Implement a progress bar element.
@@ -1037,7 +1037,7 @@ class ProgressBar extends Container
             this._backgroundSprite = new SlicedSprite({texture: options.texture, 
                 externalSourceRect: options.backgroundExternalSourceRect, 
                 internalSourceRect: options.backgroundInternalSourceRect, 
-                textureScale: textureScale});
+                textureScale: textureScale}, '_');
         }
         else
         {
@@ -1059,7 +1059,7 @@ class ProgressBar extends Container
             this._fillSprite = new SlicedSprite({texture: options.texture, 
                 externalSourceRect: options.fillExternalSourceRect, 
                 internalSourceRect: options.fillInternalSourceRect, 
-                textureScale: textureScale});
+                textureScale: textureScale}, '_');
         }
         // no fill??
         else
@@ -1086,7 +1086,7 @@ class ProgressBar extends Container
             this._foregroundSprite = new SlicedSprite({texture: options.texture, 
                 externalSourceRect: options.foregroundExternalSourceRect, 
                 internalSourceRect: options.foregroundInternalSourceRect, 
-                textureScale: textureScale});
+                textureScale: textureScale}, '_');
         }
         // set other foreground sprite properties
         if (this._foregroundSprite) {
@@ -1275,7 +1275,7 @@ class ProgressBar extends Container
 }
 
 module.exports = ProgressBar; 
-},{"../anchors":1,"../pintar":17,"../size_modes":19,"../utils":21,"./container":4,"./sliced_sprite":11,"./sprite":12}],10:[function(require,module,exports){
+},{"../anchors":1,"../pintar":18,"../size_modes":20,"../utils":22,"./container":4,"./sliced_sprite":11,"./sprite":13}],10:[function(require,module,exports){
 /**
  * file: root.js
  * description: Implement a UI root element.
@@ -1395,7 +1395,7 @@ class UIRoot extends Container
 }
 
 module.exports = UIRoot; 
-},{"../input/input_manager":16,"../pintar":17,"./container":4,"./cursor":5}],11:[function(require,module,exports){
+},{"../input/input_manager":17,"../pintar":18,"./container":4,"./cursor":5}],11:[function(require,module,exports){
 /**
  * file: sliced_sprite.js
  * description: A sliced sprite.
@@ -1415,27 +1415,24 @@ class SlicedSprite extends UIElement
 {
     /**
      * Create a sliced sprite element.
-     * @param {Object} options
-     * @param {PintarJS.Texture} options.texture Texture to use.
-     * @param {PintarJS.Rectangle} options.externalSourceRect The entire source rect, including frame and fill.
-     * @param {PintarJS.Rectangle} options.internalSourceRect The internal source rect, must be contained inside the whole source rect.
-     * @param {Number} options.textureScale (Optional) frame and fill texture scale.
-     * @param {SlicedSprite.FillModes} options.fillMode (Optional) How to handle fill part.
-     * @param {PintarJS.Color} options.fillColor (Optional) Fill color.
-     * @param {PintarJS.Color} options.frameColor (Optional) Frame color.
+     * @param {Object} theme
+     * @param {PintarJS.Texture} theme.texture Texture to use.
+     * @param {PintarJS.Rectangle} theme.externalSourceRect The entire source rect, including frame and fill.
+     * @param {PintarJS.Rectangle} theme.internalSourceRect The internal source rect, must be contained inside the whole source rect.
+     * @param {Number} theme.textureScale (Optional) frame and fill texture scale.
+     * @param {SlicedSprite.FillModes} theme.fillMode (Optional) How to handle fill part.
+     * @param {PintarJS.Color} theme.fillColor (Optional) Fill color.
+     * @param {PintarJS.Color} theme.frameColor (Optional) Frame color.
      * @param {String} skin Element skin to use from theme.
      * @param {Object} override Optional override options (can override any of the theme properties listed above).
      */
-    constructor(options, skin, override)
+    constructor(theme, skin, override)
     {
         super();
 
-        // if we got skin, we assume 'options' is actually a theme - used when other elements inherit from us, like in 'panel' case
-        if (skin) 
-        {
-            options = this.getOptionsFromTheme(options, skin, override);
-            this.setBaseOptions(options);
-        }
+        // get options from theme and skin type
+        var options = this.getOptionsFromTheme(theme, skin, override);
+        this.setBaseOptions(options);
 
         // extract params
         var texture = options.texture;
@@ -1764,7 +1761,290 @@ SlicedSprite.FillModes =
 
 // export SlicedSprite
 module.exports = SlicedSprite;
-},{"../pintar":17,"./ui_element":13}],12:[function(require,module,exports){
+},{"../pintar":18,"./ui_element":14}],12:[function(require,module,exports){
+/**
+ * file: slider.js
+ * description: Implement a slider element.
+ * author: Ronen Ness.
+ * since: 2019.
+ */
+"use strict";
+const Container = require('./container');
+const PintarJS = require('../pintar');
+const SizeModes = require('../size_modes');
+const HorizontalLine = require('./horizontal_line');
+const VerticalLine = require('./vertical_line');
+const Paragraph = require('./paragraph');
+const Anchors = require('../anchors');
+const Cursors = require('../cursor_types');
+
+
+/**
+ * Implement a slider element.
+ */
+class Slider extends Container
+{
+    /**
+     * Create a slider element.
+     * @param {Object} theme
+     * @param {PintarJS.Texture} theme.Slider[skin].texture Texture to use.
+     * @param {String} theme.Slider[skin].lineSkin Skin to use for the background line, either for HorizontalLine or VerticalLine, depends if horizontal or vertical.
+     * @param {PintarJS.Rectangle} theme.Slider[skin].middleSourceRect The source rect of the line center part (repeating).
+     * @param {PintarJS.Rectangle} theme.Slider[skin].startEdgeSourceRect The source rect of the line starting edge (left or top).
+     * @param {PintarJS.Rectangle} theme.Slider[skin].endEdgeSourceRect The source rect of the line ending edge (right or bottom).
+     * @param {PintarJS.Rectangle} theme.Slider[skin].handleSourceRect The source rect of the handle you can use to change slider value.
+     * @param {PintarJS.Rectangle} theme.Slider[skin].handleOffset (Optional) Handle offset, in pixels.
+     * @param {String} theme.Slider[skin].direction (Optional) Slider direction, either 'horizontal' (default) or 'vertical'.
+     * @param {Number} theme.Slider[skin].textureScale (Optional) Texture scale of the button. 
+     * @param {String} skin Element skin to use from theme.
+     * @param {Object} override Optional override options (can override any of the theme properties listed above).
+     */
+    constructor(theme, skin, override)
+    {
+        super();
+
+        // get options from theme and skin type
+        var options = this.getOptionsFromTheme(theme, skin, override);
+        this.setBaseOptions(options);
+
+        // get texture scale
+        var textureScale = (options.textureScale || 1);
+
+        // get direction
+        this._direction = options.direction || "horizontal";
+
+        // set min, max and if should round values
+        this._min = 0;
+        this._max = 100;
+        this._roundValues = true;
+
+        // create the line part of the slider
+        this._line = new {horizontal: HorizontalLine, vertical: VerticalLine}[this._direction](options, '_');
+        this._line._setParent(this);
+
+        // set default size
+        if (this._direction === "horizontal") {
+            this.size.x = 100;
+            this.size.xMode = SizeModes.Percents;
+        }
+        else {
+            this.size.y = 100;
+            this.size.yMode = SizeModes.Percents;
+        }
+
+        // start piece offset
+        this._startOffset = options.startEdgeSourceRect ? 
+        new PintarJS.Point(options.startEdgeSourceRect.width * textureScale, options.startEdgeSourceRect.height * textureScale) : 
+        new PintarJS.Point(0, 0);
+
+        // end piece offset
+        this._endOffset = options.endEdgeSourceRect ? 
+        new PintarJS.Point(options.endEdgeSourceRect.width * textureScale, options.endEdgeSourceRect.height * textureScale) : 
+        new PintarJS.Point(0, 0);
+
+        // create handle sprite
+        this._handle = new PintarJS.Sprite(options.texture);
+        this._handle.sourceRectangle = options.handleSourceRect;
+        this._handle.size.set(options.handleSourceRect.width * textureScale, options.handleSourceRect.height * textureScale);
+
+        // set handle offset
+        this._handleOffset = options.handleOffset || PintarJS.Point.zero();
+
+        // set starting value
+        this.value = 50;
+    }
+
+    /**
+     * Get required options for this element type.
+     */
+    get requiredOptions()
+    {
+        return ["texture", "middleSourceRect", "handleSourceRect"];
+    }
+
+    /**
+     * Get min value.
+     */
+    get min()
+    {
+        return this._min;
+    }
+
+    /**
+     * Set min value.
+     */
+    set min(val)
+    {
+        this._min = val;
+        this.value = this.value;
+    }
+
+    /**
+     * Get max value.
+     */
+    get max()
+    {
+        return this._max;
+    }
+
+    /**
+     * Set max value.
+     */
+    set max(val)
+    {
+        this._max = val;
+        this.value = this.value;
+    }
+
+    /**
+     * Get if should round values
+     */
+    get roundValue()
+    {
+        return this._roundValues;
+    }
+
+    /**
+     * Set if should round values.
+     */
+    set roundValue(val)
+    {
+        this._roundValues = Boolean(val);
+        this.value = this.value;
+    }
+
+    /**
+     * Get current value.
+     */
+    get value()
+    {
+        return this._value;
+    }
+
+    /**
+     * Set current value.
+     */
+    set value(val)
+    {
+        this._value = val;
+    }
+
+    /**
+     * Clamp and validate value range.
+     */
+    _clampValue(val)
+    {
+        if (this._roundValues) { val = Math.round(val); }
+        if (val < this.min) { val = this.min; }
+        if (val > this.max) { val = this.max; }
+        return val;
+    }
+
+    /**
+     * Get if this element is interactive by default.
+     * Elements that are not interactive will not trigger events or run the update loop.
+     */
+    get isNaturallyInteractive()
+    {
+        return true;
+    }
+     
+    /**
+     * Default cursor type for this element.
+     */
+    get _defaultCursor()
+    {
+        return Cursors.Pointer;
+    }
+
+    /**
+     * Get value in percents, from 0.0 to 1.0.
+     */
+    getValuePercent()
+    {
+        if (this.min == this.max) { return 0; }
+        var val = this.value - this.min;
+        return val / (this.max - this.min);
+    }
+
+    /**
+     * Set value from percent.
+     * @param {*} val Value, between 0.0 to 1.0.
+     */
+    setValueFromPercent(val)
+    {
+        if (val < 0) val = 0;
+        if (val > 1) val = 1;
+        this.value = this.min + (this.max - this.min) * val;
+    }
+
+    /**
+     * Draw the UI element.
+     */
+    draw(pintar)
+    {
+        // get dest rect
+        var destRect = this.getBoundingBox();
+
+        // draw background line
+        this._line.draw(pintar);
+
+        // draw handle
+        this._handle.position = destRect.getPosition().add(this._handleOffset);
+        if (this._direction === "horizontal") 
+        {
+            var maxWidth = destRect.width - this._startOffset.x - this._endOffset.x;
+            this._handle.position.x += this._startOffset.x + maxWidth * this.getValuePercent() - this._handle.size.x / 2;
+        }
+        else 
+        {
+            var maxHeight = destRect.height - this._startOffset.y - this._endOffset.y;
+            this._handle.position.y += this._startOffset.y + maxHeight * this.getValuePercent();
+        }
+        pintar.drawSprite(this._handle);
+    }
+
+    /**
+     * Update this slider.
+     */
+    update(input, forceStatus)
+    {
+        // call base update
+        super.update(input, forceStatus);
+
+        // check if should update value
+        if (this._state.mouseStartPressOnSelf && this._state.mouseDown) 
+        {
+            // get dest rect
+            var destRect = this.getBoundingBox();
+
+            // set value
+            if (this._direction === "horizontal") 
+            {
+                var maxWidth = destRect.width - this._startOffset.x - this._endOffset.x;
+                var relativePos = input.mousePosition.x - destRect.x - (this._handle.size.x / 2);
+                this.setValueFromPercent(relativePos / maxWidth);
+            }
+            else 
+            {
+                var maxHeight = destRect.height - this._startOffset.y - this._endOffset.y;
+                var relativePos = input.mousePosition.y - destRect.y - (this._handle.size.y / 2);
+                this.setValueFromPercent(relativePos / maxHeight);
+            }
+        }
+    }
+
+    /**
+     * Get this slider value.
+     */
+    _getValue()
+    {
+        return this.value;
+    }
+}
+
+module.exports = Slider; 
+},{"../anchors":1,"../cursor_types":2,"../pintar":18,"../size_modes":20,"./container":4,"./horizontal_line":6,"./paragraph":8,"./vertical_line":15}],13:[function(require,module,exports){
 /**
  * file: sprite.js
  * description: A UI sprite.
@@ -1877,7 +2157,7 @@ class Sprite extends UIElement
 
 // export sprite
 module.exports = Sprite;
-},{"../pintar":17,"./ui_element":13}],13:[function(require,module,exports){
+},{"../pintar":18,"./ui_element":14}],14:[function(require,module,exports){
 /**
  * file: ui_element.js
  * description: Base UI element class.
@@ -1901,6 +2181,7 @@ class UIElementState
     {
         this.mouseHover = false;
         this.mouseDown = false;
+        this.mouseStartPressOnSelf = false;
     }
 
     clone()
@@ -1908,6 +2189,7 @@ class UIElementState
         var ret = new UIElementState();
         ret.mouseHover = this.mouseHover;
         ret.mouseDown = this.mouseDown;
+        ret.mouseStartPressOnSelf = this.mouseStartPressOnSelf;
         return ret;
     }
 }
@@ -1996,6 +2278,11 @@ class UIElement
      */
     getOptionsFromTheme(theme, skin, override)
     {
+        // special case - if skin is '_', return theme as options
+        if (skin === '_') {
+            return theme;
+        }
+
         // get class name
         var elementName = this.elementTypeName;
 
@@ -2284,6 +2571,16 @@ class UIElement
         // check if mouse is down on element
         this._state.mouseDown = this._state.mouseHover && input.leftMouseDown;
 
+        // check if mouse was pressed on this element
+        if (this._state.mouseDown && !input.leftMousePrevDown) {
+            this._state.mouseStartPressOnSelf = true;
+        }
+
+        // cancel pressed on this state
+        if (!input.leftMouseDown) {
+            this._state.mouseStartPressOnSelf = false;
+        }
+
         // trigger events based on new state
         this._triggerEvents(input);
     }
@@ -2451,7 +2748,7 @@ UIElement.globalScale = 1;
 
 // export the base UI element object
 module.exports = UIElement; 
-},{"../anchors":1,"../cursor_types":2,"../pintar":17,"../sides_properties":18,"../size_modes":19,"../ui_point":20}],14:[function(require,module,exports){
+},{"../anchors":1,"../cursor_types":2,"../pintar":18,"../sides_properties":19,"../size_modes":20,"../ui_point":21}],15:[function(require,module,exports){
 /**
  * file: vertical_line.js
  * description: Implement a vertical line element.
@@ -2474,8 +2771,8 @@ class VerticalLine extends UIElement
      * @param {Object} theme
      * @param {PintarJS.Texture} theme.VerticalLine[skin].texture Texture to use.
      * @param {PintarJS.Rectangle} theme.VerticalLine[skin].middleSourceRect The source rect of the line center part (repeating).
-     * @param {PintarJS.Rectangle} theme.VerticalLine[skin].topEdgeSourceRect The source rect of the line top edge.
-     * @param {PintarJS.Rectangle} theme.VerticalLine[skin].bottomEdgeSourceRect The source rect of the line bottom edge.
+     * @param {PintarJS.Rectangle} theme.VerticalLine[skin].startEdgeSourceRect The source rect of the line top edge.
+     * @param {PintarJS.Rectangle} theme.VerticalLine[skin].endEdgeSourceRect The source rect of the line bottom edge.
      * @param {Number} theme.VerticalLine[skin].textureScale (Optional) Texture scale for horizontal line. 
      */
     constructor(theme, skin, override)
@@ -2498,7 +2795,7 @@ class VerticalLine extends UIElement
         this.size.yMode = SizeModes.Pixels;
 
         // create top edge
-        var topSideSourceRect = options.topEdgeSourceRect;
+        var topSideSourceRect = options.startEdgeSourceRect;
         if (topSideSourceRect)
         {
             this._topEdgeSprite = new PintarJS.Sprite(options.texture);
@@ -2506,7 +2803,7 @@ class VerticalLine extends UIElement
             this._topEdgeSprite.size.set(topSideSourceRect.width * textureScale, topSideSourceRect.height * textureScale);
         }
         // create bottom edge
-        var bottomSideSourceRect = options.bottomEdgeSourceRect;
+        var bottomSideSourceRect = options.endEdgeSourceRect;
         if (bottomSideSourceRect)
         {
             this._bottomEdgeSprite = new PintarJS.Sprite(options.texture);
@@ -2581,7 +2878,7 @@ class VerticalLine extends UIElement
 }
 
 module.exports = VerticalLine; 
-},{"../pintar":17,"../size_modes":19,"./ui_element":13}],15:[function(require,module,exports){
+},{"../pintar":18,"../size_modes":20,"./ui_element":14}],16:[function(require,module,exports){
 var UI = {
 
     UIRoot: require('./elements/root'),
@@ -2595,6 +2892,7 @@ var UI = {
     Button: require('./elements/button'),
     Sprite: require('./elements/sprite'),
     SlicedSprite: require('./elements/sliced_sprite'),
+    Slider: require('./elements/slider'),
     Cursor: require('./elements/cursor'),
 
     InputManager: require('./input/input_manager'),
@@ -2608,7 +2906,7 @@ var UI = {
 const pintar = require('./pintar');
 pintar.UI = UI;
 module.exports = UI;
-},{"./anchors":1,"./cursor_types":2,"./elements/button":3,"./elements/container":4,"./elements/cursor":5,"./elements/horizontal_line":6,"./elements/panel":7,"./elements/paragraph":8,"./elements/progress_bar":9,"./elements/root":10,"./elements/sliced_sprite":11,"./elements/sprite":12,"./elements/ui_element":13,"./elements/vertical_line":14,"./input/input_manager":16,"./pintar":17,"./sides_properties":18,"./size_modes":19,"./ui_point":20}],16:[function(require,module,exports){
+},{"./anchors":1,"./cursor_types":2,"./elements/button":3,"./elements/container":4,"./elements/cursor":5,"./elements/horizontal_line":6,"./elements/panel":7,"./elements/paragraph":8,"./elements/progress_bar":9,"./elements/root":10,"./elements/sliced_sprite":11,"./elements/slider":12,"./elements/sprite":13,"./elements/ui_element":14,"./elements/vertical_line":15,"./input/input_manager":17,"./pintar":18,"./sides_properties":19,"./size_modes":20,"./ui_point":21}],17:[function(require,module,exports){
 /**
  * file: input_manager.js
  * description: Define a basic input manager class.
@@ -2640,12 +2938,8 @@ class InputManager
             2: false,
         };
 
-        // mouse click states
-        this._mouseClicks = {
-            0: false,
-            1: false, 
-            2: false,
-        };
+        // mouse buttons previous states
+        this._mouseButtonsPrevStates = JSON.parse(JSON.stringify(this._mouseButtons));
 
         // mouse wheel change
         this._mouseWheel = 0;
@@ -2664,7 +2958,6 @@ class InputManager
         
         // mouse up
         this._mouseUpEventListener = (e) => {
-            if (this._mouseButtons[e.button]) { this._mouseClicks[e.button] = true; }
             this._mouseButtons[e.button] = false;
         };
         canvas.addEventListener("mouseup", this._mouseUpEventListener);
@@ -2720,7 +3013,7 @@ class InputManager
     endUpdate()
     {
         this._mouseWheel = 0;
-        this._mouseClicks[0] = this._mouseClicks[1] = this._mouseClicks[2] = false;  
+        this._mouseButtonsPrevStates = JSON.parse(JSON.stringify(this._mouseButtons));
     }
 
     /**
@@ -2775,12 +3068,30 @@ class InputManager
     }
     
     /**
+     * Return if left mouse button was down last frame.
+     * @returns {Boolean} left mouse button status.
+     */
+    get leftMousePrevDown()
+    {
+        return this._mouseButtonsPrevStates[0];
+    }
+    
+    /**
+     * Return if right mouse button was down last frame.
+     * @returns {Boolean} right mouse button status.
+     */
+    get rightMousePrevDown()
+    {
+        return this._mouseButtonsPrevStates[2];
+    }
+
+    /**
      * Return if left mouse button was released this frame.
      * @returns {Boolean} if left mouse button was released this frame.
      */
     get leftMouseClick()
     {
-        return this._mouseClick[0];
+        return !this._mouseClick[0] && this._mouseButtonsPrevStates[0];
     }
     
     /**
@@ -2789,7 +3100,7 @@ class InputManager
      */
     get rightMouseClick()
     {
-        return this._mouseClick[2];
+        return !this._mouseClick[2] && this._mouseButtonsPrevStates[2];
     }
 
     /**
@@ -2812,11 +3123,11 @@ class InputManager
 }
 
 module.exports = InputManager; 
-},{"../pintar":17}],17:[function(require,module,exports){
+},{"../pintar":18}],18:[function(require,module,exports){
 var pintar = window.PintarJS || window.pintar;
 if (!pintar) { throw new Error("Missing PintarJS main object."); }
 module.exports = pintar;
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 /**
  * file: sides.js
  * description: Implement a data structure for sides.
@@ -2869,7 +3180,7 @@ class SidesProperties
 
 
 module.exports = SidesProperties;
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 /**
  * file: size_modes.js
  * description: Define size modes we can set.
@@ -2882,7 +3193,7 @@ module.exports = {
     Pixels: 'px',
     Percents: '%'
 };
-},{}],20:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 /**
  * file: ui_point.js
  * description: A Point for UI elements position and size.
@@ -2952,7 +3263,7 @@ UIPoint.half = function()
 
 // export the UI point
 module.exports = UIPoint;
-},{"./pintar":17,"./size_modes":19}],21:[function(require,module,exports){
+},{"./pintar":18,"./size_modes":20}],22:[function(require,module,exports){
 /**
  * file: utils.js
  * description: Mixed utility methods.
@@ -2986,5 +3297,5 @@ module.exports = {
         return ret;
     },
 }
-},{}]},{},[15])(15)
+},{}]},{},[16])(16)
 });

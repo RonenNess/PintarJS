@@ -21,6 +21,7 @@ class UIElementState
     {
         this.mouseHover = false;
         this.mouseDown = false;
+        this.mouseStartPressOnSelf = false;
     }
 
     clone()
@@ -28,6 +29,7 @@ class UIElementState
         var ret = new UIElementState();
         ret.mouseHover = this.mouseHover;
         ret.mouseDown = this.mouseDown;
+        ret.mouseStartPressOnSelf = this.mouseStartPressOnSelf;
         return ret;
     }
 }
@@ -116,6 +118,11 @@ class UIElement
      */
     getOptionsFromTheme(theme, skin, override)
     {
+        // special case - if skin is '_', return theme as options
+        if (skin === '_') {
+            return theme;
+        }
+
         // get class name
         var elementName = this.elementTypeName;
 
@@ -403,6 +410,16 @@ class UIElement
 
         // check if mouse is down on element
         this._state.mouseDown = this._state.mouseHover && input.leftMouseDown;
+
+        // check if mouse was pressed on this element
+        if (this._state.mouseDown && !input.leftMousePrevDown) {
+            this._state.mouseStartPressOnSelf = true;
+        }
+
+        // cancel pressed on this state
+        if (!input.leftMouseDown) {
+            this._state.mouseStartPressOnSelf = false;
+        }
 
         // trigger events based on new state
         this._triggerEvents(input);

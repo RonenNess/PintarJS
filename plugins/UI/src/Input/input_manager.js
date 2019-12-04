@@ -29,12 +29,8 @@ class InputManager
             2: false,
         };
 
-        // mouse click states
-        this._mouseClicks = {
-            0: false,
-            1: false, 
-            2: false,
-        };
+        // mouse buttons previous states
+        this._mouseButtonsPrevStates = JSON.parse(JSON.stringify(this._mouseButtons));
 
         // mouse wheel change
         this._mouseWheel = 0;
@@ -53,7 +49,6 @@ class InputManager
         
         // mouse up
         this._mouseUpEventListener = (e) => {
-            if (this._mouseButtons[e.button]) { this._mouseClicks[e.button] = true; }
             this._mouseButtons[e.button] = false;
         };
         canvas.addEventListener("mouseup", this._mouseUpEventListener);
@@ -109,7 +104,7 @@ class InputManager
     endUpdate()
     {
         this._mouseWheel = 0;
-        this._mouseClicks[0] = this._mouseClicks[1] = this._mouseClicks[2] = false;  
+        this._mouseButtonsPrevStates = JSON.parse(JSON.stringify(this._mouseButtons));
     }
 
     /**
@@ -164,12 +159,30 @@ class InputManager
     }
     
     /**
+     * Return if left mouse button was down last frame.
+     * @returns {Boolean} left mouse button status.
+     */
+    get leftMousePrevDown()
+    {
+        return this._mouseButtonsPrevStates[0];
+    }
+    
+    /**
+     * Return if right mouse button was down last frame.
+     * @returns {Boolean} right mouse button status.
+     */
+    get rightMousePrevDown()
+    {
+        return this._mouseButtonsPrevStates[2];
+    }
+
+    /**
      * Return if left mouse button was released this frame.
      * @returns {Boolean} if left mouse button was released this frame.
      */
     get leftMouseClick()
     {
-        return this._mouseClick[0];
+        return !this._mouseClick[0] && this._mouseButtonsPrevStates[0];
     }
     
     /**
@@ -178,7 +191,7 @@ class InputManager
      */
     get rightMouseClick()
     {
-        return this._mouseClick[2];
+        return !this._mouseClick[2] && this._mouseButtonsPrevStates[2];
     }
 
     /**

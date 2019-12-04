@@ -20,8 +20,8 @@ class HorizontalLine extends UIElement
      * @param {Object} theme
      * @param {PintarJS.Texture} theme.HorizontalLine[skin].texture Texture to use.
      * @param {PintarJS.Rectangle} theme.HorizontalLine[skin].middleSourceRect The source rect of the line center part (repeating).
-     * @param {PintarJS.Rectangle} theme.HorizontalLine[skin].leftEdgeSourceRect The source rect of the line left side edge.
-     * @param {PintarJS.Rectangle} theme.HorizontalLine[skin].rightEdgeSourceRect The source rect of the line right side edge.
+     * @param {PintarJS.Rectangle} theme.HorizontalLine[skin].startEdgeSourceRect The source rect of the line left side edge.
+     * @param {PintarJS.Rectangle} theme.HorizontalLine[skin].endEdgeSourceRect The source rect of the line right side edge.
      * @param {Number} theme.HorizontalLine[skin].textureScale (Optional) Texture scale for horizontal line. 
      */
     constructor(theme, skin, override)
@@ -44,7 +44,7 @@ class HorizontalLine extends UIElement
         this.size.yMode = SizeModes.Pixels;
 
         // create left-side edge
-        var leftSideSourceRect = options.leftEdgeSourceRect;
+        var leftSideSourceRect = options.startEdgeSourceRect;
         if (leftSideSourceRect)
         {
             this._leftEdgeSprite = new PintarJS.Sprite(options.texture);
@@ -52,7 +52,7 @@ class HorizontalLine extends UIElement
             this._leftEdgeSprite.size.set(leftSideSourceRect.width * textureScale, leftSideSourceRect.height * textureScale);
         }
         // create right-side edge
-        var rightSideSourceRect = options.rightEdgeSourceRect;
+        var rightSideSourceRect = options.endEdgeSourceRect;
         if (rightSideSourceRect)
         {
             this._rightEdgeSprite = new PintarJS.Sprite(options.texture);

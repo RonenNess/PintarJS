@@ -17,27 +17,24 @@ class SlicedSprite extends UIElement
 {
     /**
      * Create a sliced sprite element.
-     * @param {Object} options
-     * @param {PintarJS.Texture} options.texture Texture to use.
-     * @param {PintarJS.Rectangle} options.externalSourceRect The entire source rect, including frame and fill.
-     * @param {PintarJS.Rectangle} options.internalSourceRect The internal source rect, must be contained inside the whole source rect.
-     * @param {Number} options.textureScale (Optional) frame and fill texture scale.
-     * @param {SlicedSprite.FillModes} options.fillMode (Optional) How to handle fill part.
-     * @param {PintarJS.Color} options.fillColor (Optional) Fill color.
-     * @param {PintarJS.Color} options.frameColor (Optional) Frame color.
+     * @param {Object} theme
+     * @param {PintarJS.Texture} theme.texture Texture to use.
+     * @param {PintarJS.Rectangle} theme.externalSourceRect The entire source rect, including frame and fill.
+     * @param {PintarJS.Rectangle} theme.internalSourceRect The internal source rect, must be contained inside the whole source rect.
+     * @param {Number} theme.textureScale (Optional) frame and fill texture scale.
+     * @param {SlicedSprite.FillModes} theme.fillMode (Optional) How to handle fill part.
+     * @param {PintarJS.Color} theme.fillColor (Optional) Fill color.
+     * @param {PintarJS.Color} theme.frameColor (Optional) Frame color.
      * @param {String} skin Element skin to use from theme.
      * @param {Object} override Optional override options (can override any of the theme properties listed above).
      */
-    constructor(options, skin, override)
+    constructor(theme, skin, override)
     {
         super();
 
-        // if we got skin, we assume 'options' is actually a theme - used when other elements inherit from us, like in 'panel' case
-        if (skin) 
-        {
-            options = this.getOptionsFromTheme(options, skin, override);
-            this.setBaseOptions(options);
-        }
+        // get options from theme and skin type
+        var options = this.getOptionsFromTheme(theme, skin, override);
+        this.setBaseOptions(options);
 
         // extract params
         var texture = options.texture;

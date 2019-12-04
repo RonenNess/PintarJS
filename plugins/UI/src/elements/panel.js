@@ -41,7 +41,7 @@ class Panel extends Container
         this.padding = options.padding || new SidesProperties(10, 10, 10, 10);
 
         // set background
-        this._background = new SlicedSprite(options);
+        this._background = new SlicedSprite(options, '_');
         this._background._setParent(this);
         this._background.ignoreParentPadding = true;
     }

@@ -101,7 +101,7 @@ class Button extends Container
             this._sprite = new SlicedSprite({texture: options.texture, 
                 externalSourceRect: options.externalSourceRect, 
                 internalSourceRect: options.internalSourceRect, 
-                textureScale: textureScale});
+                textureScale: textureScale}, '_');
             this._sprite.anchor = Anchors.Fixed;
         }
 
@@ -110,7 +110,7 @@ class Button extends Container
             this._spriteHover = new SlicedSprite({texture: options.texture, 
                 externalSourceRect: options.mouseHoverExternalSourceRect, 
                 internalSourceRect: options.mouseHoverInternalSourceRect, 
-                textureScale: textureScale});
+                textureScale: textureScale}, '_');
             this._spriteHover.anchor = Anchors.Fixed;
         }
         else {
@@ -122,7 +122,7 @@ class Button extends Container
             this._spriteDown = new SlicedSprite({texture: options.texture, 
                 externalSourceRect: options.mouseDownExternalSourceRect, 
                 internalSourceRect: options.mouseDownInternalSourceRect, 
-                textureScale: textureScale});
+                textureScale: textureScale}, '_');
             this._spriteDown.anchor = Anchors.Fixed;
         }
         else {

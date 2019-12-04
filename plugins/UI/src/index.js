@@ -11,6 +11,7 @@ var UI = {
     Button: require('./elements/button'),
     Sprite: require('./elements/sprite'),
     SlicedSprite: require('./elements/sliced_sprite'),
+    Slider: require('./elements/slider'),
     Cursor: require('./elements/cursor'),
 
     InputManager: require('./input/input_manager'),

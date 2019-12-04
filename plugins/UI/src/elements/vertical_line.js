@@ -20,8 +20,8 @@ class VerticalLine extends UIElement
      * @param {Object} theme
      * @param {PintarJS.Texture} theme.VerticalLine[skin].texture Texture to use.
      * @param {PintarJS.Rectangle} theme.VerticalLine[skin].middleSourceRect The source rect of the line center part (repeating).
-     * @param {PintarJS.Rectangle} theme.VerticalLine[skin].topEdgeSourceRect The source rect of the line top edge.
-     * @param {PintarJS.Rectangle} theme.VerticalLine[skin].bottomEdgeSourceRect The source rect of the line bottom edge.
+     * @param {PintarJS.Rectangle} theme.VerticalLine[skin].startEdgeSourceRect The source rect of the line top edge.
+     * @param {PintarJS.Rectangle} theme.VerticalLine[skin].endEdgeSourceRect The source rect of the line bottom edge.
      * @param {Number} theme.VerticalLine[skin].textureScale (Optional) Texture scale for horizontal line. 
      */
     constructor(theme, skin, override)
@@ -44,7 +44,7 @@ class VerticalLine extends UIElement
         this.size.yMode = SizeModes.Pixels;
 
         // create top edge
-        var topSideSourceRect = options.topEdgeSourceRect;
+        var topSideSourceRect = options.startEdgeSourceRect;
         if (topSideSourceRect)
         {
             this._topEdgeSprite = new PintarJS.Sprite(options.texture);
@@ -52,7 +52,7 @@ class VerticalLine extends UIElement
             this._topEdgeSprite.size.set(topSideSourceRect.width * textureScale, topSideSourceRect.height * textureScale);
         }
         // create bottom edge
-        var bottomSideSourceRect = options.bottomEdgeSourceRect;
+        var bottomSideSourceRect = options.endEdgeSourceRect;
         if (bottomSideSourceRect)
         {
             this._bottomEdgeSprite = new PintarJS.Sprite(options.texture);

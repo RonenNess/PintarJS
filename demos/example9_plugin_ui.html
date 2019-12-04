@@ -99,11 +99,27 @@
           default: {
             texture: uiTexture,
             textureScale: textureScale,
-            leftEdgeSourceRect: new PintarJS.Rectangle(64, 0, 2, 2),
-            rightEdgeSourceRect: new PintarJS.Rectangle(94, 0, 2, 2),
+            startEdgeSourceRect: new PintarJS.Rectangle(64, 0, 2, 2),
+            endEdgeSourceRect: new PintarJS.Rectangle(94, 0, 2, 2),
             middleSourceRect: new PintarJS.Rectangle(66, 0, 28, 2),
             margin: new PintarJS.UI.SidesProperties(0, 0, 0, 20),
-          }
+          },
+        },
+        
+        // define slider types
+        Slider:
+        {
+          // default slider
+          default: {
+            texture: uiTexture,
+            textureScale: textureScale,
+            startEdgeSourceRect: new PintarJS.Rectangle(64, 64, 5, 8),
+            middleSourceRect: new PintarJS.Rectangle(69, 64, 22, 8),
+            endEdgeSourceRect: new PintarJS.Rectangle(91, 64, 5, 8),
+            handleSourceRect: new PintarJS.Rectangle(64, 73, 5, 8),
+            margin: new PintarJS.UI.SidesProperties(0, 0, 0, 0),
+            direction: "horizontal",
+          },
         },
 
         // define progressbars
@@ -417,6 +433,12 @@
           progressbar.value = Math.random();
         }
       }, 5000);
+
+      // create bottom slider
+      var scrollbar = new PintarJS.UI.Slider(UI_THEME);
+      scrollbar.anchor = PintarJS.UI.Anchors.BottomCenter;
+      scrollbar.size.x = 95;
+      root.addChild(scrollbar);
 
       // draw everything
       function drawUI()
