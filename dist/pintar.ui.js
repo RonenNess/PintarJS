@@ -1535,7 +1535,7 @@ class SlicedSprite extends UIElement
                     {
                         var toCut = spriteRight - destRect.right;
                         if (toCut > 0) {
-                            sprite.sourceRectangle.width -= Math.round(toCut * (sprite.sourceRectangle.width / sprite.width));
+                            sprite.sourceRectangle.width -= Math.floor(toCut * (sprite.sourceRectangle.width / sprite.width));
                             sprite.width -= toCut;
                         }
                     }
@@ -1580,7 +1580,7 @@ class SlicedSprite extends UIElement
                     {
                         var toCut = spriteBottom - destRect.bottom;
                         if (toCut > 0) {
-                            sprite.sourceRectangle.height -= Math.round(toCut * (sprite.sourceRectangle.height / sprite.height));
+                            sprite.sourceRectangle.height -= Math.floor(toCut * (sprite.sourceRectangle.height / sprite.height));
                             sprite.height -= toCut;
                         }
                     }
@@ -1675,7 +1675,7 @@ class SlicedSprite extends UIElement
                     {
                         var toCut = spriteRight - this._rightFrameSprite.position.x;
                         if (toCut > 0) {
-                            sprite.sourceRectangle.width -= Math.round(toCut * (sprite.sourceRectangle.width / sprite.width));
+                            sprite.sourceRectangle.width -= Math.floor(toCut * (sprite.sourceRectangle.width / sprite.width));
                             sprite.width -= toCut;
                         }
                     }
@@ -1703,7 +1703,7 @@ class SlicedSprite extends UIElement
                         {
                             var toCut = spriteBottom - this._bottomFrameSprite.position.y;
                             if (toCut > 0) {
-                                sprite.sourceRectangle.height -= Math.round(toCut * (sprite.sourceRectangle.height / sprite.height));
+                                sprite.sourceRectangle.height -= Math.floor(toCut * (sprite.sourceRectangle.height / sprite.height));
                                 sprite.height -= toCut;
                             }
                         }
@@ -1801,15 +1801,24 @@ class Slider extends Container
         // create the line part of the slider
         this._line = new {horizontal: HorizontalLine, vertical: VerticalLine}[this._direction](options, '_');
         this._line._setParent(this);
+        this._line.size.x = 100;
+        this._line.size.xMode = '%';
+        this._line.size.y = 100;
+        this._line.size.yMode = '%';
+        this._line.ignoreParentPadding = true;
+        this._line.margin.set(0, 0, 0, 0);
 
-        // set default size
-        if (this._direction === "horizontal") {
+        // set default size for horizontal
+        if (this._direction === "horizontal") 
+        {
             this.size.x = 100;
             this.size.xMode = SizeModes.Percents;
             this.size.y = options.middleSourceRect.height * textureScale;
             this.size.yMode = SizeModes.Pixels;
         }
-        else {
+        // set default size for vertical
+        else 
+        {
             this.size.y = 100;
             this.size.yMode = SizeModes.Percents;
             this.size.x = options.middleSourceRect.width * textureScale;
@@ -1910,7 +1919,7 @@ class Slider extends Container
      */
     set value(val)
     {
-        this._value = val;
+        this._value = this._clampValue(val);
     }
 
     /**
@@ -1983,7 +1992,7 @@ class Slider extends Container
         else 
         {
             var maxHeight = destRect.height - this._startOffset.y - this._endOffset.y;
-            this._handle.position.y += this._startOffset.y + maxHeight * this.getValuePercent();
+            this._handle.position.y += this._startOffset.y + maxHeight * this.getValuePercent() - this._handle.size.y / 2;
         }
         pintar.drawSprite(this._handle);
     }
@@ -2006,13 +2015,13 @@ class Slider extends Container
             if (this._direction === "horizontal") 
             {
                 var maxWidth = destRect.width - this._startOffset.x - this._endOffset.x;
-                var relativePos = input.mousePosition.x - destRect.x - (this._handle.size.x / 2);
+                var relativePos = input.mousePosition.x - destRect.x - this._startOffset.x;
                 this.setValueFromPercent(relativePos / maxWidth);
             }
             else 
             {
                 var maxHeight = destRect.height - this._startOffset.y - this._endOffset.y;
-                var relativePos = input.mousePosition.y - destRect.y - (this._handle.size.y / 2);
+                var relativePos = input.mousePosition.y - destRect.y - this._startOffset.y;
                 this.setValueFromPercent(relativePos / maxHeight);
             }
         }

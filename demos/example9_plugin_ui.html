@@ -102,7 +102,7 @@
             startEdgeSourceRect: new PintarJS.Rectangle(64, 0, 2, 2),
             endEdgeSourceRect: new PintarJS.Rectangle(94, 0, 2, 2),
             middleSourceRect: new PintarJS.Rectangle(66, 0, 28, 2),
-            margin: new PintarJS.UI.SidesProperties(0, 0, 0, 20),
+            margin: new PintarJS.UI.SidesProperties(5, 5, 5, 20),
           },
         },
         
@@ -117,8 +117,41 @@
             middleSourceRect: new PintarJS.Rectangle(69, 64, 22, 8),
             endEdgeSourceRect: new PintarJS.Rectangle(91, 64, 5, 8),
             handleSourceRect: new PintarJS.Rectangle(64, 73, 5, 8),
-            margin: new PintarJS.UI.SidesProperties(0, 0, 0, 0),
             direction: "horizontal",
+          },
+
+          // fancy slider
+          fancy: {
+            texture: uiTexture,
+            textureScale: textureScale,
+            startEdgeSourceRect: new PintarJS.Rectangle(96, 64, 16, 16),
+            middleSourceRect: new PintarJS.Rectangle(96, 48, 16, 16),
+            endEdgeSourceRect: new PintarJS.Rectangle(112, 64, 16, 16),
+            handleSourceRect: new PintarJS.Rectangle(78, 73, 7, 8),
+            handleOffset: new PintarJS.Point(0, 4 * textureScale),
+            direction: "horizontal",
+          },
+
+          // horizontal scrollbar
+          horizontalScrollbar: {
+            texture: uiTexture,
+            textureScale: textureScale,
+            startEdgeSourceRect: new PintarJS.Rectangle(96, 0, 16, 16),
+            middleSourceRect: new PintarJS.Rectangle(96, 48, 16, 16),
+            endEdgeSourceRect: new PintarJS.Rectangle(96, 16, 16, 16),
+            handleSourceRect: new PintarJS.Rectangle(112, 48, 16, 16),
+            direction: "horizontal",
+          },
+
+          // vertical scrollbar
+          VerticalScrollbar: {
+            texture: uiTexture,
+            textureScale: textureScale,
+            startEdgeSourceRect: new PintarJS.Rectangle(112, 0, 16, 16),
+            middleSourceRect: new PintarJS.Rectangle(112, 16, 16, 16),
+            endEdgeSourceRect: new PintarJS.Rectangle(112, 32, 16, 16),
+            handleSourceRect: new PintarJS.Rectangle(112, 48, 16, 16),
+            direction: "vertical",
           },
         },
 
@@ -407,10 +440,12 @@
         progressbars.push(progressbar);
         
         // create additional progressbar, on Y axis
-        progressbar = new PintarJS.UI.ProgressBar(UI_THEME, null, {fillAnchor: "BottomLeft", fillColor: PintarJS.Color.purple(), valueSetWidth:false, valueSetHeight: true});
+        progressbar = new PintarJS.UI.ProgressBar(UI_THEME, null, {fillAnchor: "BottomLeft", fillColor: PintarJS.Color.purple(), valueSetWidth: false, valueSetHeight: true});
         progressbar.anchor = PintarJS.UI.Anchors.Auto;
         progressbar.value = 0.65;
         progressbar.size.y = 100;
+        progressbar.size.x = 100;
+        progressbar.size.xMode = "%";
         container.addChild(progressbar);
         progressbars.push(progressbar);
       }
@@ -444,8 +479,8 @@
         progressbar.addChild(text);
 
         // update health orb text
-        progressbar.beforeUpdate = () => {
-          text.text = Math.round(progressbar.displayedValue * 100) + '%';
+        progressbar.beforeUpdate = (prog) => {
+          text.text = Math.round(prog.displayedValue * 100) + '%';
         };
 
         // add vertical bar
@@ -454,6 +489,47 @@
         progressbar.value = 0.5;
         container.addChild(progressbar);
         progressbars.push(progressbar);
+      }
+
+      
+      // SLIDERS
+      {
+        // create example's container
+        var container = createContainer("Sliders:");
+
+        var paragraph = new PintarJS.UI.Paragraph(UI_THEME, "default");
+        paragraph.text = "Sliders are used to get a numeric value from a pre-defined range.\nScrollbars (like the one at the bottom of this page) are implemented as Sliders as well.";
+        container.addChild(paragraph);
+
+        var slider = new PintarJS.UI.Slider(UI_THEME);
+        slider.margin.bottom = 20;
+        container.addChild(slider);
+
+        slider = new PintarJS.UI.Slider(UI_THEME, "fancy");
+        slider.max = 10;
+        slider.value = 5;
+        slider.margin.bottom = 20;
+        container.addChild(slider);
+
+        slider = new PintarJS.UI.Slider(UI_THEME, "horizontalScrollbar");
+        container.addChild(slider);
+      }
+      
+
+      // SLIDERS II
+      {
+        // create example's container
+        var container = createContainer("Vertical Sliders:");
+
+        var paragraph = new PintarJS.UI.Paragraph(UI_THEME, "default");
+        paragraph.text = "Sliders can be vertical too. In this theme we only have a vertical scrollbar:";
+        container.addChild(paragraph);
+
+        slider = new PintarJS.UI.Slider(UI_THEME, "VerticalScrollbar");
+        slider.size.y = 250;
+        slider.size.yMode = 'px';
+        slider.anchor = PintarJS.UI.Anchors.BottomCenter;
+        container.addChild(slider);
       }
 
       // set random values every few seconds for progress bars
@@ -466,7 +542,7 @@
       }, 5000);
 
       // create bottom slider
-      var scrollbar = new PintarJS.UI.Slider(UI_THEME);
+      var scrollbar = new PintarJS.UI.Slider(UI_THEME, "horizontalScrollbar");
       scrollbar.anchor = PintarJS.UI.Anchors.BottomCenter;
       scrollbar.size.x = 98.5;
       scrollbar.value = 0;

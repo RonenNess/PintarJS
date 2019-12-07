@@ -157,7 +157,7 @@ class SlicedSprite extends UIElement
                     {
                         var toCut = spriteRight - destRect.right;
                         if (toCut > 0) {
-                            sprite.sourceRectangle.width -= Math.round(toCut * (sprite.sourceRectangle.width / sprite.width));
+                            sprite.sourceRectangle.width -= Math.floor(toCut * (sprite.sourceRectangle.width / sprite.width));
                             sprite.width -= toCut;
                         }
                     }
@@ -202,7 +202,7 @@ class SlicedSprite extends UIElement
                     {
                         var toCut = spriteBottom - destRect.bottom;
                         if (toCut > 0) {
-                            sprite.sourceRectangle.height -= Math.round(toCut * (sprite.sourceRectangle.height / sprite.height));
+                            sprite.sourceRectangle.height -= Math.floor(toCut * (sprite.sourceRectangle.height / sprite.height));
                             sprite.height -= toCut;
                         }
                     }
@@ -297,7 +297,7 @@ class SlicedSprite extends UIElement
                     {
                         var toCut = spriteRight - this._rightFrameSprite.position.x;
                         if (toCut > 0) {
-                            sprite.sourceRectangle.width -= Math.round(toCut * (sprite.sourceRectangle.width / sprite.width));
+                            sprite.sourceRectangle.width -= Math.floor(toCut * (sprite.sourceRectangle.width / sprite.width));
                             sprite.width -= toCut;
                         }
                     }
@@ -325,7 +325,7 @@ class SlicedSprite extends UIElement
                         {
                             var toCut = spriteBottom - this._bottomFrameSprite.position.y;
                             if (toCut > 0) {
-                                sprite.sourceRectangle.height -= Math.round(toCut * (sprite.sourceRectangle.height / sprite.height));
+                                sprite.sourceRectangle.height -= Math.floor(toCut * (sprite.sourceRectangle.height / sprite.height));
                                 sprite.height -= toCut;
                             }
                         }
