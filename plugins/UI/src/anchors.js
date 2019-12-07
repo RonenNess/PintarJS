@@ -15,7 +15,7 @@ module.exports = {
     CenterRight: 'CenterRight',
     BottomLeft: 'BottomLeft',
     BottomCenter: 'BottomCenter',
-    BottomCenterRight: 'BottomCenterRight',
+    BottomRight: 'BottomRight',
     Auto: 'Auto',
     AutoInline: 'AutoInline',
     AutoInlineNoBreak: 'AutoInlineNoBreak',

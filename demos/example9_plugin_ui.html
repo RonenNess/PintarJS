@@ -157,6 +157,24 @@
             valueSetHeight: true,
             fillAnchor: "BottomCenter",
             animationSpeed: 1,
+          },
+
+          // vertical bar
+          vertical: {
+            texture: uiTexture,
+            fillExternalSourceRect: new PintarJS.Rectangle(116, 105, 8, 14),
+            fillInternalSourceRect: new PintarJS.Rectangle(116+2, 105+1, 8-4, 14-2),
+            backgroundExternalSourceRect: new PintarJS.Rectangle(96, 96, 16, 32),
+            backgroundInternalSourceRect: new PintarJS.Rectangle(96+4, 96+9, 16-8, 32-18),
+            fillOffset: new PintarJS.Point(0, 9 * textureScale),
+            textureScale: textureScale,
+            fillColor: PintarJS.Color.green(),
+            backgroundColor: PintarJS.Color.white(),
+            valueSetWidth: false,
+            valueSetHeight: true,
+            height: 200,
+            fillAnchor: "BottomCenter",
+            animationSpeed: 1,
           }
         },
 
@@ -426,9 +444,16 @@
         progressbar.addChild(text);
 
         // update health orb text
-        setInterval(() => {
-          text.text = Math.round(progressbar.displayedValue * 100) + '%'
-        }, 50);
+        progressbar.beforeUpdate = () => {
+          text.text = Math.round(progressbar.displayedValue * 100) + '%';
+        };
+
+        // add vertical bar
+        progressbar = new PintarJS.UI.ProgressBar(UI_THEME, "vertical");
+        progressbar.anchor = PintarJS.UI.Anchors.BottomRight;
+        progressbar.value = 0.5;
+        container.addChild(progressbar);
+        progressbars.push(progressbar);
       }
 
       // set random values every few seconds for progress bars

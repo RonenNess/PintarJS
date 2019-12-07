@@ -69,6 +69,7 @@ class UIElement
         this.onMouseReleased = null;
         this.whileMouseDown = null;
         this.afterValueChanged = null;
+        this.beforeUpdate = null;
 
         // when inside container, this will hold the element before us and element after us.
         // this is set internally by the container
@@ -469,6 +470,11 @@ class UIElement
      */
     update(input, forceState)
     {
+        // trigger before-update callback
+        if (this.beforeUpdate) {
+            this.beforeUpdate(this, input);
+        }
+
         // set auto position
         this._setOffsetForAutoAnchors();
 

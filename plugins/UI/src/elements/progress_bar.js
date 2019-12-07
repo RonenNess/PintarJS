@@ -140,18 +140,28 @@ class ProgressBar extends Container
         // store fill part anchor
         this.fillPartAnchor = options.fillAnchor || Anchors.TopLeft;
 
+        // store if setting width / height
+        this._setWidth = Boolean(options.valueSetWidth);
+        this._setHeight = Boolean(options.valueSetHeight);
+
         // calculate progressbar default height and width
         // when using regular sprite
         if (options.fillSourceRect) {
             this.size.y = options.fillSourceRect.height * textureScale;
             this.size.x = options.fillSourceRect.width * textureScale;
         }
-        // when using sliced sprite:
+        // when using sliced sprite, set default size based on mode
         else
         {
-            this.size.y = options.height || ((backRect || fillRect).height * textureScale);
-            this.size.x = 100;
-            this.size.xMode = SizeModes.Percents;
+            if (this._setWidth && !this._setHeight) {
+                this.size.y = options.height || (((backRect || fillRect).height) * textureScale);
+                this.size.x = 100;
+                this.size.xMode = SizeModes.Percents;
+            }
+            else if (this._setHeight && !this._setWidth) {
+                this.size.x = options.width || (((backRect || fillRect).width) * textureScale);
+                this.size.y = options.height || 100;
+            }
         }
 
         // store animation speed
@@ -159,8 +169,6 @@ class ProgressBar extends Container
 
         // store if set width and height
         if (options.valueSetWidth === undefined) { options.valueSetWidth = true; }
-        this.setWidth = Boolean(options.valueSetWidth);
-        this.setHeight = Boolean(options.valueSetHeight);
 
         // set starting value
         this._displayValue = this.value = 0;
@@ -230,7 +238,7 @@ class ProgressBar extends Container
                 this._fillSprite.sourceRectangle = this.spriteFillSourceRect.clone();
 
                 // update width
-                if (this.setWidth) {
+                if (this._setWidth) {
                     this._fillSprite.sourceRectangle.width = Math.floor((this._backgroundSprite.sourceRectangle.width - this._fillWidthToRemove) * value);
                     this._fillSprite.size.x = this._fillSprite.sourceRectangle.width * this._textureScale;
                     if (this.fillPartAnchor.indexOf("right") !== -1) {
@@ -238,7 +246,7 @@ class ProgressBar extends Container
                     }
                 }
                 // update height
-                if (this.setHeight) {
+                if (this._setHeight) {
                     this._fillSprite.sourceRectangle.height = Math.floor((this._backgroundSprite.sourceRectangle.height - this._fillHeightToRemove) * value);
                     this._fillSprite.size.y = this._fillSprite.sourceRectangle.height * this._textureScale;
                     if (this.fillPartAnchor.indexOf("Bottom") !== -1) {
@@ -252,8 +260,8 @@ class ProgressBar extends Container
             // update size and offset for 9-slice texture
             else
             {
-                this._fillSprite.size.x = Math.floor((this._backgroundSprite.size.x - (this._fillWidthToRemove * this._textureScale)) * (this.setWidth ? value : 1));
-                this._fillSprite.size.y = Math.floor((this._backgroundSprite.size.y - (this._fillHeightToRemove * this._textureScale)) * (this.setHeight ? value : 1));
+                this._fillSprite.size.x = Math.floor((this._backgroundSprite.size.x - (this._fillWidthToRemove * this._textureScale)) * (this._setWidth ? value : 1));
+                this._fillSprite.size.y = Math.floor((this._backgroundSprite.size.y - (this._fillHeightToRemove * this._textureScale)) * (this._setHeight ? value : 1));
                 this._fillSprite.offset = this.getDestTopLeftPositionForRect(dest, this._fillSprite.size, this.fillPartAnchor, this.fillOffset);    
             }
 
