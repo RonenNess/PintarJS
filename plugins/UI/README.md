@@ -58,6 +58,11 @@ The result of the above would look like this:
 
 ## Basic Concepts
 
+Before we dive into using the plugin, lets go over some basic concepts.
+
+### UI Theme
+
+
 TODO
 
 ### Anchors
@@ -68,9 +73,6 @@ TODO
 
 TODO
 
-### UI Theme
-
-TODO
 
 ## Elements
 
