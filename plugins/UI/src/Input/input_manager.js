@@ -55,7 +55,7 @@ class InputManager
 
         // mouse leave
         this._mouseLeaveEventListener = (e) => {
-            this._mouseButtons[0] = this._mouseButtons[1] = this._mouseButtons[2] = false;
+            this._mouseOutside = true;
         };
         canvas.addEventListener("mouseleave", this._mouseLeaveEventListener);
 
@@ -68,6 +68,7 @@ class InputManager
         // mouse move
         this._mouseMoveEventListener = (e) => {
             this._mousePosition = new PintarJS.Point(e.offsetX, e.offsetY);
+            this._mouseOutside = false;
         };
         canvas.addEventListener("mousemove", this._mouseMoveEventListener);
     }
@@ -105,6 +106,14 @@ class InputManager
     {
         this._mouseWheel = 0;
         this._mouseButtonsPrevStates = JSON.parse(JSON.stringify(this._mouseButtons));
+    }
+
+    /**
+     * Get if mouse is outside canvas boundaries.
+     */
+    get isMouseOutside()
+    {
+        return Boolean(this._mouseOutside);
     }
 
     /**
@@ -146,7 +155,7 @@ class InputManager
      */
     get leftMouseDown()
     {
-        return this._mouseButtons[0];
+        return this._mouseButtons[0] && !this._mouseOutside;
     }
     
     /**
@@ -155,7 +164,7 @@ class InputManager
      */
     get rightMouseDown()
     {
-        return this._mouseButtons[2];
+        return this._mouseButtons[2] && !this._mouseOutside;
     }
     
     /**

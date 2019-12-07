@@ -324,6 +324,7 @@ class Container extends UIElement
         if (index !== -1) 
         {
             this._children.splice(index, 1);
+            element._siblingBefore = element._siblingAfter = null;
             element._setParent(null);
         }
     }
@@ -392,42 +393,13 @@ class Container extends UIElement
             // get element
             var element = this._children[i];
 
-            // if auto-inline anchor, arrange it
-            var needToSetAuto = false;
-            if ((element.anchor === Anchors.AutoInline) || (element.anchor === Anchors.AutoInlineNoBreak))
-            {
-                if (lastElement) {
-                    var marginX = Math.max(element.margin.left, lastElement.margin.right);
-                    element.offset.set(lastElement.offset.x + lastElement.size.x + marginX, lastElement.offset.y);
-                    if ((element.anchor === Anchors.AutoInline) && (element.getBoundingBox().right >= selfSize.x)) {
-                        needToSetAuto = true;
-                    }
-                }
-                else {
-                    var padding = this._convertSides(this.padding);
-                    element.offset.set(Math.max(element.margin.left - padding.left, 0), Math.max(element.margin.top - padding.top, 0));
-                }
-            }
-
-            // if auto anchor, arrange it
-            if (needToSetAuto || element.anchor === Anchors.Auto)
-            {
-                if (lastElement) 
-                {
-                    var marginY = Math.max(element.margin.top, lastElement.margin.bottom);
-                    var marginX = Math.max(element.margin.left - padding.left, 0);
-                    element.offset.set(marginX, lastElement.offset.y + lastElement.size.y + marginY);
-                }
-                else 
-                {
-                    var padding = this._convertSides(this.padding);
-                    element.offset.set(Math.max(element.margin.left - padding.left, 0), Math.max(element.margin.top - padding.top, 0));
-                }
-            }
+            // set siblings and store last element
+            element._siblingBefore = lastElement;
+            if (lastElement) { lastElement._siblingAfter = element; }
+            lastElement = element;
 
             // update child element
             element.update(input, forceState || (this.forceSelfStateOnChildren ? this._state : null));
-            lastElement = element;
         }
     }
 }
@@ -1826,10 +1798,14 @@ class Slider extends Container
         if (this._direction === "horizontal") {
             this.size.x = 100;
             this.size.xMode = SizeModes.Percents;
+            this.size.y = options.middleSourceRect.height * textureScale;
+            this.size.yMode = SizeModes.Pixels;
         }
         else {
             this.size.y = 100;
             this.size.yMode = SizeModes.Percents;
+            this.size.x = options.middleSourceRect.width * textureScale;
+            this.size.xMode = SizeModes.Pixels;
         }
 
         // start piece offset
@@ -1990,7 +1966,7 @@ class Slider extends Container
         this._line.draw(pintar);
 
         // draw handle
-        this._handle.position = destRect.getPosition().add(this._handleOffset);
+        this._handle.position = destRect.getPosition().add(this._handleOffset).round();
         if (this._direction === "horizontal") 
         {
             var maxWidth = destRect.width - this._startOffset.x - this._endOffset.x;
@@ -2229,6 +2205,13 @@ class UIElement
         this.onMouseReleased = null;
         this.whileMouseDown = null;
         this.afterValueChanged = null;
+
+        // when inside container, this will hold the element before us and element after us.
+        // this is set internally by the container
+        this._siblingBefore = this._siblingAfter = null;
+
+        // hold special offset for auto anchors
+        this._autoOffset = null;
     }
 
     /**
@@ -2352,6 +2335,8 @@ class UIElement
      */
     _setParent(parent)
     {
+        this.__cachedTopLeftPos = null;
+        this._autoOffset = this._siblingBefore = this._siblingAfter = null;
         this.__parent = parent;
     }
 
@@ -2538,12 +2523,91 @@ class UIElement
     }
 
     /**
+     * Set offset for auto anchor types.
+     */
+    _setOffsetForAutoAnchors()
+    {
+        // not auto anchor? skip
+        if (this.anchor.indexOf('Auto') !== 0 || this.__parent == null) {
+            this._autoOffset = null;
+            return;
+        }
+
+        // to check if anchor offset changed
+        var prevOffset = this._autoOffset ? this._autoOffset.clone() : PintarJS.Point.zero();
+
+        // get parent internal bounding box
+        var parentIBB = this.__parent.getInternalBoundingBox();
+        
+        // get margin
+        var selfMargin = this._convertSides(this.margin);
+
+        // get last element and its bounding box and margin
+        var lastElement = this._siblingBefore;
+        var lastElementMargin = lastElement ? lastElement._convertSides(lastElement.margin) : new Sides(0, 0, 0, 0);
+        var lastElementBB = lastElement ? lastElement.getBoundingBox() : new PintarJS.Rectangle();
+
+        // do we need to break line? 
+        var needBreakLine = false;
+
+        // if auto-inline anchor, arrange it accordingly
+        if ((this.anchor === Anchors.AutoInline) || (this.anchor === Anchors.AutoInlineNoBreak))
+        {
+            // got element before?
+            if (lastElement) 
+            {
+                // calc margin x as max between self margin and last element margin
+                var marginX = Math.max(selfMargin.left, lastElementMargin.right);
+
+                // set offset
+                this._autoOffset = new PintarJS.Point(lastElementBB.right - parentIBB.left + marginX, lastElementBB.top);
+
+                // check if we should break line
+                if ((this.anchor === Anchors.AutoInline) && (this.getBoundingBox().right >= parentIBB.right)) 
+                {
+                    needBreakLine = true;
+                }
+            }
+            // don't have element before? set margin as offset
+            else 
+            {
+                this._autoOffset = new PintarJS.Point(selfMargin.left, selfMargin.top);
+            }
+        }
+
+        // if auto anchor or need to break line, do auto with line break
+        if (needBreakLine || this.anchor === Anchors.Auto)
+        {
+            // got last element?
+            if (lastElement) 
+            {
+                var marginY = Math.max(selfMargin.top, lastElementMargin.bottom);
+                var marginX = Math.max(selfMargin.left, 0);
+                this._autoOffset = new PintarJS.Point(marginX, lastElementBB.bottom - parentIBB.top + marginY);
+            }
+            // don't have element before? set margin as offset
+            else 
+            {
+                this._autoOffset = new PintarJS.Point(selfMargin.left, selfMargin.top);
+            }
+        }
+
+        // check if updated and remove position caching
+        if (!prevOffset.equals(this._autoOffset)) {
+            this.__cachedTopLeftPos = null;
+        }
+    }
+
+    /**
      * Update the UI element.
      * @param {InputManager} input A class that implements the 'InputManager' API.
      * @param {UIElementState} forceState If provided, this element will copy this state, no questions asked.
      */
     update(input, forceState)
     {
+        // set auto position
+        this._setOffsetForAutoAnchors();
+
         // not interactive? skip
         if (!this.interactive) {
             return;
@@ -2577,7 +2641,7 @@ class UIElement
         }
 
         // cancel pressed on this state
-        if (!input.leftMouseDown) {
+        if (!input.leftMouseDown && !input.isMouseOutside) {
             this._state.mouseStartPressOnSelf = false;
         }
 
@@ -2632,9 +2696,11 @@ class UIElement
         // set position based on anchor
         switch (anchor)
         {
+            // note: auto anchors behave like top-left because they set the internal 'auto-offset' property.
             case Anchors.TopLeft:
-            case Anchors.Auto:          // note: auto and auto-inline behave just like top-left because offset is set by the parent container.
+            case Anchors.Auto: 
             case Anchors.AutoInline:
+            case Anchors.AutoInlineNoBreak:
                 ret.set(parentRect.x, parentRect.y);
                 break;
 
@@ -2683,12 +2749,17 @@ class UIElement
                 break;       
         }
         
-        // add self position and return
+        // add self offset and round
         if (offset) {
             ret = ret.add(offset.mul(offsetFactor));
         }
         ret.x = Math.floor(ret.x);
         ret.y = Math.floor(ret.y);
+
+        // add auto-anchor offset (if exist) and return
+        if (anchor.indexOf('Auto') === 0 && this._autoOffset) {
+            ret = ret.add(this._autoOffset);
+        }
         return ret;
     }
 
@@ -2964,7 +3035,7 @@ class InputManager
 
         // mouse leave
         this._mouseLeaveEventListener = (e) => {
-            this._mouseButtons[0] = this._mouseButtons[1] = this._mouseButtons[2] = false;
+            this._mouseOutside = true;
         };
         canvas.addEventListener("mouseleave", this._mouseLeaveEventListener);
 
@@ -2977,6 +3048,7 @@ class InputManager
         // mouse move
         this._mouseMoveEventListener = (e) => {
             this._mousePosition = new PintarJS.Point(e.offsetX, e.offsetY);
+            this._mouseOutside = false;
         };
         canvas.addEventListener("mousemove", this._mouseMoveEventListener);
     }
@@ -3014,6 +3086,14 @@ class InputManager
     {
         this._mouseWheel = 0;
         this._mouseButtonsPrevStates = JSON.parse(JSON.stringify(this._mouseButtons));
+    }
+
+    /**
+     * Get if mouse is outside canvas boundaries.
+     */
+    get isMouseOutside()
+    {
+        return Boolean(this._mouseOutside);
     }
 
     /**
@@ -3055,7 +3135,7 @@ class InputManager
      */
     get leftMouseDown()
     {
-        return this._mouseButtons[0];
+        return this._mouseButtons[0] && !this._mouseOutside;
     }
     
     /**
@@ -3064,7 +3144,7 @@ class InputManager
      */
     get rightMouseDown()
     {
-        return this._mouseButtons[2];
+        return this._mouseButtons[2] && !this._mouseOutside;
     }
     
     /**

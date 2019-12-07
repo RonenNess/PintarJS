@@ -62,10 +62,14 @@ class Slider extends Container
         if (this._direction === "horizontal") {
             this.size.x = 100;
             this.size.xMode = SizeModes.Percents;
+            this.size.y = options.middleSourceRect.height * textureScale;
+            this.size.yMode = SizeModes.Pixels;
         }
         else {
             this.size.y = 100;
             this.size.yMode = SizeModes.Percents;
+            this.size.x = options.middleSourceRect.width * textureScale;
+            this.size.xMode = SizeModes.Pixels;
         }
 
         // start piece offset
@@ -226,7 +230,7 @@ class Slider extends Container
         this._line.draw(pintar);
 
         // draw handle
-        this._handle.position = destRect.getPosition().add(this._handleOffset);
+        this._handle.position = destRect.getPosition().add(this._handleOffset).round();
         if (this._direction === "horizontal") 
         {
             var maxWidth = destRect.width - this._startOffset.x - this._endOffset.x;

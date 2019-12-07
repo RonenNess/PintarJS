@@ -58,6 +58,7 @@ class Container extends UIElement
         if (index !== -1) 
         {
             this._children.splice(index, 1);
+            element._siblingBefore = element._siblingAfter = null;
             element._setParent(null);
         }
     }
@@ -126,42 +127,13 @@ class Container extends UIElement
             // get element
             var element = this._children[i];
 
-            // if auto-inline anchor, arrange it
-            var needToSetAuto = false;
-            if ((element.anchor === Anchors.AutoInline) || (element.anchor === Anchors.AutoInlineNoBreak))
-            {
-                if (lastElement) {
-                    var marginX = Math.max(element.margin.left, lastElement.margin.right);
-                    element.offset.set(lastElement.offset.x + lastElement.size.x + marginX, lastElement.offset.y);
-                    if ((element.anchor === Anchors.AutoInline) && (element.getBoundingBox().right >= selfSize.x)) {
-                        needToSetAuto = true;
-                    }
-                }
-                else {
-                    var padding = this._convertSides(this.padding);
-                    element.offset.set(Math.max(element.margin.left - padding.left, 0), Math.max(element.margin.top - padding.top, 0));
-                }
-            }
-
-            // if auto anchor, arrange it
-            if (needToSetAuto || element.anchor === Anchors.Auto)
-            {
-                if (lastElement) 
-                {
-                    var marginY = Math.max(element.margin.top, lastElement.margin.bottom);
-                    var marginX = Math.max(element.margin.left - padding.left, 0);
-                    element.offset.set(marginX, lastElement.offset.y + lastElement.size.y + marginY);
-                }
-                else 
-                {
-                    var padding = this._convertSides(this.padding);
-                    element.offset.set(Math.max(element.margin.left - padding.left, 0), Math.max(element.margin.top - padding.top, 0));
-                }
-            }
+            // set siblings and store last element
+            element._siblingBefore = lastElement;
+            if (lastElement) { lastElement._siblingAfter = element; }
+            lastElement = element;
 
             // update child element
             element.update(input, forceState || (this.forceSelfStateOnChildren ? this._state : null));
-            lastElement = element;
         }
     }
 }

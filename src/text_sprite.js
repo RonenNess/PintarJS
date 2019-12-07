@@ -565,7 +565,7 @@ TextSprite.measureTextHeight = function(fontFamily, fontSize, char)
     document.body.appendChild(text);
     var result = text.getBoundingClientRect().height;
     document.body.removeChild(text);
-    return result;
+    return Math.ceil(result);
 };
 
 /**

@@ -69,6 +69,13 @@ class UIElement
         this.onMouseReleased = null;
         this.whileMouseDown = null;
         this.afterValueChanged = null;
+
+        // when inside container, this will hold the element before us and element after us.
+        // this is set internally by the container
+        this._siblingBefore = this._siblingAfter = null;
+
+        // hold special offset for auto anchors
+        this._autoOffset = null;
     }
 
     /**
@@ -192,6 +199,8 @@ class UIElement
      */
     _setParent(parent)
     {
+        this.__cachedTopLeftPos = null;
+        this._autoOffset = this._siblingBefore = this._siblingAfter = null;
         this.__parent = parent;
     }
 
@@ -378,12 +387,91 @@ class UIElement
     }
 
     /**
+     * Set offset for auto anchor types.
+     */
+    _setOffsetForAutoAnchors()
+    {
+        // not auto anchor? skip
+        if (this.anchor.indexOf('Auto') !== 0 || this.__parent == null) {
+            this._autoOffset = null;
+            return;
+        }
+
+        // to check if anchor offset changed
+        var prevOffset = this._autoOffset ? this._autoOffset.clone() : PintarJS.Point.zero();
+
+        // get parent internal bounding box
+        var parentIBB = this.__parent.getInternalBoundingBox();
+        
+        // get margin
+        var selfMargin = this._convertSides(this.margin);
+
+        // get last element and its bounding box and margin
+        var lastElement = this._siblingBefore;
+        var lastElementMargin = lastElement ? lastElement._convertSides(lastElement.margin) : new Sides(0, 0, 0, 0);
+        var lastElementBB = lastElement ? lastElement.getBoundingBox() : new PintarJS.Rectangle();
+
+        // do we need to break line? 
+        var needBreakLine = false;
+
+        // if auto-inline anchor, arrange it accordingly
+        if ((this.anchor === Anchors.AutoInline) || (this.anchor === Anchors.AutoInlineNoBreak))
+        {
+            // got element before?
+            if (lastElement) 
+            {
+                // calc margin x as max between self margin and last element margin
+                var marginX = Math.max(selfMargin.left, lastElementMargin.right);
+
+                // set offset
+                this._autoOffset = new PintarJS.Point(lastElementBB.right - parentIBB.left + marginX, lastElementBB.top);
+
+                // check if we should break line
+                if ((this.anchor === Anchors.AutoInline) && (this.getBoundingBox().right >= parentIBB.right)) 
+                {
+                    needBreakLine = true;
+                }
+            }
+            // don't have element before? set margin as offset
+            else 
+            {
+                this._autoOffset = new PintarJS.Point(selfMargin.left, selfMargin.top);
+            }
+        }
+
+        // if auto anchor or need to break line, do auto with line break
+        if (needBreakLine || this.anchor === Anchors.Auto)
+        {
+            // got last element?
+            if (lastElement) 
+            {
+                var marginY = Math.max(selfMargin.top, lastElementMargin.bottom);
+                var marginX = Math.max(selfMargin.left, 0);
+                this._autoOffset = new PintarJS.Point(marginX, lastElementBB.bottom - parentIBB.top + marginY);
+            }
+            // don't have element before? set margin as offset
+            else 
+            {
+                this._autoOffset = new PintarJS.Point(selfMargin.left, selfMargin.top);
+            }
+        }
+
+        // check if updated and remove position caching
+        if (!prevOffset.equals(this._autoOffset)) {
+            this.__cachedTopLeftPos = null;
+        }
+    }
+
+    /**
      * Update the UI element.
      * @param {InputManager} input A class that implements the 'InputManager' API.
      * @param {UIElementState} forceState If provided, this element will copy this state, no questions asked.
      */
     update(input, forceState)
     {
+        // set auto position
+        this._setOffsetForAutoAnchors();
+
         // not interactive? skip
         if (!this.interactive) {
             return;
@@ -417,7 +505,7 @@ class UIElement
         }
 
         // cancel pressed on this state
-        if (!input.leftMouseDown) {
+        if (!input.leftMouseDown && !input.isMouseOutside) {
             this._state.mouseStartPressOnSelf = false;
         }
 
@@ -472,9 +560,11 @@ class UIElement
         // set position based on anchor
         switch (anchor)
         {
+            // note: auto anchors behave like top-left because they set the internal 'auto-offset' property.
             case Anchors.TopLeft:
-            case Anchors.Auto:          // note: auto and auto-inline behave just like top-left because offset is set by the parent container.
+            case Anchors.Auto: 
             case Anchors.AutoInline:
+            case Anchors.AutoInlineNoBreak:
                 ret.set(parentRect.x, parentRect.y);
                 break;
 
@@ -523,12 +613,17 @@ class UIElement
                 break;       
         }
         
-        // add self position and return
+        // add self offset and round
         if (offset) {
             ret = ret.add(offset.mul(offsetFactor));
         }
         ret.x = Math.floor(ret.x);
         ret.y = Math.floor(ret.y);
+
+        // add auto-anchor offset (if exist) and return
+        if (anchor.indexOf('Auto') === 0 && this._autoOffset) {
+            ret = ret.add(this._autoOffset);
+        }
         return ret;
     }
 

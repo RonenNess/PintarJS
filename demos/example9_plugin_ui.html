@@ -272,7 +272,9 @@
       // next container position x
       var marginX = 10;
       var positionX = marginX;
-      var containersHeight = 480;
+      var containersHeight = 490;
+      var totalWidth = 0;
+      var firstContainer = null;
 
       // set cursor
       var cursor = new PintarJS.UI.Cursor(UI_THEME);
@@ -287,6 +289,10 @@
         container.size.set(370, containersHeight);
         container.margin.set(10, 10, 10, 10);
         root.addChild(container);
+        totalWidth += 10 + 370;
+
+        // set first container
+        firstContainer = firstContainer || container;
 
         // add title
         var header = new PintarJS.UI.Paragraph(UI_THEME, "header");
@@ -386,7 +392,7 @@
         progressbar = new PintarJS.UI.ProgressBar(UI_THEME, null, {fillAnchor: "BottomLeft", fillColor: PintarJS.Color.purple(), valueSetWidth:false, valueSetHeight: true});
         progressbar.anchor = PintarJS.UI.Anchors.Auto;
         progressbar.value = 0.65;
-        progressbar.size.y = 90;
+        progressbar.size.y = 100;
         container.addChild(progressbar);
         progressbars.push(progressbar);
       }
@@ -437,8 +443,14 @@
       // create bottom slider
       var scrollbar = new PintarJS.UI.Slider(UI_THEME);
       scrollbar.anchor = PintarJS.UI.Anchors.BottomCenter;
-      scrollbar.size.x = 95;
+      scrollbar.size.x = 98.5;
+      scrollbar.value = 0;
       root.addChild(scrollbar);
+
+      // set offset from scrollbar
+      scrollbar.afterValueChanged = () => {
+        firstContainer.margin.left = (-totalWidth + pintar.canvas.width) * scrollbar.getValuePercent();
+      }
 
       // draw everything
       function drawUI()

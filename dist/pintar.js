@@ -880,6 +880,30 @@ class Point
     }
     
     /**
+     * Return a round copy of this point.
+     */
+    round() 
+    {
+        return new Point(Math.round(this.x), Math.round(this.y));
+    }
+    
+    /**
+     * Return a floored copy of this point.
+     */
+    floor() 
+    {
+        return new Point(Math.floor(this.x), Math.floor(this.y));
+    }
+        
+    /**
+     * Return a ceiled copy of this point.
+     */
+    ceil() 
+    {
+        return new Point(Math.ceil(this.x), Math.ceil(this.y));
+    }
+
+    /**
      * Return cross product with another point.
      * @param {PintarJS.Point} other Other point to get cross product with.
      */
@@ -4711,7 +4735,7 @@ TextSprite.measureTextHeight = function(fontFamily, fontSize, char)
     document.body.appendChild(text);
     var result = text.getBoundingClientRect().height;
     document.body.removeChild(text);
-    return result;
+    return Math.ceil(result);
 };
 
 /**
