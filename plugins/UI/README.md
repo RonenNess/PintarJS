@@ -56,25 +56,91 @@ The result of the above would look like this:
 
 ![UI example 1](assets/exm1.jpg "example 1")
 
-## Basic Concepts
+# Basic Concepts
 
 Before we dive into using the plugin, lets go over some basic concepts.
 
-### UI Theme
+## UI Theme
+
+The UI Theme is a dictionary which defines all the UI elements appearance and behavior. This include things likes:
+
+- Texture.
+- Scale.
+- Source rectangle in texture.
+- Margins.
+- Default size.
+- Is horizontal or vertical, when relevant.
+- And much more..
+
+The UI dictionary must have a key for every element type you want to use (key being the element's class name). Every UI element accepts different options.
+
+`Pintar.UI` comes with a demo theme you can use (for any purpose even commercual), which is used by the demo pages. This theme includes a UI texture file, a font, and all the basic elements configurations.
+
+You can check it out [here](assets/ui_theme.js) or watch it in action in the [demo pages](https://ronenness.github.io/PintarJS/demos/index.html#example9_plugin_ui.html).
+
+## Anchors
+
+Every element in `Pintar.UI` anchors to something. Anchors determine the position of the element inside its parent, or relative to its siblings.
+The basic anchors include all corners, sides, and the center of the parent element:
+
+- TopLeft		
+- TopCenter		
+- TopRight		
+- CenterLeft
+- Center	
+- CenterRight	
+- BottomLeft	
+- BottomCenter	
+- BottomRight	
+
+For example, `TopLeft` will position the element based on its parent top-left corner, while `BottomCenter` will position it at the bottom, but vertically center of the parent.
+
+In addition, there's the `Fixed` anchor which will anchor to element to the top-left corner of the screen, regardless its parent, and there are 3 very important `Auto` anchors you should know:
+
+- Auto: Will place element right under the previous element's bottom. This is used to place elements automatically, with one element per row.
+- AutoInline: Given enough room, will place element right next to the previous element. If not enough room, will break line and behave like `Auto`.
+- AutoInlineNoBreak: Will always place element right next to the previous element, even if exceed the parent element boundaries.
 
 
-TODO
+## Container
 
-### Anchors
-
-TODO
-
-### Offsets and Sizes
-
-TODO
+Containers are any element that can hold child elements.
+Normally you'd use `Panels` to group together elements, especially if you want form-like graphics with it (described later), but know that some elements are also containers themselves (like buttons and progressbars) and you can add child elements directly to them (for example adding paragraph on top of progressbar).
 
 
-## Elements
+## Offset
+
+Every element have an offset property, which is the distance, in either pixels or percents, from its designated anchor-based position.
+For example, the following code:
+
+```JS
+element.anchor = PintarJS.UI.Anchors.TopLeft;
+element.offset.x = 100;
+element.offset.xMode = 'px';
+```
+
+Will position `element` at the top-left corner of its parent, and then add additional 100 pixels to the right.
+To take another example, adding the following code:
+
+```JS
+element.offset.y = 25;
+element.offset.yMode = '%';
+```
+
+Will also push the element 25% down. But percent of what? The answer is always - the parent's size. So if the element is inside a panel with height of 400 pixels, this will move the element 100 pixels down.
+
+
+## Size
+
+Every element has a size property, which will determine the region it occupies when rendering. Different elements might react slightly different to the size property (for example in paragraphs it determines how many characters can fit in a row), but normally its just the element size.
+
+The size property can also be set in either percent or pixels, just like with offset. Most elements have 100% width by default.
+
+
+
+
+
+# Elements
 
 TODO
 
