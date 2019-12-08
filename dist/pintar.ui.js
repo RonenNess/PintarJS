@@ -227,6 +227,11 @@ class Button extends Container
      */
     draw(pintar)
     {
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+
         // get dest rect
         var destRect = this.getBoundingBox();
 
@@ -258,6 +263,9 @@ class Button extends Container
                 paragraph.draw(pintar);
             }
         }
+
+        // draw children
+        super.draw(pintar);
     }
 
     /**
@@ -375,6 +383,11 @@ class Container extends UIElement
      */
     draw(pintar)
     {
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+        
         // draw children
         for (var i = 0; i < this._children.length; ++i) 
         {
@@ -389,6 +402,11 @@ class Container extends UIElement
      */
     update(input, forceState)
     {
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+
         // call base class update
         super.update(input, forceState);
         var selfSize = this.getSizeInPixels();
@@ -525,6 +543,12 @@ class Cursor extends UIElement
      */
     draw(pintar)
     {
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+
+        // draw cursor
         this._sprite.draw(pintar);
     }
     
@@ -535,6 +559,11 @@ class Cursor extends UIElement
      */
     update(input, forceState)
     {
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+
         // call base and set offset
         super.update(input, forceState);
         this._sprite.offset = input.mousePosition;
@@ -631,6 +660,11 @@ class HorizontalLine extends UIElement
      */
     draw(pintar)
     {
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+        
         // get dest rect
         var destRect = this.getBoundingBox();
 
@@ -742,7 +776,15 @@ class Panel extends Container
      */
     draw(pintar)
     {
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+
+        // draw background
         this._background.draw(pintar);
+
+        // draw children
         super.draw(pintar);
     }
 
@@ -753,6 +795,11 @@ class Panel extends Container
      */
     update(input, forceState)
     {
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+
         // call base class update
         super.update(input, forceState);
         
@@ -879,6 +926,11 @@ class Paragraph extends UIElement
      */
     draw(pintar)
     {
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+
         // set auto height
         if (this.autoSetHeight) 
         {
@@ -1155,6 +1207,11 @@ class ProgressBar extends Container
      */
     draw(pintar)
     {
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+        
         // get dest rect
         var dest = this.getBoundingBox();
 
@@ -1241,6 +1298,11 @@ class ProgressBar extends Container
      */
     update(input, forceState)
     {
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+
         // call base update
         super.update(input, forceState);
 
@@ -1352,9 +1414,14 @@ class UIRoot extends Container
     /**
      * Draw the UI element.
      */
-    draw(pintar)
+    draw()
     {
-        // draw UI elements
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+
+        // draw children
         super.draw(this.pintar);
 
         // draw cursor
@@ -1368,6 +1435,11 @@ class UIRoot extends Container
      */
     update(input)
     {
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+
         // update UI
         this.inputManager.startUpdate();
         super.update(this.inputManager);
@@ -1497,6 +1569,11 @@ class SlicedSprite extends UIElement
      */
     draw(pintar)
     {
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+        
         // get drawing position and size
         var destRect = this.getBoundingBox();
         
@@ -1982,6 +2059,11 @@ class Slider extends Container
      */
     draw(pintar)
     {
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+
         // get dest rect
         var destRect = this.getBoundingBox();
 
@@ -2001,6 +2083,9 @@ class Slider extends Container
             this._handle.position.y += this._startOffset.y + maxHeight * this.getValuePercent() - this._handle.size.y / 2;
         }
         pintar.drawSprite(this._handle);
+
+        // draw children
+        super.draw(pintar);
     }
 
     /**
@@ -2008,6 +2093,11 @@ class Slider extends Container
      */
     update(input, forceStatus)
     {
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+
         // call base update
         super.update(input, forceStatus);
 
@@ -2145,6 +2235,11 @@ class Sprite extends UIElement
      */
     draw(pintar)
     {
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+        
         // get drawing position and size and draw element
         var destRect = this.getBoundingBox();
         this._sprite.size.set(destRect.width, destRect.height);
@@ -2229,6 +2324,9 @@ class UIElement
         this.whileMouseDown = null;
         this.afterValueChanged = null;
         this.beforeUpdate = null;
+
+        // is this element currently visible?
+        this.visible = true;
 
         // when inside container, this will hold the element before us and element after us.
         // this is set internally by the container
@@ -2629,6 +2727,11 @@ class UIElement
      */
     update(input, forceState)
     {
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+
         // trigger before-update callback
         if (this.beforeUpdate) {
             this.beforeUpdate(this, input);
@@ -2929,6 +3032,11 @@ class VerticalLine extends UIElement
      */
     draw(pintar)
     {
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+        
         // get dest rect
         var destRect = this.getBoundingBox();
 

@@ -99,6 +99,11 @@ class Sprite extends UIElement
      */
     draw(pintar)
     {
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+        
         // get drawing position and size and draw element
         var destRect = this.getBoundingBox();
         this._sprite.size.set(destRect.width, destRect.height);

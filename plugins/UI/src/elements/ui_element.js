@@ -71,6 +71,9 @@ class UIElement
         this.afterValueChanged = null;
         this.beforeUpdate = null;
 
+        // is this element currently visible?
+        this.visible = true;
+
         // when inside container, this will hold the element before us and element after us.
         // this is set internally by the container
         this._siblingBefore = this._siblingAfter = null;
@@ -470,6 +473,11 @@ class UIElement
      */
     update(input, forceState)
     {
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+
         // trigger before-update callback
         if (this.beforeUpdate) {
             this.beforeUpdate(this, input);

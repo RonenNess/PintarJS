@@ -219,6 +219,11 @@ class ProgressBar extends Container
      */
     draw(pintar)
     {
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+        
         // get dest rect
         var dest = this.getBoundingBox();
 
@@ -305,6 +310,11 @@ class ProgressBar extends Container
      */
     update(input, forceState)
     {
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+
         // call base update
         super.update(input, forceState);
 

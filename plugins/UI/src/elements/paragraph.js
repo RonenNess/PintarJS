@@ -108,6 +108,11 @@ class Paragraph extends UIElement
      */
     draw(pintar)
     {
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+
         // set auto height
         if (this.autoSetHeight) 
         {

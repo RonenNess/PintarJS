@@ -197,6 +197,11 @@ class Button extends Container
      */
     draw(pintar)
     {
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+
         // get dest rect
         var destRect = this.getBoundingBox();
 
@@ -228,6 +233,9 @@ class Button extends Container
                 paragraph.draw(pintar);
             }
         }
+
+        // draw children
+        super.draw(pintar);
     }
 
     /**

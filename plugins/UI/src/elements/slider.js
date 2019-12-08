@@ -231,6 +231,11 @@ class Slider extends Container
      */
     draw(pintar)
     {
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+
         // get dest rect
         var destRect = this.getBoundingBox();
 
@@ -250,6 +255,9 @@ class Slider extends Container
             this._handle.position.y += this._startOffset.y + maxHeight * this.getValuePercent() - this._handle.size.y / 2;
         }
         pintar.drawSprite(this._handle);
+
+        // draw children
+        super.draw(pintar);
     }
 
     /**
@@ -257,6 +265,11 @@ class Slider extends Container
      */
     update(input, forceStatus)
     {
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+
         // call base update
         super.update(input, forceStatus);
 

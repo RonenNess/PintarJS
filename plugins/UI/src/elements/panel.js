@@ -59,7 +59,15 @@ class Panel extends Container
      */
     draw(pintar)
     {
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+
+        // draw background
         this._background.draw(pintar);
+
+        // draw children
         super.draw(pintar);
     }
 
@@ -70,6 +78,11 @@ class Panel extends Container
      */
     update(input, forceState)
     {
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+
         // call base class update
         super.update(input, forceState);
         

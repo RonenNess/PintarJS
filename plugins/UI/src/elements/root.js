@@ -87,9 +87,14 @@ class UIRoot extends Container
     /**
      * Draw the UI element.
      */
-    draw(pintar)
+    draw()
     {
-        // draw UI elements
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+
+        // draw children
         super.draw(this.pintar);
 
         // draw cursor
@@ -103,6 +108,11 @@ class UIRoot extends Container
      */
     update(input)
     {
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+
         // update UI
         this.inputManager.startUpdate();
         super.update(this.inputManager);

@@ -102,6 +102,11 @@ class Container extends UIElement
      */
     draw(pintar)
     {
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+        
         // draw children
         for (var i = 0; i < this._children.length; ++i) 
         {
@@ -116,6 +121,11 @@ class Container extends UIElement
      */
     update(input, forceState)
     {
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+
         // call base class update
         super.update(input, forceState);
         var selfSize = this.getSizeInPixels();

@@ -422,7 +422,7 @@ const Viewport = require('./viewport');
 const PintarConsole = require('./console');
 
 // current version and author
-const __version__ = "2.0.0.1";
+const __version__ = "2.0.0.2";
 const __author__ = "Ronen Ness";
 
 /**

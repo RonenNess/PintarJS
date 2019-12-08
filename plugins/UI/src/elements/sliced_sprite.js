@@ -112,6 +112,11 @@ class SlicedSprite extends UIElement
      */
     draw(pintar)
     {
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+        
         // get drawing position and size
         var destRect = this.getBoundingBox();
         

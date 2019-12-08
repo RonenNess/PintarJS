@@ -109,6 +109,12 @@ class Cursor extends UIElement
      */
     draw(pintar)
     {
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+
+        // draw cursor
         this._sprite.draw(pintar);
     }
     
@@ -119,6 +125,11 @@ class Cursor extends UIElement
      */
     update(input, forceState)
     {
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+
         // call base and set offset
         super.update(input, forceState);
         this._sprite.offset = input.mousePosition;
