@@ -36,6 +36,7 @@ class Button extends Container
      * @param {Number} theme.Button[skin].heightInPixels (Optional) Button default height in pixels. 
      * @param {Number} theme.Button[skin].textureScale (Optional) Texture scale of the button. 
      * @param {Number} theme.Button[skin].toggleMode (Optional) If true, this button will behave like a checkbox and be toggleable. 
+     * @param {Number} theme.Button[skin].color (Optional) Optional color for button skins. 
      * @param {String} skin Element skin to use from theme.
      * @param {Object} override Optional override options (can override any of the theme properties listed above).
      */
@@ -64,6 +65,9 @@ class Button extends Container
         // for toggle mode
         this.isChecked = false;
         this.toggleModeEnabled = options.toggleMode || false;
+
+        // get color
+        var color = options.color || PintarJS.Color.white();
 
         // init button paragraph properties
         var initParagraph = (paragraph) => {
@@ -103,6 +107,7 @@ class Button extends Container
                 internalSourceRect: options.internalSourceRect, 
                 textureScale: textureScale}, '_');
             this._sprite.anchor = Anchors.Fixed;
+            this._sprite.color = color;
         }
 
         // create sprite for hover
@@ -112,6 +117,7 @@ class Button extends Container
                 internalSourceRect: options.mouseHoverInternalSourceRect, 
                 textureScale: textureScale}, '_');
             this._spriteHover.anchor = Anchors.Fixed;
+            this._spriteHover.color = color;
         }
         else {
             this._spriteHover = this._sprite;
@@ -124,6 +130,7 @@ class Button extends Container
                 internalSourceRect: options.mouseDownInternalSourceRect, 
                 textureScale: textureScale}, '_');
             this._spriteDown.anchor = Anchors.Fixed;
+            this._spriteDown.color = color;
         }
         else {
             this._spriteDown = this._spriteHover || this._sprite;

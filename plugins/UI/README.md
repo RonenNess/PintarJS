@@ -134,15 +134,141 @@ Will also push the element 25% down. But percent of what? The answer is always -
 
 Every element has a size property, which will determine the region it occupies when rendering. Different elements might react slightly different to the size property (for example in paragraphs it determines how many characters can fit in a row), but normally its just the element size.
 
-The size property can also be set in either percent or pixels, just like with offset. Most elements have 100% width by default.
+The size property can also be set in either percent or pixels, just like with offset. Most elements have 100% width by default, assuming one element per row layout.
 
 
+# UI Elements
+
+UI elements are the set of built-in elements you can use to build your UI. They are all located under the `PintarJS.UI` namespace and inherit from the `UIElement` base class. Some elements, those who can have children, also inherit from the `Container` base class.
+
+In this section we'll first describe the base UI Element and its properties, and then we'll dive into all the other element types and how you define them in the theme dictionary.
+
+## Constructor & Basic Properties
+
+Every UI element expect 3 parameters in its creation:
+
+* UI Theme dictionary.
+* Skin identifier.
+* Override options.
+
+The first param, the UI theme, is the dictionary that defines all the UI elements theme. So if for example you create a `Button` element, your UI theme dictionary must contain a `Button` key, which will be a dictionary to define different button skins.
+
+The second param is which skin to use for this element type. You can define multiple skins for every element type, and with this param choose the skin to use. If not defined, will use 'default'.
+
+The last param is an optional dictionary with values to directly override the values we have in the theme dictionary.
+
+So now lets take a look at a simple example to illustrate that. First we define our theme (this is just a partial decleration for this example):
+
+```js
+var UI_THEME = {
+	
+	// Define buttons theme
+	Button: 
+	{
+	  // default button
+	  default: 
+	  {
+		texture: uiTexture,
+		externalSourceRect: new PintarJS.Rectangle(64, 16, 32, 16),
+		internalSourceRect: new PintarJS.Rectangle(64 + 5, 16 + 5, 32 - 10, 16 - 10),
+		mouseDownExternalSourceRect: new PintarJS.Rectangle(64, 32, 32, 16),
+		mouseDownInternalSourceRect: new PintarJS.Rectangle(64 + 5, 32 + 5, 32 - 10, 16 - 10),
+		mouseHoverExternalSourceRect: new PintarJS.Rectangle(64, 48, 32, 16),
+		mouseHoverInternalSourceRect: new PintarJS.Rectangle(64 + 5, 48 + 5, 32 - 10, 16 - 10),
+		paragraphSkin: "buttons",
+		mouseHoverParagraphSkin: "buttonsHover",
+		mouseDownParagraphSkin: "buttonsDown",
+		textureScale: textureScale,   
+	  },
+
+	  // toggle button
+	  toggle: 
+	  {
+		extends: 'default',
+		toggleMode: true,
+	  },
+
+	  // a button that is just text
+	  textOnly: 
+	  {
+		texture: uiTexture,
+		paragraphSkin: "buttons",
+		mouseHoverParagraphSkin: "buttonsHover",
+		mouseDownParagraphSkin: "buttonsDown",
+		textureScale: textureScale,
+		heightInPixels: 60,
+	  }
+	}
+}
+```
+
+Now lets create two type of buttons - a regular one, and a text-only button:
+
+```js
+// create a default button. since no skin param is set, it uses the 'default' skin.
+var defaultButton = new PintarJS.UI.Button(UI_THEME);
+
+// create a text-only button
+var textButton = new PintarJS.UI.Button(UI_THEME, 'textOnly');
+```
+
+Lastly, let's create a default button, but with a green color:
+
+```js
+// set green shade by using the override properties dictionary. skin is still 'undefined' to use 'default'.
+var greenButton = new PintarJS.UI.Button(UI_THEME, undefined, {color: PintarJS.Color.green()});
+```
+
+### Basic Style Properties
+
+The following is a list of basic properties you can define in the UI theme that all elements share.
+
+#### texture [PintarJS.Texture]
+
+Texture to use for this element.
+
+#### scale [Number]
+
+Scale all sizes, position, margins, ect. Basically scale up all the element's scalable properties.
+
+#### anchor [PintarJS.UI.Anchors]
+
+As mentioned before, anchor determine how to position the element and what to magnet it to. If you haven't already, go back and read about anchors in basic concepts.
+
+#### margin [PintarJS.UI.SidesProperties]
+
+When using `Auto` anchors, add distance to different elements. This property has `left`, `right`, `top`, and `bottom`.
+
+#### cursor [PintarJS.UI.CursorTypes]
+
+When using cursors, this determines what cursor to use when pointing on this element.
+
+#### textureScale [Number]
+
+Scale the element based on the source rectangles from texture.
+This property will make sure that if for example texture scale is 4, every pixel in texture will turn into 4 pixels on screen.
+
+For some elements it affects the actual element size, for some elements that use sliced sprite (described later) it will only scale the texture without forcing the element actual size.
 
 
+## SlicedSprite
 
-# Elements
+Sliced sprite is a very important concept since many other elements are based on it. 
 
-TODO
+Sliced Sprite in Pintar.UI refer to the [9 slice scaling](https://en.wikipedia.org/wiki/9-slice_scaling) technique, often used in video games.
+
+![9 slice scaling](assets/9-sliced.png "9 slice scaling")
+
+# Credits
+
+The built-in UI theme contains some external resources that deserves a mention..
+
+- Many UI elements based on: https://opengameart.org/content/golden-ui (by Buch)
+- Health orb based on: https://opengameart.org/content/crystal-orbs (by MSavioti)
 
 
-[TODO - STILL UNDER DEVELOPMENT]
+# License
+
+`Pintar.UI`, just like `PintarJS`, is distributed under the permissive MIT license and can be used for absolutely any (legal) purpose.
+
+The built-in UI theme is partly made by me and partly using free Public Domain resources (see credits) so it may also be used (and modified) for any purpose. Credits are appreciated, but not mandatory. If you do credit me, be sure to include the external resources as well :)
