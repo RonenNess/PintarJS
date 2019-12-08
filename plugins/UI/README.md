@@ -140,6 +140,40 @@ Every element has a size property, which will determine the region it occupies w
 The size property can also be set in either percent or pixels, just like with offset. Most elements have 100% width by default, assuming one element per row layout.
 
 
+# Initializing & Using
+
+Initializing and using `Pintar.UI` is quite easy. You only need to create a root object (which you later add elements to), and call `update()` and `draw()`:
+
+```js
+// create pintar.UI root object (pintar = PintarJS instance)
+var uiRoot = new PintarJS.UI.UIRoot(pintar);
+
+// main loop function
+function mainLoop()
+{
+	// start frame
+	pintar.startFrame();
+
+	// draw your game here..
+
+	// update & draw ui
+	uiRoot.update();
+	uiRoot.draw();
+
+	// end frame and request next frame
+	pintar.endFrame();
+	requestAnimationFrame(mainLoop);
+}
+mainLoop();
+```
+
+Ofcourse, the example above won't display anything, since there are no elements in UI. Next section shows the different types of elements we can create and how to use them. After creating elements you can add them to root by using:
+
+```js
+uiRoot.addChild(newElement);
+```
+
+
 # UI Elements
 
 UI elements are the set of built-in elements you can use to build your UI. They are all located under the `PintarJS.UI` namespace and inherit from the `UIElement` base class. Some elements, those who can have children, also inherit from the `Container` base class.
@@ -412,12 +446,189 @@ When in toggle mode you can use `button.isChecked` to get if its currently toggl
 Set the button sprites color.
 
 
+## Cursor
+
+![Cursor](assets/elem_cursor.png "cursor")
+
+Cursor is a sprite element that `Pintar.UI` will always draw over the cursor position, and will change based on the elements you point on.
+When using cursors, its the user's responsibility to hide the original OS cursor. This can be achieved easily with the following CSS rule:
+
+```css
+* {
+	cursor: none !important;
+}
+```
+
+### Usage example:
+
+```js
+var cursor = new PintarJS.UI.Cursor(UI_THEME);
+uiRoot.setCursor(cursor);
+```
+
+### Properties
+
+`Cursor` accepts the following properties (in addition to the default ones any base element gets):
+
+#### defaultSourceRect [PintarJS.Rectangle]
+
+Cursor source rectangle, when in default state and up.
+
+#### defaultDownSourceRect [PintarJS.Rectangle]
+
+Cursor source rectangle, when in default state and down.
+
+#### pointerSourceRect [PintarJS.Rectangle]
+
+Cursor source rectangle, when in pointer state and up.
+
+#### pointerDownSourceRect [PintarJS.Rectangle]
+
+Cursor source rectangle, when in pointer state and down.
+
+
+## ProgressBar
+
+![ProgressBar](assets/elem_progressbars.png "progressbars")
+
+ProgressBars are used to show something that fills or depletes. They can represent health bars, loading bars, action progress, XP gained, ect.
+
+Every progressbar value ranges from 0.0 to 1.0, and its the user's (aka you) responsibility to update it.
+
+Progressbars are made of 3 main parts: background sprite, fill sprite (which is the part that grows as the progressbar fills), and optional foreground sprite (for extra effects, like shine on a health orb). All progressbar parts can either be a sliced sprite, if you want to scale them to different sizes, or be a regular sprite, if you want stuff like diablo's life orbs, which are individual sprites.
+
+### Usage example:
+
+```js
+var progressbar = new PintarJS.UI.ProgressBar(UI_THEME);
+progressbar.value = 0.85;
+```
+
+### Properties
+
+`ProgressBar` accepts the following properties (in addition to the default ones any base element gets):
+
+#### fillExternalSourceRect [PintarJS.Rectangle]
+
+ProgressBar's fill external source rectangle. If specified, it will use a `SlicedSprite` (later you'll see you can also use a regular source rectangle).
+
+#### fillInternalSourceRect [PintarJS.Rectangle]
+
+ProgressBar's fill internal source rectangle, required when you provide a `fillExternalSourceRect` value.
+
+#### fillSourceRect [PintarJS.Rectangle]
+
+ProgressBar's fill source rectangle when you don't want to use a `SlicedSprite` for the fill part.
+
+#### fillColor [PintarJS.Color]
+
+ProgressBar's fill color.
+
+#### fillColor [PintarJS.Color]
+
+ProgressBar's fill color.
+
+#### backgroundExternalSourceRect [PintarJS.Rectangle]
+
+ProgressBar's background external source rectangle. If specified, it will use a `SlicedSprite` (later you'll see you can also use a regular source rectangle).
+
+#### backgroundInternalSourceRect [PintarJS.Rectangle]
+
+ProgressBar's background internal source rectangle, required when you provide a `backgroundExternalSourceRect` value.
+
+#### backgroundSourceRect [PintarJS.Rectangle]
+
+ProgressBar's background source rectangle when you don't want to use a `SlicedSprite` for the background part.
+
+#### backgroundColor [PintarJS.Color]
+
+ProgressBar's background color.
+
+
+
+#### foregroundExternalSourceRect [PintarJS.Rectangle]
+
+ProgressBar's foreground external source rectangle. If specified, it will use a `SlicedSprite` (later you'll see you can also use a regular source rectangle).
+
+#### foregroundInternalSourceRect [PintarJS.Rectangle]
+
+ProgressBar's foreground internal source rectangle, required when you provide a `foregroundExternalSourceRect` value.
+
+#### foregroundSourceRect [PintarJS.Rectangle]
+
+ProgressBar's foreground source rectangle when you don't want to use a `SlicedSprite` for the foreground part.
+
+#### foregroundColor [PintarJS.Color]
+
+ProgressBar's foreground color.
+
+#### fillOffset [PintarJS.Point]
+
+Optional offset, in pixels, for the fill part. Note: if you use `textureScale` you should probably multiply the value by it.
+
+#### height [Number]
+
+Default height for the progressbar (if not defined will base on source rectangle).
+
+#### animationSpeed [Number]
+
+Animation speed to display new values when value changes. If 0, will just match fill size to new value immediately.
+
+#### fillAnchor [PintarJS.UI.Anchors]
+
+The anchor to use when positioning the fill sprite inside the progressbar background.
+
+#### valueSetWidth [Boolean]
+
+If true, filling the progressbar will affect the width of the fill sprite.
+
+#### valueSetHeight [Boolean]
+
+If true, filling the progressbar will affect the height of the fill sprite.
+
 
 # Callbacks
 
-To respond to UI events, you can register the following callbacks on all UI elements:
+To respond to UI events (like mouse enter, mouse leave, click, ect), you can register a set of callbacks on every UI element. Every callback gets two parameters: the element itself, and `Pintar.UI` Input Manager class.
 
--- TODO
+Note that not all elements are interactive by default. Elements you interact with, like buttons, sliders, ect. will always trigger events. But "passive" elements, like paragraphs or panels, will normally won't even check.
+
+To make sure an element is interactive and will trigger events you can set `element.interactive = true`.
+
+The callbacks you can register on elements are:
+
+## onMouseEnter
+
+Invoked when mouse enters the element.
+
+## onMouseLeave
+
+Invoked when mouse leaves the element.
+
+## whileMouseHover
+
+Invoked every `update()` call while mouse is over the element.
+
+## onMousePressed
+
+Invoked when mouse button is pressed down over the element.
+
+## onMouseReleased
+
+Invoked when mouse is released over the element.
+
+## whileMouseDown
+
+Invoked every `update()` call while mouse is down over the element.
+
+## afterValueChanged
+
+If its an element with value that can change, invoked every time the values changes, after the new value was applied.
+
+## beforeUpdate
+        
+Invoked every `update()` call before the element do its internal update logic.
+
 
 # Credits
 
