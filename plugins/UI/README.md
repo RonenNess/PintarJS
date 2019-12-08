@@ -4,6 +4,8 @@
 
 A quick example can be seen [here](https://ronenness.github.io/PintarJS/demos/index.html#example9_plugin_ui.html).
 
+![Example](assets/all_example.png "example")
+
 ## How It Works
 
 `Pintar.UI ` uses `PintarJS` sprites and rendering pipelines to implement basic UI elements, as well as a grid / anchors system, UI theme, sliced sprites, and other UI-related goodies.
