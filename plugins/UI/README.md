@@ -2,6 +2,7 @@
 
 `Pintar.UI` is a built-in UI plugin for `PintarJS`.
 
+A quick example can be seen [here](https://ronenness.github.io/PintarJS/demos/index.html#example9_plugin_ui.html).
 
 ## How It Works
 
@@ -254,10 +255,79 @@ For some elements it affects the actual element size, for some elements that use
 ## SlicedSprite
 
 Sliced sprite is a very important concept since many other elements are based on it. 
-
-Sliced Sprite in Pintar.UI refer to the [9 slice scaling](https://en.wikipedia.org/wiki/9-slice_scaling) technique, often used in video games.
+Sliced Sprite in Pintar.UI refer to the [9 slice scaling (with repeating)](https://en.wikipedia.org/wiki/9-slice_scaling) technique, often used in video games.
 
 ![9 slice scaling](assets/9-sliced.png "9 slice scaling")
+
+Basically in `Pintar.UI` whenever we have a surface that we want to scale indefinitely without losing quality, we use the sliced sprite. With this technique we define an external source rectangle and an internal source rectangle. These two compose the 9-parts grid (the internal source rect being the grid center piece). Then when we draw the surface, we draw the grid parts with repeating mode.
+
+The elements that use the sliced sprite are: buttons, progressbars, panels, ect.
+
+
+## HorizontalLine / VerticalLine
+
+![HorizontalLine](assets/elem_horiz_line.png "horizontal line")
+
+HorizontalLine and VerticalLine are, simply-put, lines we can draw.
+They work slightly similar to the `SlicedSprite` in the sense that they have a starting source rect, ending source rect, and repeating middle source rect part which will fill the line part.
+
+This element is used internally by other elements (like sliders) but you can also create them yourself to create seperation between parts.
+
+### Properties
+
+`HorizontalLine` and `VerticalLine` accepts the following properties (in addition to the default ones any base element gets):
+
+#### startEdgeSourceRect [PintarJS.Rectangle]
+
+Source rectangle of the begining of the line (either left side or top side).
+
+#### middleSourceRect [PintarJS.Rectangle]
+
+Source rectangle of the middle part of the line. This part repeats one or more times, depending on the size of the line.
+
+#### endEdgeSourceRect [PintarJS.Rectangle]
+
+Source rectangle of the end of the line (either right side or bottom).
+
+
+## Paragraph
+
+![Paragraph](assets/elem_paragraph.png "paragraph")
+
+Paragraphs are used to create texts and titles.
+
+### Properties
+
+`Paragraph` accepts the following properties (in addition to the default ones any base element gets):
+
+#### font [String]
+
+Font to use.
+
+#### fontSize [Number]
+
+Font size.
+
+#### fillColor [PintarJS.Color]
+
+Text default fill color.
+
+#### strokeColor [PintarJS.Color]
+
+Text default stroke color.
+
+#### strokeWidth [Number]
+
+Text stroke width.
+
+#### alignment [PintarJS.TextAlignment]
+
+Text alignment.
+
+#### useStyleCommands [Boolean]
+
+Should this text sprite accept style commands.
+
 
 # Credits
 
