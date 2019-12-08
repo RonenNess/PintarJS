@@ -655,12 +655,18 @@ pintar.adjustToParentSize();
 - Fixed some bugs with WebGL text sprite + added better support in custom fonts.
 - Added style commands to WebGL text sprite.
 
-### 1.0.0.5 [NOT RELEASED YET]
+### 2.0.0.1
 
 - Changed sprite size / width / height API so you can use `sprite.size.set()` properly.
 - Added anti-bleeding flag for sprites (used to always be true, now can be modified).
-- Added UI plugin.
+- Fixed bug in Color.fromHex().
+- Added round, floor and ceil methods to Point.
+- Refactored the way text sprites work internally, better handling different-size fonts, and more encapsulated.
+- Small refactor in calculating and caching sprites relative source rectangles.
+- Added `tracking` property to texts.
+- Better caching texts metadata and lines.
+- Huge addon: added UI plugin.
 
 ## License
 
-PintarJS is distributed under the permissive MIT License and is absolutely free to use for any purpose, commercial or not.
+PintarJS is distributed under the permissive MIT License and is absolutely free to use for any purpose (commercial included).

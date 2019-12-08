@@ -317,7 +317,7 @@ var hl = new PintarJS.UI.HorizontalLine(UI_THEME);
 
 ### Properties
 
-`HorizontalLine` and `VerticalLine` accepts the following properties (in addition to the default ones any base element gets):
+`HorizontalLine` and `VerticalLine` accepts the following properties (in addition to the default properties every element gets):
 
 #### startEdgeSourceRect [PintarJS.Rectangle]
 
@@ -347,7 +347,7 @@ paragraph.text = "Hello world!";
 
 ### Properties
 
-`Paragraph` accepts the following properties (in addition to the default ones any base element gets):
+`Paragraph` accepts the following properties (in addition to the default properties every element gets):
 
 #### font [String]
 
@@ -394,7 +394,7 @@ button.onMouseReleased = (btn, input) => { alert("Hello World!"); }
 
 ### Properties
 
-`Button` accepts the following properties (in addition to the default ones any base element gets):
+`Button` accepts the following properties (in addition to the default properties every element gets):
 
 #### externalSourceRect [PintarJS.Rectangle]
 
@@ -468,7 +468,7 @@ uiRoot.setCursor(cursor);
 
 ### Properties
 
-`Cursor` accepts the following properties (in addition to the default ones any base element gets):
+`Cursor` accepts the following properties (in addition to the default properties every element gets):
 
 #### defaultSourceRect [PintarJS.Rectangle]
 
@@ -506,7 +506,7 @@ progressbar.value = 0.85;
 
 ### Properties
 
-`ProgressBar` accepts the following properties (in addition to the default ones any base element gets):
+`ProgressBar` accepts the following properties (in addition to the default properties every element gets):
 
 #### fillExternalSourceRect [PintarJS.Rectangle]
 
@@ -543,7 +543,6 @@ ProgressBar's background source rectangle when you don't want to use a `SlicedSp
 #### backgroundColor [PintarJS.Color]
 
 ProgressBar's background color.
-
 
 
 #### foregroundExternalSourceRect [PintarJS.Rectangle]
@@ -586,6 +585,52 @@ If true, filling the progressbar will affect the width of the fill sprite.
 
 If true, filling the progressbar will affect the height of the fill sprite.
 
+
+## Slider
+
+![Slider](assets/elem_sliders.png "sliders")
+
+Sliders are used to receive a numeric value from the user which is limited to a given range.
+
+### Usage example:
+
+```js
+slider = new PintarJS.UI.Slider(UI_THEME);
+slider.min = 0;
+slider.max = 10;
+slider.value = 5;
+slider.roundValue = true;
+slider.afterValueChanged = () => { alert(slider.value); };
+```
+
+### Properties
+
+`Slider` accepts the following properties (in addition to the default properties every element gets):
+
+#### middleSourceRect [PintarJS.Rectangle]
+
+The source rectangle of the slider's track repeating part.
+
+#### startEdgeSourceRect [PintarJS.Rectangle]
+
+The source rectangle of the slider's track starting edge.
+
+#### endEdgeSourceRect [PintarJS.Rectangle]
+
+The source rectangle of the slider's track closing edge.
+
+#### handleSourceRect [PintarJS.Rectangle]
+
+The source rectangle of the slider's handle sprite (the part you drag to set value).
+
+#### handleOffset [PintarJS.Point]
+
+Offset, in pixels, of the handle from its natural value-based position. Note: if you set `textureScale` you should probably multiply the values with it.
+
+#### direction [String]
+
+Slider direction, can either be "horizontal" or "vertical".
+This determines the movement users have to do to set value.
 
 # Callbacks
 
@@ -637,6 +682,17 @@ The built-in UI theme contains some external resources that deserves a mention..
 - Many UI elements based on: https://opengameart.org/content/golden-ui (by Buch)
 - Health orb based on: https://opengameart.org/content/crystal-orbs (by MSavioti)
 
+
+# Future TODOs
+
+Some things that will be added to later UI versions:
+
+- Disable elements mode.
+- Checkbox and Radio buttons.
+- Better handling updates loop so that clicks won't go through elements.
+- Input boxes.
+- List boxes.
+- Combo boxes.
 
 # License
 

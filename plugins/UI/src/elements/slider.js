@@ -24,7 +24,6 @@ class Slider extends Container
      * Create a slider element.
      * @param {Object} theme
      * @param {PintarJS.Texture} theme.Slider[skin].texture Texture to use.
-     * @param {String} theme.Slider[skin].lineSkin Skin to use for the background line, either for HorizontalLine or VerticalLine, depends if horizontal or vertical.
      * @param {PintarJS.Rectangle} theme.Slider[skin].middleSourceRect The source rect of the line center part (repeating).
      * @param {PintarJS.Rectangle} theme.Slider[skin].startEdgeSourceRect The source rect of the line starting edge (left or top).
      * @param {PintarJS.Rectangle} theme.Slider[skin].endEdgeSourceRect The source rect of the line ending edge (right or bottom).
