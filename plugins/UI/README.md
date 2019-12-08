@@ -273,6 +273,12 @@ They work slightly similar to the `SlicedSprite` in the sense that they have a s
 
 This element is used internally by other elements (like sliders) but you can also create them yourself to create seperation between parts.
 
+### Usage example:
+
+```js
+var hl = new PintarJS.UI.HorizontalLine(UI_THEME);
+```
+
 ### Properties
 
 `HorizontalLine` and `VerticalLine` accepts the following properties (in addition to the default ones any base element gets):
@@ -295,6 +301,13 @@ Source rectangle of the end of the line (either right side or bottom).
 ![Paragraph](assets/elem_paragraph.png "paragraph")
 
 Paragraphs are used to create texts and titles.
+
+### Usage example:
+
+```js
+var paragraph = new PintarJS.UI.Paragraph(UI_THEME);
+paragraph.text = "Hello world!";
+```
 
 ### Properties
 
@@ -328,6 +341,81 @@ Text alignment.
 
 Should this text sprite accept style commands.
 
+
+## Button
+
+![Button](assets/elem_button.png "button")
+
+Buttons are clickable elements.
+
+### Usage example:
+
+```js
+var button = new PintarJS.UI.Button(UI_THEME);
+button.text = "Click Me!";
+button.onMouseReleased = (btn, input) => { alert("Hello World!"); }
+```
+
+### Properties
+
+`Button` accepts the following properties (in addition to the default ones any base element gets):
+
+#### externalSourceRect [PintarJS.Rectangle]
+
+Button's background external source rectangle (it uses a `SlicedSprite`).
+
+#### internalSourceRect [PintarJS.Rectangle]
+
+Button's background internal source rectangle (it uses a `SlicedSprite`).
+
+#### mouseHoverExternalSourceRect [PintarJS.Rectangle]
+
+Button's background external source rectangle, when mouse hovers over the button (it uses a `SlicedSprite`).
+
+#### mouseHoverInternalSourceRect [PintarJS.Rectangle]
+
+Button's background internal source rectangle, when mouse hovers over the button (it uses a `SlicedSprite`).
+
+#### mouseDownExternalSourceRect [PintarJS.Rectangle]
+
+Button's background external source rectangle, when mouse is down over the button (it uses a `SlicedSprite`).
+
+#### mouseDownInternalSourceRect [PintarJS.Rectangle]
+
+Button's background internal source rectangle, when mouse is down over the button (it uses a `SlicedSprite`).
+
+#### paragraphSkin [String]
+
+What paragraph skin to use for the button's text (the button creates an internal paragraph to show text).
+
+#### mouseHoverParagraphSkin [String]
+
+Paragraph skin for when the mouse hover over the button (if not defined, will use default paragraphSkin).
+
+#### mouseDownParagraphSkin [String]
+
+Paragraph skin for when the mouse is down over the button (if not defined, will use default paragraphSkin).
+
+#### heightInPixels [Number]
+
+Button default height in pixels.
+
+#### toggleMode [Boolean]
+
+If true, button will be in toggle mode, meaning clicking it will hold it down and clicking again will release it.
+When in toggle mode you can use `button.isChecked` to get if its currently toggled.
+
+#### color [PintarJS.Color]
+
+Set the button sprites color.
+
+
+
+# Callbacks
+
+To respond to UI events, you can register the following callbacks on all UI elements:
+
+-- TODO
 
 # Credits
 
