@@ -670,6 +670,7 @@ pintar.adjustToParentSize();
 ### 2.0.0.2 [UNDER DEVELOPMENT]
 
 - Added 'visible' property to UI elements.
+- Extended progressbar API.
 
 ## License
 

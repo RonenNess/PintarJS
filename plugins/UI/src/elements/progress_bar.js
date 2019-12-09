@@ -215,6 +215,32 @@ class ProgressBar extends Container
     }
 
     /**
+     * Make display value be the same of value right now, regardless of animation speed.
+     * Useful when you want to usually have animation, but set the starting value immediately.
+     */
+    matchDisplayToValue()
+    {
+        this._displayValue = this.value;
+    }
+
+    /**
+     * Set value from value and max.
+     * @param {Number} value Current value.
+     * @param {Number} max Max value.
+     */
+    setFromValueAndMax(value, max)
+    {
+        // special case
+        if (max <= 0 || value <= 0) {
+            this.value = 0;
+            return;
+        }
+
+        // set value
+        this.value = Math.min(value / max, 1);
+    }
+
+    /**
      * Draw the UI element.
      */
     draw(pintar)
@@ -223,7 +249,7 @@ class ProgressBar extends Container
         if (!this.visible) {
             return;
         }
-        
+
         // get dest rect
         var dest = this.getBoundingBox();
 
