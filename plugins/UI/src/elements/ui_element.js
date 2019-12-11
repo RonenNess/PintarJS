@@ -74,9 +74,9 @@ class UIElement
         // is this element currently visible?
         this.visible = true;
 
-        // when inside container, this will hold the element before us and element after us.
+        // when inside container, this will hold the element before us.
         // this is set internally by the container
-        this._siblingBefore = this._siblingAfter = null;
+        this._siblingBefore = null;
 
         // hold special offset for auto anchors
         this._autoOffset = null;
@@ -204,7 +204,7 @@ class UIElement
     _setParent(parent)
     {
         this.__cachedTopLeftPos = null;
-        this._autoOffset = this._siblingBefore = this._siblingAfter = null;
+        this._autoOffset = this._siblingBefore = null;
         this.__parent = parent;
     }
 

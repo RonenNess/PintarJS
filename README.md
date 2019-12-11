@@ -671,6 +671,8 @@ pintar.adjustToParentSize();
 
 - Added 'visible' property to UI elements.
 - Extended progressbar API.
+- Improved panels and auto anchors + added method to arrange all child anchors on-demand.
+- Added `hideExceedingElements` mode to containers.
 
 ## License
 

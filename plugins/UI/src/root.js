@@ -57,7 +57,11 @@ class UIRoot extends Container
      */
     draw(pintar)
     {
+        // draw children
         super.draw(this.pintar);
+
+        // clear viewports queue
+        Container._viewportsQueue = [];
     }
 
     /**

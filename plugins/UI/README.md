@@ -110,6 +110,10 @@ In addition, there's the `Fixed` anchor which will anchor to element to the top-
 Containers are any element that can hold child elements.
 Normally you'd use `Panels` to group together elements, especially if you want form-like graphics with it (described later), but know that some elements are also containers themselves (like buttons and progressbars) and you can add child elements directly to them (for example adding paragraph on top of progressbar).
 
+### hideExceedingElements
+
+If you want the container to hide overflowing elements (useful when you implement scrollbars), set this property to `true`. This will utilize Pintar's Viewports API to clip out everything that's beyond the container internal bounding box.
+
 
 ## Offset
 

@@ -287,8 +287,9 @@ module.exports = Button;
  */
 "use strict";
 const UIElement = require('./ui_element');
-const Anchors = require('../anchors');
+const PintarJS = require('../pintar');
 const SidesProperties = require('../sides_properties');
+
 
 /**
  * Implement a container element to hold other elements.
@@ -305,6 +306,7 @@ class Container extends UIElement
         // create children list
         this._children = [];
         this.padding = new SidesProperties(0, 0, 0, 0);
+        this.hideExceedingElements = false;
     }
 
     /**
@@ -321,6 +323,9 @@ class Container extends UIElement
         // add child
         this._children.push(element);
         element._setParent(this);
+        
+        // set starting sibling-before so we can calculate dest rect without waiting for update
+        element._siblingBefore = this._children[this._children.length-2];
     }
 
     /**
@@ -339,7 +344,7 @@ class Container extends UIElement
         if (index !== -1) 
         {
             this._children.splice(index, 1);
-            element._siblingBefore = element._siblingAfter = null;
+            element._siblingBefore = null;
             element._setParent(null);
         }
     }
@@ -387,11 +392,48 @@ class Container extends UIElement
         if (!this.visible) {
             return;
         }
+
+        // hide exceeding element by using pintar's viewport
+        if (this.hideExceedingElements) {
+            var destRect = this.getInternalBoundingBox();
+            var viewport = new PintarJS.Viewport(PintarJS.Point.zero(), destRect);
+            pintar.setViewport(viewport);
+            Container._viewportsQueue.push(viewport);
+        }
         
         // draw children
         for (var i = 0; i < this._children.length; ++i) 
         {
             this._children[i].draw(pintar);
+        }
+
+        // clear viewport
+        if (this.hideExceedingElements) {
+            Container._viewportsQueue.pop();    // <-- removes self viewport
+            var prev = Container._viewportsQueue.pop();
+            pintar.setViewport(prev);
+        }
+    }
+
+    /**
+     * Arrange the auto anchors of all children.
+     */
+    arrangeAllChildAutoAnchors()
+    {
+        // iterate all children
+        var lastElem = null;
+        for (var i = 0; i < this._children.length; ++i) {
+
+            // arrange child
+            var child = this._children[i];
+            child._siblingBefore = lastElem;
+            child._setOffsetForAutoAnchors();
+            lastElem = child;
+
+            // call child's arrange function
+            if (child.arrangeAllChildAutoAnchors) {
+                child.arrangeAllChildAutoAnchors();
+            }
         }
     }
 
@@ -409,7 +451,6 @@ class Container extends UIElement
 
         // call base class update
         super.update(input, forceState);
-        var selfSize = this.getSizeInPixels();
 
         // update children
         var lastElement = null;
@@ -420,7 +461,6 @@ class Container extends UIElement
 
             // set siblings and store last element
             element._siblingBefore = lastElement;
-            if (lastElement) { lastElement._siblingAfter = element; }
             lastElement = element;
 
             // update child element
@@ -429,9 +469,13 @@ class Container extends UIElement
     }
 }
 
+// queue of viewports to hide exceeding elements
+// this reset every drawing frame
+Container._viewportsQueue = [];
+
 // export the container
 module.exports = Container; 
-},{"../anchors":1,"../sides_properties":19,"./ui_element":14}],5:[function(require,module,exports){
+},{"../pintar":18,"../sides_properties":19,"./ui_element":14}],5:[function(require,module,exports){
 /**
  * file: cursor.js
  * description: Implement a cursor element.
@@ -2354,9 +2398,9 @@ class UIElement
         // is this element currently visible?
         this.visible = true;
 
-        // when inside container, this will hold the element before us and element after us.
+        // when inside container, this will hold the element before us.
         // this is set internally by the container
-        this._siblingBefore = this._siblingAfter = null;
+        this._siblingBefore = null;
 
         // hold special offset for auto anchors
         this._autoOffset = null;
@@ -2484,7 +2528,7 @@ class UIElement
     _setParent(parent)
     {
         this.__cachedTopLeftPos = null;
-        this._autoOffset = this._siblingBefore = this._siblingAfter = null;
+        this._autoOffset = this._siblingBefore = null;
         this.__parent = parent;
     }
 
