@@ -47,6 +47,7 @@ class UIRoot extends Container
         if (cursor.constructor !== Cursor) {
             throw new Error("Cursor must be a 'Cursor' element instance!");
         }
+        cursor._setParent(this);
         this._cursor = cursor;
     }
 
@@ -94,6 +95,9 @@ class UIRoot extends Container
             return;
         }
 
+        // check if should update bounding boxes
+        this.checkIfSelfBoundingBoxShouldUpdate();
+
         // draw children
         super.draw(this.pintar);
 
@@ -123,6 +127,17 @@ class UIRoot extends Container
             this._cursor.update(this.inputManager);
             this._cursor.setCursorType(this.inputManager.cursorType);
         }
+    }
+
+    /**
+     * Check if screen bounds updated.
+     */
+    checkIfSelfBoundingBoxShouldUpdate()
+    {
+        if (this.__lastCanvasRect && !this.__lastCanvasRect.equals(this.pintar.canvasRect)) {
+            this._onSelfBoundingBoxChange();
+        }
+        this.__lastCanvasRect = this.pintar.canvasRect.clone();
     }
 }
 

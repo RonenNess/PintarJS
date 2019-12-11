@@ -243,13 +243,8 @@ class ProgressBar extends Container
     /**
      * Draw the UI element.
      */
-    draw(pintar)
+    drawImp(pintar)
     {
-        // if not visible, do nothing
-        if (!this.visible) {
-            return;
-        }
-
         // get dest rect
         var dest = this.getBoundingBox();
 
@@ -308,8 +303,8 @@ class ProgressBar extends Container
             this._foregroundSprite.draw(pintar);
          }
 
-         // draw children, if have any
-         super.draw(pintar);
+         // draw children
+        super.drawImp(pintar);
     }
 
     /**

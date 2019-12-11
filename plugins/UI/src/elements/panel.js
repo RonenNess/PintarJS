@@ -43,6 +43,8 @@ class Panel extends Container
         // set background
         this._background = new SlicedSprite(options, '_');
         this._background._setParent(this);
+        this._background.size.x = this._background.size.y = 100;
+        this._background.size.xMode = this._background.size.yMode = '%';
         this._background.ignoreParentPadding = true;
     }
     
@@ -57,18 +59,13 @@ class Panel extends Container
     /**
      * Draw the UI element.
      */
-    draw(pintar)
+    drawImp(pintar)
     {
-        // if not visible, do nothing
-        if (!this.visible) {
-            return;
-        }
-
         // draw background
         this._background.draw(pintar);
 
         // draw children
-        super.draw(pintar);
+        super.drawImp(pintar);
     }
 
     /**
@@ -90,7 +87,6 @@ class Panel extends Container
         if (this._background)
         {
             this._background.update(input, forceState);
-            this._background.size = this.size;
         }
     }
 }

@@ -76,13 +76,8 @@ class VerticalLine extends UIElement
     /**
      * Draw the UI element.
      */
-    draw(pintar)
+    drawImp(pintar)
     {
-        // if not visible, do nothing
-        if (!this.visible) {
-            return;
-        }
-        
         // get dest rect
         var destRect = this.getBoundingBox();
 

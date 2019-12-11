@@ -107,13 +107,8 @@ class Cursor extends UIElement
     /**
      * Draw the UI element.
      */
-    draw(pintar)
+    drawImp(pintar)
     {
-        // if not visible, do nothing
-        if (!this.visible) {
-            return;
-        }
-
         // draw cursor
         this._sprite.draw(pintar);
     }
@@ -132,7 +127,7 @@ class Cursor extends UIElement
 
         // call base and set offset
         super.update(input, forceState);
-        this._sprite.offset = input.mousePosition;
+        this._sprite.offset = input.mousePosition.clone();
 
         // check if need to set down state
         if (input.leftMouseDown && this._sourceRect.downState) {

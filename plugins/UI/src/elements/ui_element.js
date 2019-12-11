@@ -71,6 +71,12 @@ class UIElement
         this.afterValueChanged = null;
         this.beforeUpdate = null;
 
+        // cache some things for faster calculations
+        this._selfBoundingBoxCache = null;
+        this._parentBoundingBoxCache = null;
+        this._parentInternalBoundingBoxCache = null;
+        this._boundingBoxVersion = 0;
+
         // is this element currently visible?
         this.visible = true;
 
@@ -203,8 +209,10 @@ class UIElement
      */
     _setParent(parent)
     {
-        this.__cachedTopLeftPos = null;
+        this._lastParentBoundingBoxVersion = -1;
+        this._cachedTopLeftPos = null;
         this._autoOffset = this._siblingBefore = null;
+        this._onParentBoundingBoxChange();
         this.__parent = parent;
     }
 
@@ -299,18 +307,27 @@ class UIElement
      */
     draw(pintar)
     {
-        throw new Error("Not Implemented!");
+        // if not visible, do nothing
+        if (!this.visible) {
+            return;
+        }
+
+        // check if should reset caches
+        this.checkIfParentBoundingBoxWasUpdated();
+        this.checkIfSelfBoundingBoxShouldUpdate();
+
+        // check if visible and draw
+        if (this.isVisiblyByViewport()) {
+            this.drawImp(pintar);
+        }
     }
 
     /**
-     * Draw the UI element but only if its visible.
+     * Actually implements drawing this element.
      * @param {*} pintar Pintar instance to draw this element on.
      */
-    drawIfVisible(pintar)
+    drawImp(pintar)
     {
-        if (this.isVisiblyByViewport()) {
-            this.draw(pintar);
-        }
     }
 
     /**
@@ -412,11 +429,8 @@ class UIElement
             return;
         }
 
-        // to check if anchor offset changed
-        var prevOffset = this._autoOffset ? this._autoOffset.clone() : PintarJS.Point.zero();
-
         // get parent internal bounding box
-        var parentIBB = this.__parent.getInternalBoundingBox();
+        var parentIBB = this.getParentInternalBoundingBox()
         
         // get margin
         var selfMargin = this._convertSides(this.margin);
@@ -439,7 +453,7 @@ class UIElement
                 var marginX = Math.max(selfMargin.left, lastElementMargin.right);
 
                 // set offset
-                this._autoOffset = new PintarJS.Point(lastElementBB.right - parentIBB.left + marginX, lastElementBB.top);
+                this._autoOffset = new PintarJS.Point(lastElementBB.right - parentIBB.left + marginX, lastElementBB.top - parentIBB.top);
 
                 // check if we should break line
                 if ((this.anchor === Anchors.AutoInline) && (this.getBoundingBox().right >= parentIBB.right)) 
@@ -470,11 +484,6 @@ class UIElement
                 this._autoOffset = new PintarJS.Point(selfMargin.left, selfMargin.top);
             }
         }
-
-        // check if updated and remove position caching
-        if (!prevOffset.equals(this._autoOffset)) {
-            this.__cachedTopLeftPos = null;
-        }
     }
 
     /**
@@ -493,6 +502,9 @@ class UIElement
         if (this.beforeUpdate) {
             this.beforeUpdate(this, input);
         }
+
+        // check if bounding box should update
+        this.checkIfSelfBoundingBoxShouldUpdate();
 
         // set auto position
         this._setOffsetForAutoAnchors();
@@ -544,9 +556,18 @@ class UIElement
      */
     getBoundingBox()
     {
+        // if got cached value, return it
+        if (this._selfBoundingBoxCache) 
+        {
+            return this._selfBoundingBoxCache.clone();
+        }
+
+        // calculate and return bounding box
         var position = this.getDestTopLeftPosition();
         var size = this.getSizeInPixels();
-        return new PintarJS.Rectangle(position.x, position.y, size.x, size.y);
+        this._selfBoundingBoxCache = new PintarJS.Rectangle(position.x, position.y, size.x, size.y);
+        this._boundingBoxVersion++;
+        return this._selfBoundingBoxCache.clone();
     }
 
     /**
@@ -556,7 +577,14 @@ class UIElement
      */
     getInternalBoundingBox()
     {
-        return this.getBoundingBox();
+        // if got cached value, return it
+        if (this._selfInternalBoundingBoxCache) 
+        {
+            return this._selfInternalBoundingBoxCache.clone();
+        }
+
+        this._selfInternalBoundingBoxCache = this.getBoundingBox();
+        return this._selfInternalBoundingBoxCache.clone();
     }
 
     /**
@@ -568,7 +596,7 @@ class UIElement
     }
 
     /**
-     * Check if this element is visible for current viewport
+     * Check if this element is visible for current viewport.
      */
     isVisiblyByViewport()
     {
@@ -595,10 +623,32 @@ class UIElement
      */
     getParentInternalBoundingBox()
     {
-        if (!this.parent) {
+        // get parent and make sure valid
+        var parent = this.parent;
+        if (!parent) {
             throw new Error("Missing parent element! Did you forget to create a UI root and add elements to it?");
         }
-        return this.ignoreParentPadding ? this.parent.getBoundingBox() : this.parent.getInternalBoundingBox();
+
+        // ignore padding - take parent whole bounding box
+        if (this.ignoreParentPadding) 
+        {
+            // check if need to refresh cache and return
+            if (!this._parentBoundingBoxCache)
+            {
+                this._parentBoundingBoxCache = this.parent.getBoundingBox();
+            }
+            return this._parentBoundingBoxCache;
+        }
+        // don't ignore padding - get internal bounding box
+        else 
+        {
+            // check if need to refresh cache and return
+            if (!this._parentInternalBoundingBoxCache)
+            {
+                this._parentInternalBoundingBoxCache = this.parent.getInternalBoundingBox();
+            }
+            return this._parentInternalBoundingBoxCache;
+        }
     } 
 
     /**
@@ -679,6 +729,8 @@ class UIElement
         if (anchor.indexOf('Auto') === 0 && this._autoOffset) {
             ret = ret.add(this._autoOffset);
         }
+
+        // return result
         return ret;
     }
 
@@ -694,32 +746,94 @@ class UIElement
             return this.offset.clone();
         }
 
-        // get parent bounding box
+        // got cached value? return it
+        if (this._cachedTopLeftPos) {
+            return this._cachedTopLeftPos.clone();
+        }
+
+        // if got here it means there's no cache, calculate it
         var parentRect = this.getParentInternalBoundingBox();
         var selfSize = this.getSizeInPixels();
         var offset = this.getOffsetInPixels();
         
-
-        // check if we can use cache
-        if (this.__cachedTopLeftPos &&
-            this.anchor === this.__lastAnchor &&
-            selfSize.equals(this.__lastSize || PintarJS.Point.zero()) &&
-            offset.equals(this.__lastOffset || PintarJS.Point.zero()) &&
-            parentRect.equals(this.__lastParentRect || new PintarJS.Rectangle()))
-            {
-                return this.__cachedTopLeftPos;
-            }
+        // update auto-anchor offset if needed
+        this._setOffsetForAutoAnchors();
         
         // get position based on anchor
         var ret = this.getDestTopLeftPositionForRect(parentRect, selfSize, this.anchor, offset);
 
         // put in cache and return
-        this.__cachedTopLeftPos = ret.clone();
-        this.__lastAnchor = this.anchor;
-        this.__lastSize = selfSize;
-        this.__lastOffset = offset;
-        this.__lastParentRect = parentRect.clone();
+        this._boundingBoxVersion++;
+        this._cachedTopLeftPos = ret.clone();
         return ret;
+    }
+
+    /**
+     * Check if bounding box of this element's parent should update.
+     * If so, will call _onParentBoundingBoxChange().
+     */
+    checkIfParentBoundingBoxWasUpdated()
+    {
+        if (this.__parent && this._lastParentBoundingBoxVersion != this.__parent._boundingBoxVersion) {
+            this._onParentBoundingBoxChange();
+        }
+    }
+
+    /**
+     * Check if bounding box of this element should update, but not due to parent change but because of internal change.
+     * If so, will call _onSelfBoundingBoxChange().
+     */
+    checkIfSelfBoundingBoxShouldUpdate()
+    {
+        var autoOffset = this._autoOffset || PintarJS.Point.zero();
+        if ((this.__lastAnchor !== this.anchor) ||
+            (!this.__lastSize || !this.__lastSize.equals(this.size)) ||
+            (!this.__lastOffset || !this.__lastOffset.equals(this.offset)) ||
+            (!this.__lastMargin || !this.__lastMargin.equals(this.margin)) ||
+            (!this.__lastAutoOffset || !this.__lastAutoOffset.equals(autoOffset)) ||
+            (this.__lastScale !== this.scale) ||
+            (this.__lastIgnoreParentPadding !== this.ignoreParentPadding) ||
+            (this.padding && (!this.__lastPadding || !this.__lastPadding.equals(this.padding))))
+            {
+                this._onSelfBoundingBoxChange();
+                this.__lastAnchor = this.anchor;
+                this.__lastSize = this.size.clone();
+                this.__lastOffset = this.offset.clone();
+                this.__lastMargin = this.margin.clone();
+                this.__lastAutoOffset = autoOffset.clone();
+                this.__lastPadding = this.padding ? this.padding.clone() : null;
+                this.__lastIgnoreParentPadding = this.ignoreParentPadding;
+                this.__lastScale = this.scale;
+            }
+    }
+
+    /**
+     * Called whenever self bounding box changed.
+     */
+    _onSelfBoundingBoxChange()
+    {
+        this._autoOffset = null;
+        this._cachedTopLeftPos = null;
+        this._selfBoundingBoxCache = null;
+        this._selfInternalBoundingBoxCache = null;
+    }
+
+    /**
+     * Called whenever the parent's bounding box was updated.
+     */
+    _onParentBoundingBoxChange()
+    {
+        // change in parent bounding box will always result in self change
+        this._onSelfBoundingBoxChange();
+
+        // clear parent caches
+        this._parentBoundingBoxCache = null;
+        this._parentInternalBoundingBoxCache = null;
+
+        // store last known parent bounding box
+        if (this.__parent) {
+            this._lastParentBoundingBoxVersion = this.__parent._boundingBoxVersion;
+        }
     }
 
     /**

@@ -35,6 +35,15 @@ class SidesProperties
     }
 
     /**
+     * Return if equal another value.
+     */
+    equals(other)
+    {
+        return this.left === other.left && this.right === other.right && this.top === other.top && this.bottom === other.bottom &&
+                this.leftMode === other.leftMode && this.rightMode === other.rightMode && this.topMode === other.topMode && this.bottomMode === other.bottomMode;
+    }
+
+    /**
      * Clone and return sides data.
      */
     clone()

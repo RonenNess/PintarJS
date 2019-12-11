@@ -106,13 +106,8 @@ class Paragraph extends UIElement
     /**
      * Draw the UI element.
      */
-    draw(pintar)
+    drawImp(pintar)
     {
-        // if not visible, do nothing
-        if (!this.visible) {
-            return;
-        }
-
         // set auto height
         if (this.autoSetHeight) 
         {

@@ -110,13 +110,8 @@ class SlicedSprite extends UIElement
      * Draw the UI element.
      * @param {*} pintar Pintar instance to draw this element on.
      */
-    draw(pintar)
+    drawImp(pintar)
     {
-        // if not visible, do nothing
-        if (!this.visible) {
-            return;
-        }
-        
         // get drawing position and size
         var destRect = this.getBoundingBox();
         

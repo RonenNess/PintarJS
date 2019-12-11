@@ -674,6 +674,7 @@ pintar.adjustToParentSize();
 - Improved panels and auto anchors + added method to arrange all child anchors on-demand.
 - Added `hideExceedingElements` mode to containers.
 - Added optimization to skip drawing invisible elements.
+- Huge refactor to optimize bounding boxes and positions, making everything a lot faster when there are lots of containers.
 
 ## License
 

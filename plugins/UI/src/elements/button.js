@@ -195,13 +195,8 @@ class Button extends Container
     /**
      * Draw the UI element.
      */
-    draw(pintar)
+    drawImp(pintar)
     {
-        // if not visible, do nothing
-        if (!this.visible) {
-            return;
-        }
-
         // get dest rect
         var destRect = this.getBoundingBox();
 
@@ -235,7 +230,7 @@ class Button extends Container
         }
 
         // draw children
-        super.draw(pintar);
+        super.drawImp(pintar);
     }
 
     /**

@@ -57,7 +57,8 @@
       var positionX = marginX;
       var containersHeight = 490;
       var totalWidth = 0;
-      var firstContainer = null;
+      var allDemoContainer = new PintarJS.UI.Container();
+      root.addChild(allDemoContainer);
 
       // set cursor
       var cursor = new PintarJS.UI.Cursor(UI_THEME);
@@ -71,11 +72,8 @@
         container.anchor = PintarJS.UI.Anchors.AutoInlineNoBreak;
         container.size.set(370, containersHeight);
         container.margin.set(10, 10, 10, 10);
-        root.addChild(container);
+        allDemoContainer.addChild(container);
         totalWidth += 10 + 370;
-
-        // set first container
-        firstContainer = firstContainer || container;
 
         // add title
         var header = new PintarJS.UI.Paragraph(UI_THEME, "header");
@@ -282,7 +280,7 @@
 
       // set offset from scrollbar
       scrollbar.afterValueChanged = () => {
-        firstContainer.margin.left = (-totalWidth + pintar.canvas.width) * scrollbar.getValuePercent();
+        allDemoContainer.offset.x = (-totalWidth + pintar.canvas.width - 30) * scrollbar.getValuePercent();
       }
 
       // draw everything

@@ -85,13 +85,38 @@ class Container extends UIElement
      */
     getInternalBoundingBox()
     {
+        // get bounding box and padding
         var ret = this.getBoundingBox();
         var padding = this.padding ? this._convertSides(this.padding) : {top: 0, bottom: 0, left: 0, right: 0};
+
+        // check if should update internal bounding box version
+        if (!this.__lastKnownPadding || 
+            (this.__lastKnownPadding.left != padding.left || 
+            this.__lastKnownPadding.right != padding.right || 
+            this.__lastKnownPadding.top != padding.top || 
+            this.__lastKnownPadding.bottom != padding.bottom))
+            {
+                this._bbiVersion++;
+                this.__lastKnownPadding = padding;
+            }
+
+        // add padding and return
         ret.x += padding.left;
         ret.y += padding.top;
         ret.width -= (padding.right + padding.left);
         ret.height -= (padding.bottom + padding.top);
         return ret;
+    }
+
+    /**
+     * Called whenever self bounding box changed.
+     */
+    _onSelfBoundingBoxChange()
+    {
+        super._onSelfBoundingBoxChange();
+        for (var i = 0; i < this._children.length; ++i) {
+            this._children[i]._onParentBoundingBoxChange();
+        }
     }
 
     /**
@@ -105,13 +130,8 @@ class Container extends UIElement
     /**
      * Draw the UI element.
      */
-    draw(pintar)
+    drawImp(pintar)
     {
-        // if not visible, do nothing
-        if (!this.visible) {
-            return;
-        }
-
         // hide exceeding element by using pintar's viewport
         if (this.hideExceedingElements) {
             var destRect = this.getInternalBoundingBox();
@@ -124,7 +144,7 @@ class Container extends UIElement
         // draw children
         for (var i = 0; i < this._children.length; ++i) 
         {
-            this._children[i].drawIfVisible(pintar);
+            this._children[i].draw(pintar);
         }
 
         // clear viewport
@@ -137,13 +157,12 @@ class Container extends UIElement
     }
 
     /**
-     * Draw the UI element but only if its visible.
-     * Skip this test for containers, its only relevant for elements.
-     * @param {*} pintar Pintar instance to draw this element on.
+     * Check if this element is visible for current viewport - containers are always "visible".
+     * This test is only relevant for elements.
      */
-    drawIfVisible(pintar)
+    isVisiblyByViewport()
     {
-        this.draw(pintar);
+        return true;
     }
 
     /**
