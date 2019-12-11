@@ -303,6 +303,17 @@ class UIElement
     }
 
     /**
+     * Draw the UI element but only if its visible.
+     * @param {*} pintar Pintar instance to draw this element on.
+     */
+    drawIfVisible(pintar)
+    {
+        if (this.isVisiblyByViewport()) {
+            this.draw(pintar);
+        }
+    }
+
+    /**
      * Trigger registered events based on current state and previous state.
      */
     _triggerEvents(input)
@@ -546,6 +557,36 @@ class UIElement
     getInternalBoundingBox()
     {
         return this.getBoundingBox();
+    }
+
+    /**
+     * Get currently visible region.
+     */
+    getVisibleRegion()
+    {
+        return UIElement.visibleRegion;
+    }
+
+    /**
+     * Check if this element is visible for current viewport
+     */
+    isVisiblyByViewport()
+    {
+        // get visible region
+        var visibleRegion = UIElement.visibleRegion;
+
+        // if got visible region test it
+        if (visibleRegion) {
+
+            // get dest rect and check if visible
+            var dest = this.getBoundingBox();
+            if (dest.bottom < visibleRegion.top || dest.top > visibleRegion.bottom || dest.right < visibleRegion.left || dest.left > visibleRegion.right) {
+                return false;
+            }
+        }
+
+        // if got here it means its visible
+        return true;
     }
 
     /**

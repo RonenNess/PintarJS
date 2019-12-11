@@ -118,12 +118,13 @@ class Container extends UIElement
             var viewport = new PintarJS.Viewport(PintarJS.Point.zero(), destRect);
             pintar.setViewport(viewport);
             Container._viewportsQueue.push(viewport);
+            this._updateVisibleRegion(pintar);
         }
         
         // draw children
         for (var i = 0; i < this._children.length; ++i) 
         {
-            this._children[i].draw(pintar);
+            this._children[i].drawIfVisible(pintar);
         }
 
         // clear viewport
@@ -131,7 +132,27 @@ class Container extends UIElement
             Container._viewportsQueue.pop();    // <-- removes self viewport
             var prev = Container._viewportsQueue.pop();
             pintar.setViewport(prev);
+            this._updateVisibleRegion(pintar);
         }
+    }
+
+    /**
+     * Draw the UI element but only if its visible.
+     * Skip this test for containers, its only relevant for elements.
+     * @param {*} pintar Pintar instance to draw this element on.
+     */
+    drawIfVisible(pintar)
+    {
+        this.draw(pintar);
+    }
+
+    /**
+     * Update the currently visible region.
+     */
+    _updateVisibleRegion(pintar)
+    {
+        var viewport = Container._viewportsQueue[Container._viewportsQueue.length-1];
+        UIElement.visibleRegion = viewport ? viewport.drawingRegion : pintar.canvasRect;
     }
 
     /**

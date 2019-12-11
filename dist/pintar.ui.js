@@ -399,12 +399,13 @@ class Container extends UIElement
             var viewport = new PintarJS.Viewport(PintarJS.Point.zero(), destRect);
             pintar.setViewport(viewport);
             Container._viewportsQueue.push(viewport);
+            this._updateVisibleRegion(pintar);
         }
         
         // draw children
         for (var i = 0; i < this._children.length; ++i) 
         {
-            this._children[i].draw(pintar);
+            this._children[i].drawIfVisible(pintar);
         }
 
         // clear viewport
@@ -412,7 +413,27 @@ class Container extends UIElement
             Container._viewportsQueue.pop();    // <-- removes self viewport
             var prev = Container._viewportsQueue.pop();
             pintar.setViewport(prev);
+            this._updateVisibleRegion(pintar);
         }
+    }
+
+    /**
+     * Draw the UI element but only if its visible.
+     * Skip this test for containers, its only relevant for elements.
+     * @param {*} pintar Pintar instance to draw this element on.
+     */
+    drawIfVisible(pintar)
+    {
+        this.draw(pintar);
+    }
+
+    /**
+     * Update the currently visible region.
+     */
+    _updateVisibleRegion(pintar)
+    {
+        var viewport = Container._viewportsQueue[Container._viewportsQueue.length-1];
+        UIElement.visibleRegion = viewport ? viewport.drawingRegion : pintar.canvasRect;
     }
 
     /**
@@ -2627,6 +2648,17 @@ class UIElement
     }
 
     /**
+     * Draw the UI element but only if its visible.
+     * @param {*} pintar Pintar instance to draw this element on.
+     */
+    drawIfVisible(pintar)
+    {
+        if (this.isVisiblyByViewport()) {
+            this.draw(pintar);
+        }
+    }
+
+    /**
      * Trigger registered events based on current state and previous state.
      */
     _triggerEvents(input)
@@ -2870,6 +2902,36 @@ class UIElement
     getInternalBoundingBox()
     {
         return this.getBoundingBox();
+    }
+
+    /**
+     * Get currently visible region.
+     */
+    getVisibleRegion()
+    {
+        return UIElement.visibleRegion;
+    }
+
+    /**
+     * Check if this element is visible for current viewport
+     */
+    isVisiblyByViewport()
+    {
+        // get visible region
+        var visibleRegion = UIElement.visibleRegion;
+
+        // if got visible region test it
+        if (visibleRegion) {
+
+            // get dest rect and check if visible
+            var dest = this.getBoundingBox();
+            if (dest.bottom < visibleRegion.top || dest.top > visibleRegion.bottom || dest.right < visibleRegion.left || dest.left > visibleRegion.right) {
+                return false;
+            }
+        }
+
+        // if got here it means its visible
+        return true;
     }
 
     /**
