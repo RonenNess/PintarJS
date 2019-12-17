@@ -860,7 +860,7 @@ class Point
     {
         return new Point(this.x - other.x, this.y - other.y);
     }
-	
+    
     /**
      * Add this / other point (does not affect self, return a copy).
      * @param {PintarJS.Point} other Other point to add.
@@ -901,6 +901,16 @@ class Point
     ceil() 
     {
         return new Point(Math.ceil(this.x), Math.ceil(this.y));
+    }
+    
+    /**
+     * Return a normalized copy of this point.
+     */
+    normalize()
+    {
+        if (this.x == 0 && this.y == 0) { return Point.zero(); }
+        var mag = Math.sqrt((this.x * this.x) + (this.y * this.y));
+        return new Point(this.x / mag, this.y / mag);
     }
 
     /**
@@ -972,6 +982,15 @@ Point.one = function()
 Point.half = function()
 {
     return new Point(0.5, 0.5);
+}
+
+/**
+ * Get point from degrees.
+ */
+Point.fromAngle = function(degrees)
+{
+    var rads = degrees * (Math.PI / 180);
+    return new Point(Math.cos(rads), Math.sin(rads));
 }
 
 // export Point
