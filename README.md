@@ -675,6 +675,7 @@ pintar.adjustToParentSize();
 - Added `hideExceedingElements` mode to containers.
 - Added optimization to skip drawing invisible elements.
 - Huge refactor to optimize bounding boxes and positions, making everything a lot faster when there are lots of containers.
+- Fixed bug in positioning panels background after screen / parent resize.
 
 ## License
 

@@ -843,6 +843,15 @@ class Panel extends Container
     }
        
     /**
+     * Called whenever self bounding box changed.
+     */
+    _onSelfBoundingBoxChange()
+    {
+        super._onSelfBoundingBoxChange();
+        this._background._onParentBoundingBoxChange();
+    }
+
+    /**
      * Draw the UI element.
      */
     drawImp(pintar)
