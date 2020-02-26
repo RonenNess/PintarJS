@@ -3392,6 +3392,9 @@ class InputManager
         // mouse wheel change
         this._mouseWheel = 0;
 
+        // mouse position multiply factor - use this to adjust different size between canvas and screen
+        this.mousePositionFactor = 1;
+
         // starting position
         this._mousePosition = new PintarJS.Point(0, 0);
 
@@ -3503,7 +3506,10 @@ class InputManager
      */
     get mousePosition()
     {
-        return this._mousePosition.clone();
+        var ret = this._mousePosition.clone();
+        ret.x *= this.mousePositionFactor;
+        ret.y *= this.mousePositionFactor;
+        return ret;
     }
 
     /**
