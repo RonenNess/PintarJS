@@ -677,6 +677,7 @@ pintar.adjustToParentSize();
 - Huge refactor to optimize bounding boxes and positions, making everything a lot faster when there are lots of containers.
 - Fixed bug in positioning panels background after screen / parent resize.
 - Added `mousePositionFactor` to input manager to allow adjustment between different canvas and window size.
+- Unified the way we extract values from options dictionary or theme, to make sure we clone values and never accidentally change shared resource.
 
 ## License
 

@@ -1971,10 +1971,10 @@ class Slider extends Container
         this.setBaseOptions(options);
 
         // get texture scale
-        var textureScale = (options.textureScale || 1);
-
+        var textureScale = this.__getFromOptions(options, 'textureScale', 1);
+        
         // get direction
-        this._direction = options.direction || "horizontal";
+        this._direction = this.__getFromOptions(options, 'direction', "horizontal");
 
         // set min, max and if should round values
         this._min = 0;
@@ -1991,12 +1991,15 @@ class Slider extends Container
         this._line.ignoreParentPadding = true;
         this._line.margin.set(0, 0, 0, 0);
 
+        // get middle source rect
+        var middleSourceRect = this.__getFromOptions(options, 'middleSourceRect');
+
         // set default size for horizontal
         if (this._direction === "horizontal") 
         {
             this.size.x = 100;
             this.size.xMode = SizeModes.Percents;
-            this.size.y = options.middleSourceRect.height * textureScale;
+            this.size.y = middleSourceRect.height * textureScale;
             this.size.yMode = SizeModes.Pixels;
         }
         // set default size for vertical
@@ -2004,7 +2007,7 @@ class Slider extends Container
         {
             this.size.y = 100;
             this.size.yMode = SizeModes.Percents;
-            this.size.x = options.middleSourceRect.width * textureScale;
+            this.size.x = middleSourceRect.width * textureScale;
             this.size.xMode = SizeModes.Pixels;
         }
 
@@ -2024,7 +2027,7 @@ class Slider extends Container
         this._handle.size.set(options.handleSourceRect.width * textureScale, options.handleSourceRect.height * textureScale);
 
         // set handle offset
-        this._handleOffset = options.handleOffset || PintarJS.Point.zero();
+        this._handleOffset = this.__getFromOptions(options, 'handleOffset', PintarJS.Point.zero());
 
         // set starting value
         this.value = 50;
@@ -2266,9 +2269,9 @@ class Sprite extends UIElement
         }
 
         // extract params
-        var texture = options.texture;
-        var textureScale = options.textureScale || 1;
-        var sourceRect = options.sourceRect;
+        var texture = this.__getFromOptions(options, 'texture');
+        var textureScale = this.__getFromOptions(options, 'textureScale', 1);
+        var sourceRect = this.__getFromOptions(options, 'sourceRect');
 
         // make sure texture scale comes with source rect
         if (options.textureScale && !sourceRect) {
@@ -2282,6 +2285,22 @@ class Sprite extends UIElement
             this.size.x = sourceRect.width * textureScale;
             this.size.y = sourceRect.height * textureScale;
         }
+    }
+
+    /**
+     * Set texture.
+     */
+    set texture(val)
+    {
+        this._sprite.texture = val;
+    }
+
+    /**
+     * Get texture.
+     */
+    get texture()
+    {
+        return this._sprite.texture;
     }
 
     /**
@@ -2449,10 +2468,10 @@ class UIElement
      */
     setBaseOptions(options)
     {
-        this.scale = options.scale || this.scale;
-        this.margin = (options.margin || this.margin).clone();
-        this.anchor = options.anchor || this.anchor;
-        this.cursor = options.cursor || this.cursor;
+        this.scale = this.__getFromOptions(options, 'scale', this.scale);
+        this.margin = this.__getFromOptions(options, 'margin', this.margin);
+        this.anchor = this.__getFromOptions(options, 'anchor', this.anchor);
+        this.cursor = this.__getFromOptions(options, 'cursor', this.cursor);
     }
 
     /**
@@ -2558,6 +2577,19 @@ class UIElement
         this._autoOffset = this._siblingBefore = null;
         this._onParentBoundingBoxChange();
         this.__parent = parent;
+    }
+
+    /**
+     * Get value from options dictionary (and clone it) or default.
+     */
+    __getFromOptions(options, key, defaultVal)
+    {
+        var val = options[key]
+        if (val === undefined) val = defaultVal;
+        if (val && val.clone) {
+            val = val.clone();
+        }
+        return val;
     }
 
     /**
@@ -3232,36 +3264,42 @@ class VerticalLine extends UIElement
         this.setBaseOptions(options);
 
         // get texture scale
-        var textureScale = (options.textureScale || 1);
+        var textureScale = this.__getFromOptions(options, 'textureScale', 1);
+
+        // get middle source rect
+        var middleSourceRect = this.__getFromOptions(options, 'middleSourceRect');
 
         // set default width
-        this.size.x = options.middleSourceRect.width * textureScale;
+        this.size.x = middleSourceRect.width * textureScale;
         this.size.xMode = SizeModes.Pixels;
 
         // set default height
-        this.size.y = options.middleSourceRect.height * textureScale * 2;
+        this.size.y = middleSourceRect.height * textureScale * 2;
         this.size.yMode = SizeModes.Pixels;
 
+        // get texture
+        var texture = this.__getFromOptions(options, 'texture');
+
         // create top edge
-        var topSideSourceRect = options.startEdgeSourceRect;
+        var topSideSourceRect = this.__getFromOptions(options, 'startEdgeSourceRect');
         if (topSideSourceRect)
         {
-            this._topEdgeSprite = new PintarJS.Sprite(options.texture);
+            this._topEdgeSprite = new PintarJS.Sprite(texture);
             this._topEdgeSprite.sourceRectangle = topSideSourceRect;
             this._topEdgeSprite.size.set(topSideSourceRect.width * textureScale, topSideSourceRect.height * textureScale);
         }
         // create bottom edge
-        var bottomSideSourceRect = options.endEdgeSourceRect;
+        var bottomSideSourceRect = this.__getFromOptions(options, 'endEdgeSourceRect');
         if (bottomSideSourceRect)
         {
-            this._bottomEdgeSprite = new PintarJS.Sprite(options.texture);
+            this._bottomEdgeSprite = new PintarJS.Sprite(texture);
             this._bottomEdgeSprite.sourceRectangle = bottomSideSourceRect;
             this._bottomEdgeSprite.size.set(bottomSideSourceRect.width * textureScale, bottomSideSourceRect.height * textureScale);
         }
         // create center part
-        this._middleSprite = new PintarJS.Sprite(options.texture);
-        this._textureScale = options.textureScale;
-        this._middleSourceRect = options.middleSourceRect;
+        this._middleSprite = new PintarJS.Sprite(texture);
+        this._textureScale = this.__getFromOptions(options, 'textureScale');
+        this._middleSourceRect = this.__getFromOptions(options, 'middleSourceRect');
     }
 
     /**

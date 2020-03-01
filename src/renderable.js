@@ -47,6 +47,19 @@ class Renderable
         target.color = this.color.clone();
         target.blendMode = this.blendMode;
     }
+    
+    /**
+     * Get value from options dictionary (and clone it) or default.
+     */
+    __getFromOptions(options, key, defaultVal)
+    {
+        var val = options[key];
+        if (val === undefined) val = defaultVal;
+        if (val && val.clone) {
+            val = val.clone();
+        }
+        return val;
+    }
 }
 
 // export Renderable class

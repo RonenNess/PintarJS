@@ -43,10 +43,10 @@ class Slider extends Container
         this.setBaseOptions(options);
 
         // get texture scale
-        var textureScale = (options.textureScale || 1);
-
+        var textureScale = this.__getFromOptions(options, 'textureScale', 1);
+        
         // get direction
-        this._direction = options.direction || "horizontal";
+        this._direction = this.__getFromOptions(options, 'direction', "horizontal");
 
         // set min, max and if should round values
         this._min = 0;
@@ -63,12 +63,15 @@ class Slider extends Container
         this._line.ignoreParentPadding = true;
         this._line.margin.set(0, 0, 0, 0);
 
+        // get middle source rect
+        var middleSourceRect = this.__getFromOptions(options, 'middleSourceRect');
+
         // set default size for horizontal
         if (this._direction === "horizontal") 
         {
             this.size.x = 100;
             this.size.xMode = SizeModes.Percents;
-            this.size.y = options.middleSourceRect.height * textureScale;
+            this.size.y = middleSourceRect.height * textureScale;
             this.size.yMode = SizeModes.Pixels;
         }
         // set default size for vertical
@@ -76,7 +79,7 @@ class Slider extends Container
         {
             this.size.y = 100;
             this.size.yMode = SizeModes.Percents;
-            this.size.x = options.middleSourceRect.width * textureScale;
+            this.size.x = middleSourceRect.width * textureScale;
             this.size.xMode = SizeModes.Pixels;
         }
 
@@ -96,7 +99,7 @@ class Slider extends Container
         this._handle.size.set(options.handleSourceRect.width * textureScale, options.handleSourceRect.height * textureScale);
 
         // set handle offset
-        this._handleOffset = options.handleOffset || PintarJS.Point.zero();
+        this._handleOffset = this.__getFromOptions(options, 'handleOffset', PintarJS.Point.zero());
 
         // set starting value
         this.value = 50;

@@ -26,17 +26,17 @@ class TextSprite extends Renderable
     {
         // set basics
         options = options || {};
-        super(position || Point.zero(), options.color || TextSprite.defaults.color, options.blendMode || TextSprite.defaults.blendMode);
+        super(this.__getFromOptions(options, 'position', Point.zero()), this.__getFromOptions(options, 'color', TextSprite.defaults.color), this.__getFromOptions(options, 'blendMode', TextSprite.defaults.blendMode));
         this._version = 0;
         this.text = text;
-        this.font = options.font || TextSprite.defaults.font;
-        this.fontSize = options.fontSize || TextSprite.defaults.fontSize;
-        this.alignment = options.alignment || TextSprite.defaults.alignment;
-        this.strokeWidth = options.strokeWidth || TextSprite.defaults.strokeWidth;
-        this.maxWidth = null;
-        this.strokeColor = (options.strokeColor || TextSprite.defaults.strokeColor).clone();
+        this.font = this.__getFromOptions(options, 'font', TextSprite.defaults.font);
+        this.fontSize = this.__getFromOptions(options, 'fontSize', TextSprite.defaults.fontSize);
+        this.alignment = this.__getFromOptions(options, 'alignment', TextSprite.defaults.alignment);
+        this.strokeWidth = this.__getFromOptions(options, 'strokeWidth', TextSprite.defaults.strokeWidth);
+        this.strokeColor = this.__getFromOptions(options, 'strokeColor', TextSprite.defaults.strokeColor);
         this.useStyleCommands = TextSprite.defaults.useStyleCommands;
         this.tracking = TextSprite.defaults.tracking;
+        this.maxWidth = null;
         
         // optional offset to add on Y axis based on actual line height
         this.lineHeightOffsetFactor = TextSprite.defaults.lineHeightOffsetFactor;

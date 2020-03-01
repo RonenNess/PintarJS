@@ -39,21 +39,22 @@ class Sprite extends Renderable
     constructor(texture, position, options)
     {
         options = options || {};
-        super((position || Point.zero()), (options.color || Sprite.defaults.color), (options.blendMode || Sprite.defaults.blendMode));
+        super(this.__getFromOptions(options, 'position', Point.zero()), this.__getFromOptions(options, 'color', Sprite.defaults.color), this.__getFromOptions(options, 'blendMode', Sprite.defaults.blendMode));
+        
         this.texture = texture;
-        var size = (options.size || Sprite.defaults.size);
+        var size = this.__getFromOptions(options, 'size', Sprite.defaults.size);
         this.size = new Point(size.x, size.y);
-        this.scale = (options.scale || Sprite.defaults.scale).clone();
-        this.sourceRectangle = (options.sourceRectangle || this.sourceRectangle).clone();
-        this.smoothingEnabled = options.smoothingEnabled || Sprite.defaults.smoothingEnabled;
-        this.origin = (options.origin || Sprite.defaults.origin).clone();
-        this.rotation = options.rotation || 0;
-        this.brightness = options.brightness || 1;
-        this.colorBoost = (options.colorBoost || Sprite.defaults.colorBoost).clone();
-        this.greyscale = Boolean(options.greyscale);
+        this.scale = this.__getFromOptions(options, 'scale', Sprite.defaults.scale); 
+        this.sourceRectangle = this.__getFromOptions(options, 'sourceRectangle', Sprite.defaults.sourceRectangle);
+        this.smoothingEnabled = this.__getFromOptions(options, 'smoothingEnabled', Sprite.defaults.smoothingEnabled);
+        this.origin = this.__getFromOptions(options, 'origin', Sprite.defaults.origin);
+        this.rotation =  this.__getFromOptions(options, 'rotation', 0);
+        this.brightness = this.__getFromOptions(options, 'brightness', 1);
+        this.colorBoost = this.__getFromOptions(options, 'colorBoost', Sprite.defaults.colorBoost);
+        this.greyscale = Boolean(this.__getFromOptions(options, 'greyscale'));
         this.cacheRelativeSourceRectangle = true;
         this.applyAntiBleeding = Sprite.defaults.applyAntiBleeding;
-        this.skew = options.skew ? options.skew.clone() : Point.zero();
+        this.skew = this.__getFromOptions(options, 'skew', Point.zero());
     }
 
     /**

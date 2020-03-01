@@ -105,10 +105,10 @@ class UIElement
      */
     setBaseOptions(options)
     {
-        this.scale = options.scale || this.scale;
-        this.margin = (options.margin || this.margin).clone();
-        this.anchor = options.anchor || this.anchor;
-        this.cursor = options.cursor || this.cursor;
+        this.scale = this.__getFromOptions(options, 'scale', this.scale);
+        this.margin = this.__getFromOptions(options, 'margin', this.margin);
+        this.anchor = this.__getFromOptions(options, 'anchor', this.anchor);
+        this.cursor = this.__getFromOptions(options, 'cursor', this.cursor);
     }
 
     /**
@@ -214,6 +214,19 @@ class UIElement
         this._autoOffset = this._siblingBefore = null;
         this._onParentBoundingBoxChange();
         this.__parent = parent;
+    }
+
+    /**
+     * Get value from options dictionary (and clone it) or default.
+     */
+    __getFromOptions(options, key, defaultVal)
+    {
+        var val = options[key]
+        if (val === undefined) val = defaultVal;
+        if (val && val.clone) {
+            val = val.clone();
+        }
+        return val;
     }
 
     /**

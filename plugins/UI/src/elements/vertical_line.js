@@ -33,36 +33,42 @@ class VerticalLine extends UIElement
         this.setBaseOptions(options);
 
         // get texture scale
-        var textureScale = (options.textureScale || 1);
+        var textureScale = this.__getFromOptions(options, 'textureScale', 1);
+
+        // get middle source rect
+        var middleSourceRect = this.__getFromOptions(options, 'middleSourceRect');
 
         // set default width
-        this.size.x = options.middleSourceRect.width * textureScale;
+        this.size.x = middleSourceRect.width * textureScale;
         this.size.xMode = SizeModes.Pixels;
 
         // set default height
-        this.size.y = options.middleSourceRect.height * textureScale * 2;
+        this.size.y = middleSourceRect.height * textureScale * 2;
         this.size.yMode = SizeModes.Pixels;
 
+        // get texture
+        var texture = this.__getFromOptions(options, 'texture');
+
         // create top edge
-        var topSideSourceRect = options.startEdgeSourceRect;
+        var topSideSourceRect = this.__getFromOptions(options, 'startEdgeSourceRect');
         if (topSideSourceRect)
         {
-            this._topEdgeSprite = new PintarJS.Sprite(options.texture);
+            this._topEdgeSprite = new PintarJS.Sprite(texture);
             this._topEdgeSprite.sourceRectangle = topSideSourceRect;
             this._topEdgeSprite.size.set(topSideSourceRect.width * textureScale, topSideSourceRect.height * textureScale);
         }
         // create bottom edge
-        var bottomSideSourceRect = options.endEdgeSourceRect;
+        var bottomSideSourceRect = this.__getFromOptions(options, 'endEdgeSourceRect');
         if (bottomSideSourceRect)
         {
-            this._bottomEdgeSprite = new PintarJS.Sprite(options.texture);
+            this._bottomEdgeSprite = new PintarJS.Sprite(texture);
             this._bottomEdgeSprite.sourceRectangle = bottomSideSourceRect;
             this._bottomEdgeSprite.size.set(bottomSideSourceRect.width * textureScale, bottomSideSourceRect.height * textureScale);
         }
         // create center part
-        this._middleSprite = new PintarJS.Sprite(options.texture);
-        this._textureScale = options.textureScale;
-        this._middleSourceRect = options.middleSourceRect;
+        this._middleSprite = new PintarJS.Sprite(texture);
+        this._textureScale = this.__getFromOptions(options, 'textureScale');
+        this._middleSourceRect = this.__getFromOptions(options, 'middleSourceRect');
     }
 
     /**

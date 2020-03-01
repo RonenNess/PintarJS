@@ -35,9 +35,9 @@ class Sprite extends UIElement
         }
 
         // extract params
-        var texture = options.texture;
-        var textureScale = options.textureScale || 1;
-        var sourceRect = options.sourceRect;
+        var texture = this.__getFromOptions(options, 'texture');
+        var textureScale = this.__getFromOptions(options, 'textureScale', 1);
+        var sourceRect = this.__getFromOptions(options, 'sourceRect');
 
         // make sure texture scale comes with source rect
         if (options.textureScale && !sourceRect) {
@@ -51,6 +51,22 @@ class Sprite extends UIElement
             this.size.x = sourceRect.width * textureScale;
             this.size.y = sourceRect.height * textureScale;
         }
+    }
+
+    /**
+     * Set texture.
+     */
+    set texture(val)
+    {
+        this._sprite.texture = val;
+    }
+
+    /**
+     * Get texture.
+     */
+    get texture()
+    {
+        return this._sprite.texture;
     }
 
     /**
