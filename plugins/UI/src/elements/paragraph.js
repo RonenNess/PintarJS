@@ -46,13 +46,13 @@ class Paragraph extends UIElement
 
         // create text
         this._textSprite = new PintarJS.TextSprite("");
-        this._textSprite.useStyleCommands = Boolean(options.useStyleCommands);
-        if (options.font !== undefined) { this._textSprite.font = options.font; }
-        if (options.fontSize !== undefined) { this._textSprite.fontSize = options.fontSize; }
-        if (options.alignment !== undefined) { this._textSprite.alignment = options.alignment; }
-        if (options.fillColor !== undefined) { this._textSprite.color = options.fillColor; }
-        if (options.strokeColor !== undefined) { this._textSprite.strokeColor = options.strokeColor; }
-        if (options.strokeWidth !== undefined) { this._textSprite.strokeWidth = options.strokeWidth; }
+        this._textSprite.useStyleCommands = Boolean(this.__getFromOptions(options, 'useStyleCommands'));
+        if (options.font !== undefined) { this._textSprite.font = this.__getFromOptions(options, 'font'); }
+        if (options.fontSize !== undefined) { this._textSprite.fontSize = this.__getFromOptions(options, 'fontSize'); }
+        if (options.alignment !== undefined) { this._textSprite.alignment = this.__getFromOptions(options, 'alignment'); }
+        if (options.fillColor !== undefined) { this._textSprite.color = this.__getFromOptions(options, 'fillColor'); }
+        if (options.strokeColor !== undefined) { this._textSprite.strokeColor = this.__getFromOptions(options, 'strokeColor'); }
+        if (options.strokeWidth !== undefined) { this._textSprite.strokeWidth = this.__getFromOptions(options, 'strokeWidth'); }
 
         // if true, set element height automatically from text
         this.autoSetHeight = true;

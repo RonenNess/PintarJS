@@ -53,10 +53,12 @@ class Button extends Container
         this.size.xMode = SizeModes.Percents;
 
         // get texture scale
-        var textureScale = (options.textureScale || 1);
+        var textureScale = this.__getFromOptions(options, 'textureScale', 1);
 
         // set height
-        this.size.y = options.heightInPixels || (options.externalSourceRect ? (options.externalSourceRect.height * textureScale) : 100);
+        this.size.y = this.__getFromOptions(options, 'heightInPixels') || 
+                        (this.__getFromOptions(options, 'externalSourceRect') ? 
+                        (this.__getFromOptions(options, 'externalSourceRect').height * textureScale) : 100);
         this.size.yMode = SizeModes.Pixels;
 
         // button text
@@ -64,10 +66,10 @@ class Button extends Container
 
         // for toggle mode
         this.isChecked = false;
-        this.toggleModeEnabled = options.toggleMode || false;
+        this.toggleModeEnabled = this.__getFromOptions(options, 'toggleMode', false);
 
         // get color
-        var color = options.color || PintarJS.Color.white();
+        var color = this.__getFromOptions(options, 'color', PintarJS.Color.white());
 
         // init button paragraph properties
         var initParagraph = (paragraph) => {
@@ -100,9 +102,12 @@ class Button extends Container
             this._paragraphDown = this._paragraphHover || this._paragraph;
         }
 
+        // get texture
+        var texture = this.__getFromOptions(options, 'texture');
+
         // create default sprite
         if (options.externalSourceRect) {
-            this._sprite = new SlicedSprite({texture: options.texture, 
+            this._sprite = new SlicedSprite({texture: texture, 
                 externalSourceRect: options.externalSourceRect, 
                 internalSourceRect: options.internalSourceRect, 
                 textureScale: textureScale}, '_');
@@ -112,7 +117,7 @@ class Button extends Container
 
         // create sprite for hover
         if (options.mouseHoverExternalSourceRect) {
-            this._spriteHover = new SlicedSprite({texture: options.texture, 
+            this._spriteHover = new SlicedSprite({texture: texture, 
                 externalSourceRect: options.mouseHoverExternalSourceRect, 
                 internalSourceRect: options.mouseHoverInternalSourceRect, 
                 textureScale: textureScale}, '_');
@@ -125,7 +130,7 @@ class Button extends Container
         
         // create sprite for down
         if (options.mouseDownExternalSourceRect) {
-            this._spriteDown = new SlicedSprite({texture: options.texture, 
+            this._spriteDown = new SlicedSprite({texture: texture, 
                 externalSourceRect: options.mouseDownExternalSourceRect, 
                 internalSourceRect: options.mouseDownInternalSourceRect, 
                 textureScale: textureScale}, '_');

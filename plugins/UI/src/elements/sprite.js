@@ -47,7 +47,7 @@ class Sprite extends UIElement
         // create underlying sprite
         this._sprite = new PintarJS.Sprite(texture);
         if (sourceRect) { 
-            this._sprite.sourceRectangle = sourceRect.clone(); 
+            this._sprite.sourceRectangle = sourceRect; 
             this.size.x = sourceRect.width * textureScale;
             this.size.y = sourceRect.height * textureScale;
         }

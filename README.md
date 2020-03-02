@@ -667,7 +667,7 @@ pintar.adjustToParentSize();
 - Better caching texts metadata and lines.
 - Huge addon: added UI plugin.
 
-### 2.0.0.2 [UNDER DEVELOPMENT]
+### 2.0.2
 
 - Added 'visible' property to UI elements.
 - Extended progressbar API.

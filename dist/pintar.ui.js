@@ -83,10 +83,12 @@ class Button extends Container
         this.size.xMode = SizeModes.Percents;
 
         // get texture scale
-        var textureScale = (options.textureScale || 1);
+        var textureScale = this.__getFromOptions(options, 'textureScale', 1);
 
         // set height
-        this.size.y = options.heightInPixels || (options.externalSourceRect ? (options.externalSourceRect.height * textureScale) : 100);
+        this.size.y = this.__getFromOptions(options, 'heightInPixels') || 
+                        (this.__getFromOptions(options, 'externalSourceRect') ? 
+                        (this.__getFromOptions(options, 'externalSourceRect').height * textureScale) : 100);
         this.size.yMode = SizeModes.Pixels;
 
         // button text
@@ -94,10 +96,10 @@ class Button extends Container
 
         // for toggle mode
         this.isChecked = false;
-        this.toggleModeEnabled = options.toggleMode || false;
+        this.toggleModeEnabled = this.__getFromOptions(options, 'toggleMode', false);
 
         // get color
-        var color = options.color || PintarJS.Color.white();
+        var color = this.__getFromOptions(options, 'color', PintarJS.Color.white());
 
         // init button paragraph properties
         var initParagraph = (paragraph) => {
@@ -130,9 +132,12 @@ class Button extends Container
             this._paragraphDown = this._paragraphHover || this._paragraph;
         }
 
+        // get texture
+        var texture = this.__getFromOptions(options, 'texture');
+
         // create default sprite
         if (options.externalSourceRect) {
-            this._sprite = new SlicedSprite({texture: options.texture, 
+            this._sprite = new SlicedSprite({texture: texture, 
                 externalSourceRect: options.externalSourceRect, 
                 internalSourceRect: options.internalSourceRect, 
                 textureScale: textureScale}, '_');
@@ -142,7 +147,7 @@ class Button extends Container
 
         // create sprite for hover
         if (options.mouseHoverExternalSourceRect) {
-            this._spriteHover = new SlicedSprite({texture: options.texture, 
+            this._spriteHover = new SlicedSprite({texture: texture, 
                 externalSourceRect: options.mouseHoverExternalSourceRect, 
                 internalSourceRect: options.mouseHoverInternalSourceRect, 
                 textureScale: textureScale}, '_');
@@ -155,7 +160,7 @@ class Button extends Container
         
         // create sprite for down
         if (options.mouseDownExternalSourceRect) {
-            this._spriteDown = new SlicedSprite({texture: options.texture, 
+            this._spriteDown = new SlicedSprite({texture: texture, 
                 externalSourceRect: options.mouseDownExternalSourceRect, 
                 internalSourceRect: options.mouseDownInternalSourceRect, 
                 textureScale: textureScale}, '_');
@@ -552,8 +557,8 @@ class Cursor extends UIElement
         this.setBaseOptions(options);
 
         // store params
-        this._textureScale = options.textureScale || 1;
-        this._texture = options.texture;
+        this._textureScale = this.__getFromOptions(options, 'textureScale', 1);
+        this._texture = this.__getFromOptions(options, 'texture');
 
         // store source rects
         this._sourceRects = {}
@@ -693,32 +698,34 @@ class HorizontalLine extends UIElement
         this.size.xMode = SizeModes.Percents;
 
         // get texture scale
-        var textureScale = (options.textureScale || 1);
+        var textureScale = this.__getFromOptions(options, 'textureScale', 1);
 
         // set height
-        this.size.y = options.middleSourceRect.height * textureScale;
+        this.size.y = this.__getFromOptions(options, 'middleSourceRect').height * textureScale;
         this.size.yMode = SizeModes.Pixels;
 
+        var texture = this.__getFromOptions(options, 'texture');
+
         // create left-side edge
-        var leftSideSourceRect = options.startEdgeSourceRect;
+        var leftSideSourceRect = this.__getFromOptions(options, 'startEdgeSourceRect');
         if (leftSideSourceRect)
         {
-            this._leftEdgeSprite = new PintarJS.Sprite(options.texture);
+            this._leftEdgeSprite = new PintarJS.Sprite(texture);
             this._leftEdgeSprite.sourceRectangle = leftSideSourceRect;
             this._leftEdgeSprite.size.set(leftSideSourceRect.width * textureScale, leftSideSourceRect.height * textureScale);
         }
         // create right-side edge
-        var rightSideSourceRect = options.endEdgeSourceRect;
+        var rightSideSourceRect = this.__getFromOptions(options, 'endEdgeSourceRect');
         if (rightSideSourceRect)
         {
-            this._rightEdgeSprite = new PintarJS.Sprite(options.texture);
+            this._rightEdgeSprite = new PintarJS.Sprite(texture);
             this._rightEdgeSprite.sourceRectangle = rightSideSourceRect;
             this._rightEdgeSprite.size.set(rightSideSourceRect.width * textureScale, rightSideSourceRect.height * textureScale);
         }
         // create center part
-        this._middleSprite = new PintarJS.Sprite(options.texture);
-        this._textureScale = options.textureScale;
-        this._middleSourceRect = options.middleSourceRect;
+        this._middleSprite = new PintarJS.Sprite(texture);
+        this._textureScale = this.__getFromOptions(options, 'textureScale');
+        this._middleSourceRect = this.__getFromOptions(options, 'middleSourceRect');
     }
 
     /**
@@ -794,6 +801,10 @@ module.exports = HorizontalLine;
 const PintarJS = require('../pintar');
 const Container = require('./container');
 const SlicedSprite = require('./sliced_sprite');
+const SidesProperties = require('../sides_properties');
+
+// default panel paddings
+const defaultPadding = new SidesProperties(10, 10, 10, 10);
 
 
 /**
@@ -824,7 +835,7 @@ class Panel extends Container
         this.setBaseOptions(options);
         
         // set padding
-        this.padding = options.padding || new SidesProperties(10, 10, 10, 10);
+        this.padding = this.__getFromOptions(options, 'padding', defaultPadding);
 
         // set background
         this._background = new SlicedSprite(options, '_');
@@ -889,7 +900,7 @@ class Panel extends Container
 
 // export the panel class
 module.exports = Panel;
-},{"../pintar":18,"./container":4,"./sliced_sprite":11}],8:[function(require,module,exports){
+},{"../pintar":18,"../sides_properties":19,"./container":4,"./sliced_sprite":11}],8:[function(require,module,exports){
 /**
  * file: paragraph.js
  * description: Implement a paragraph element.
@@ -938,13 +949,13 @@ class Paragraph extends UIElement
 
         // create text
         this._textSprite = new PintarJS.TextSprite("");
-        this._textSprite.useStyleCommands = Boolean(options.useStyleCommands);
-        if (options.font !== undefined) { this._textSprite.font = options.font; }
-        if (options.fontSize !== undefined) { this._textSprite.fontSize = options.fontSize; }
-        if (options.alignment !== undefined) { this._textSprite.alignment = options.alignment; }
-        if (options.fillColor !== undefined) { this._textSprite.color = options.fillColor; }
-        if (options.strokeColor !== undefined) { this._textSprite.strokeColor = options.strokeColor; }
-        if (options.strokeWidth !== undefined) { this._textSprite.strokeWidth = options.strokeWidth; }
+        this._textSprite.useStyleCommands = Boolean(this.__getFromOptions(options, 'useStyleCommands'));
+        if (options.font !== undefined) { this._textSprite.font = this.__getFromOptions(options, 'font'); }
+        if (options.fontSize !== undefined) { this._textSprite.fontSize = this.__getFromOptions(options, 'fontSize'); }
+        if (options.alignment !== undefined) { this._textSprite.alignment = this.__getFromOptions(options, 'alignment'); }
+        if (options.fillColor !== undefined) { this._textSprite.color = this.__getFromOptions(options, 'fillColor'); }
+        if (options.strokeColor !== undefined) { this._textSprite.strokeColor = this.__getFromOptions(options, 'strokeColor'); }
+        if (options.strokeWidth !== undefined) { this._textSprite.strokeWidth = this.__getFromOptions(options, 'strokeWidth'); }
 
         // if true, set element height automatically from text
         this.autoSetHeight = true;
@@ -1121,22 +1132,28 @@ class ProgressBar extends Container
         }
 
         // store fill offset
-        this.fillOffset = options.fillOffset || PintarJS.Point.zero();
+        this.fillOffset = this.__getFromOptions(options, 'fillOffset', PintarJS.Point.zero());
 
         // get texture scale
-        var textureScale = this._textureScale = options.textureScale || 1;
+        var textureScale = this._textureScale = this.__getFromOptions(options, 'textureScale', 1);
+
+        // get texture
+        var texture = this.__getFromOptions(options, 'texture');
 
         // create background sprite as regular UI sprite
-        if (options.backgroundSourceRect) {
-            this._backgroundSprite = new Sprite({texture: options.texture, 
-                sourceRect: options.backgroundSourceRect, 
+        var backgroundSourceRect = this.__getFromOptions(options, 'backgroundSourceRect');
+        if (backgroundSourceRect) {
+            this._backgroundSprite = new Sprite({texture: texture, 
+                sourceRect: backgroundSourceRect, 
                 textureScale: textureScale});
         }
         // create background sprite as 9-sliced sprite
         else if (options.backgroundExternalSourceRect) {
-            this._backgroundSprite = new SlicedSprite({texture: options.texture, 
-                externalSourceRect: options.backgroundExternalSourceRect, 
-                internalSourceRect: options.backgroundInternalSourceRect, 
+            var backgroundExternalSourceRect = this.__getFromOptions(options, 'backgroundExternalSourceRect');
+            var backgroundInternalSourceRect = this.__getFromOptions(options, 'backgroundInternalSourceRect');
+            this._backgroundSprite = new SlicedSprite({texture: texture, 
+                externalSourceRect: backgroundExternalSourceRect, 
+                internalSourceRect: backgroundInternalSourceRect, 
                 textureScale: textureScale}, '_');
         }
         else
@@ -1144,21 +1161,24 @@ class ProgressBar extends Container
             throw new Error("Progress bars must have a background sprite!");
         }
         // set other background properties
-        this._backgroundSprite.color = options.backgroundColor || PintarJS.Color.white();
+        this._backgroundSprite.color = this.__getFromOptions(options, 'backgroundColor', PintarJS.Color.white());
         this._backgroundSprite.anchor = Anchors.Fixed;
 
         // create fill sprite as regular UI sprite
-        if (options.fillSourceRect) {
-            this.spriteFillSourceRect = options.fillSourceRect;
-            this._fillSprite = new Sprite({texture: options.texture, 
-                sourceRect: options.fillSourceRect, 
+        var fillSourceRect = this.__getFromOptions(options, 'fillSourceRect');
+        if (fillSourceRect) {
+            this.spriteFillSourceRect = fillSourceRect;
+            this._fillSprite = new Sprite({texture: texture, 
+                sourceRect: fillSourceRect, 
                 textureScale: textureScale});
         }
         // create fill sprite as 9-sliced sprite
         else if (options.fillExternalSourceRect) {
-            this._fillSprite = new SlicedSprite({texture: options.texture, 
-                externalSourceRect: options.fillExternalSourceRect, 
-                internalSourceRect: options.fillInternalSourceRect, 
+            var fillExternalSourceRect = this.__getFromOptions(options, 'fillExternalSourceRect');
+            var fillInternalSourceRect = this.__getFromOptions(options, 'fillInternalSourceRect');
+            this._fillSprite = new SlicedSprite({texture: texture, 
+                externalSourceRect: fillExternalSourceRect, 
+                internalSourceRect: fillInternalSourceRect, 
                 textureScale: textureScale}, '_');
         }
         // no fill??
@@ -1168,64 +1188,65 @@ class ProgressBar extends Container
         }
 
         // set fill other properties
-        var fillRect = options.fillExternalSourceRect || options.fillSourceRect;
-        var backRect = options.backgroundExternalSourceRect || options.backgroundSourceRect;
-        this._fillSprite.color = options.fillColor || PintarJS.Color.white();
+        var fillRect = this.__getFromOptions(options, 'fillExternalSourceRect') || this.__getFromOptions(options, 'fillSourceRect');
+        var backRect = this.__getFromOptions(options, 'backgroundExternalSourceRect') || this.__getFromOptions(options, 'backgroundSourceRect');
+        this._fillSprite.color = this.__getFromOptions(options, 'fillColor', PintarJS.Color.white());
         this._fillSprite.anchor = Anchors.Fixed;
         this._fillWidthToRemove = backRect ? Math.round(backRect.width - fillRect.width) : 0;
         this._fillHeightToRemove = backRect ? Math.round(backRect.height - fillRect.height) : 0;
 
         // create optional foreground sprite as regular UI sprite
-        if (options.foregroundSourceRect) {
-            this._foregroundSprite = new Sprite({texture: options.texture, 
-                sourceRect: options.foregroundSourceRect, 
+        var foregroundSourceRect = this.__getFromOptions(options, 'foregroundSourceRect');
+        if (foregroundSourceRect) {
+            this._foregroundSprite = new Sprite({texture: texture, 
+                sourceRect: foregroundSourceRect, 
                 textureScale: textureScale});
         }
         // create optional foreground sprite as 9-sliced sprite
         else if (options.foregroundExternalSourceRect) {
-            this._foregroundSprite = new SlicedSprite({texture: options.texture, 
-                externalSourceRect: options.foregroundExternalSourceRect, 
-                internalSourceRect: options.foregroundInternalSourceRect, 
+            var foregroundExternalSourceRect = this.__getFromOptions(options, 'foregroundExternalSourceRect');
+            var foregroundInternalSourceRect = this.__getFromOptions(options, 'foregroundInternalSourceRect');
+            this._foregroundSprite = new SlicedSprite({texture: texture, 
+                externalSourceRect: foregroundExternalSourceRect, 
+                internalSourceRect: foregroundInternalSourceRect, 
                 textureScale: textureScale}, '_');
         }
         // set other foreground sprite properties
         if (this._foregroundSprite) {
-            this._foregroundSprite.color = options.foregroundColor || PintarJS.Color.white();
+            this._foregroundSprite.color = this.__getFromOptions(options, 'foregroundColor', PintarJS.Color.white());
             this._foregroundSprite.anchor = Anchors.Fixed;
         }
 
         // store fill part anchor
-        this.fillPartAnchor = options.fillAnchor || Anchors.TopLeft;
+        this.fillPartAnchor = this.__getFromOptions(options, 'fillAnchor', Anchors.TopLeft);
 
         // store if setting width / height
-        this._setWidth = Boolean(options.valueSetWidth);
-        this._setHeight = Boolean(options.valueSetHeight);
+        this._setWidth = Boolean(this.__getFromOptions(options, 'valueSetWidth', true));
+        this._setHeight = Boolean(this.__getFromOptions(options, 'valueSetHeight'));
 
         // calculate progressbar default height and width
         // when using regular sprite
-        if (options.fillSourceRect) {
-            this.size.y = options.fillSourceRect.height * textureScale;
-            this.size.x = options.fillSourceRect.width * textureScale;
+        var fillSourceRect = this.__getFromOptions(options, 'fillSourceRect');
+        if (fillSourceRect) {
+            this.size.y = fillSourceRect.height * textureScale;
+            this.size.x = fillSourceRect.width * textureScale;
         }
         // when using sliced sprite, set default size based on mode
         else
         {
             if (this._setWidth && !this._setHeight) {
-                this.size.y = options.height || (((backRect || fillRect).height) * textureScale);
+                this.size.y = this.__getFromOptions(options, 'height') || (((backRect || fillRect).height) * textureScale);
                 this.size.x = 100;
                 this.size.xMode = SizeModes.Percents;
             }
             else if (this._setHeight && !this._setWidth) {
-                this.size.x = options.width || (((backRect || fillRect).width) * textureScale);
-                this.size.y = options.height || 100;
+                this.size.x = this.__getFromOptions(options, 'width') || (((backRect || fillRect).width) * textureScale);
+                this.size.y = this.__getFromOptions(options, 'height') || 100;
             }
         }
 
         // store animation speed
-        this.animationSpeed = options.animationSpeed || 0;
-
-        // store if set width and height
-        if (options.valueSetWidth === undefined) { options.valueSetWidth = true; }
+        this.animationSpeed = this.__getFromOptions(options, 'animationSpeed', 0);
 
         // set starting value
         this._displayValue = this.value = 0;
@@ -1599,11 +1620,11 @@ class SlicedSprite extends UIElement
         this.setBaseOptions(options);
 
         // extract params
-        var texture = options.texture;
-        var textureScale = options.textureScale || 1;
-        var wholeSourceRect = this._externalSourceRect = options.externalSourceRect;
-        var fillSourceRect = this._internalSourceRect = options.internalSourceRect;
-        var fillMode = options.fillMode || SlicedSprite.FillModes.Tiled;
+        var texture = this.__getFromOptions(options, 'texture');
+        var textureScale = this.__getFromOptions(options, 'textureScale', 1);
+        var wholeSourceRect = this._externalSourceRect = this.__getFromOptions(options, 'externalSourceRect');
+        var fillSourceRect = this._internalSourceRect = this.__getFromOptions(options, 'internalSourceRect');
+        var fillMode = this.__getFromOptions(options, 'fillMode', SlicedSprite.FillModes.Tiled);
        
         // calculate frame source rects
         this._leftFrameSourceRect = new PintarJS.Rectangle(wholeSourceRect.x, fillSourceRect.y, fillSourceRect.x - wholeSourceRect.x, fillSourceRect.height);
@@ -1629,8 +1650,8 @@ class SlicedSprite extends UIElement
         this._fillSprite = new PintarJS.Sprite(texture);
 
         // set default colors
-        this.fillColor = options.fillColor || PintarJS.Color.white();
-        this.frameColor = options.frameColor || PintarJS.Color.white();
+        this.fillColor = this.__getFromOptions(options, 'fillColor', PintarJS.Color.white());
+        this.frameColor = this.__getFromOptions(options, 'frameColor', PintarJS.Color.white());
 
         // store frame scale
         this.frameScale = textureScale;
@@ -2012,19 +2033,21 @@ class Slider extends Container
         }
 
         // start piece offset
-        this._startOffset = options.startEdgeSourceRect ? 
-        new PintarJS.Point(options.startEdgeSourceRect.width * textureScale, options.startEdgeSourceRect.height * textureScale) : 
+        var startOffset = this.__getFromOptions(options, 'startEdgeSourceRect');
+        this._startOffset = startOffset ? 
+        new PintarJS.Point(startOffset.width * textureScale, startOffset.height * textureScale) : 
         new PintarJS.Point(0, 0);
 
         // end piece offset
-        this._endOffset = options.endEdgeSourceRect ? 
-        new PintarJS.Point(options.endEdgeSourceRect.width * textureScale, options.endEdgeSourceRect.height * textureScale) : 
+        var endEdgeSourceRect = this.__getFromOptions(options, 'endEdgeSourceRect');
+        this._endOffset = endEdgeSourceRect ? 
+        new PintarJS.Point(endEdgeSourceRect.width * textureScale, endEdgeSourceRect.height * textureScale) : 
         new PintarJS.Point(0, 0);
 
         // create handle sprite
-        this._handle = new PintarJS.Sprite(options.texture);
-        this._handle.sourceRectangle = options.handleSourceRect;
-        this._handle.size.set(options.handleSourceRect.width * textureScale, options.handleSourceRect.height * textureScale);
+        this._handle = new PintarJS.Sprite(this.__getFromOptions(options, 'texture'));
+        this._handle.sourceRectangle = this.__getFromOptions(options, 'handleSourceRect');
+        this._handle.size.set(this._handle.sourceRectangle.width * textureScale, this._handle.sourceRectangle.height * textureScale);
 
         // set handle offset
         this._handleOffset = this.__getFromOptions(options, 'handleOffset', PintarJS.Point.zero());
@@ -2281,7 +2304,7 @@ class Sprite extends UIElement
         // create underlying sprite
         this._sprite = new PintarJS.Sprite(texture);
         if (sourceRect) { 
-            this._sprite.sourceRectangle = sourceRect.clone(); 
+            this._sprite.sourceRectangle = sourceRect; 
             this.size.x = sourceRect.width * textureScale;
             this.size.y = sourceRect.height * textureScale;
         }

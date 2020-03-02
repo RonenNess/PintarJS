@@ -39,7 +39,10 @@ class Sprite extends Renderable
     constructor(texture, position, options)
     {
         options = options || {};
-        super(this.__getFromOptions(options, 'position', Point.zero()), this.__getFromOptions(options, 'color', Sprite.defaults.color), this.__getFromOptions(options, 'blendMode', Sprite.defaults.blendMode));
+        super(
+            position || Point.zero(), 
+            options.color || Sprite.defaults.color, 
+            options.blendMode !== undefined ? options.blendMode : Sprite.defaults.blendMode);
         
         this.texture = texture;
         var size = this.__getFromOptions(options, 'size', Sprite.defaults.size);

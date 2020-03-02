@@ -37,32 +37,34 @@ class HorizontalLine extends UIElement
         this.size.xMode = SizeModes.Percents;
 
         // get texture scale
-        var textureScale = (options.textureScale || 1);
+        var textureScale = this.__getFromOptions(options, 'textureScale', 1);
 
         // set height
-        this.size.y = options.middleSourceRect.height * textureScale;
+        this.size.y = this.__getFromOptions(options, 'middleSourceRect').height * textureScale;
         this.size.yMode = SizeModes.Pixels;
 
+        var texture = this.__getFromOptions(options, 'texture');
+
         // create left-side edge
-        var leftSideSourceRect = options.startEdgeSourceRect;
+        var leftSideSourceRect = this.__getFromOptions(options, 'startEdgeSourceRect');
         if (leftSideSourceRect)
         {
-            this._leftEdgeSprite = new PintarJS.Sprite(options.texture);
+            this._leftEdgeSprite = new PintarJS.Sprite(texture);
             this._leftEdgeSprite.sourceRectangle = leftSideSourceRect;
             this._leftEdgeSprite.size.set(leftSideSourceRect.width * textureScale, leftSideSourceRect.height * textureScale);
         }
         // create right-side edge
-        var rightSideSourceRect = options.endEdgeSourceRect;
+        var rightSideSourceRect = this.__getFromOptions(options, 'endEdgeSourceRect');
         if (rightSideSourceRect)
         {
-            this._rightEdgeSprite = new PintarJS.Sprite(options.texture);
+            this._rightEdgeSprite = new PintarJS.Sprite(texture);
             this._rightEdgeSprite.sourceRectangle = rightSideSourceRect;
             this._rightEdgeSprite.size.set(rightSideSourceRect.width * textureScale, rightSideSourceRect.height * textureScale);
         }
         // create center part
-        this._middleSprite = new PintarJS.Sprite(options.texture);
-        this._textureScale = options.textureScale;
-        this._middleSourceRect = options.middleSourceRect;
+        this._middleSprite = new PintarJS.Sprite(texture);
+        this._textureScale = this.__getFromOptions(options, 'textureScale');
+        this._middleSourceRect = this.__getFromOptions(options, 'middleSourceRect');
     }
 
     /**

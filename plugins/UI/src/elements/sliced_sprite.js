@@ -37,11 +37,11 @@ class SlicedSprite extends UIElement
         this.setBaseOptions(options);
 
         // extract params
-        var texture = options.texture;
-        var textureScale = options.textureScale || 1;
-        var wholeSourceRect = this._externalSourceRect = options.externalSourceRect;
-        var fillSourceRect = this._internalSourceRect = options.internalSourceRect;
-        var fillMode = options.fillMode || SlicedSprite.FillModes.Tiled;
+        var texture = this.__getFromOptions(options, 'texture');
+        var textureScale = this.__getFromOptions(options, 'textureScale', 1);
+        var wholeSourceRect = this._externalSourceRect = this.__getFromOptions(options, 'externalSourceRect');
+        var fillSourceRect = this._internalSourceRect = this.__getFromOptions(options, 'internalSourceRect');
+        var fillMode = this.__getFromOptions(options, 'fillMode', SlicedSprite.FillModes.Tiled);
        
         // calculate frame source rects
         this._leftFrameSourceRect = new PintarJS.Rectangle(wholeSourceRect.x, fillSourceRect.y, fillSourceRect.x - wholeSourceRect.x, fillSourceRect.height);
@@ -67,8 +67,8 @@ class SlicedSprite extends UIElement
         this._fillSprite = new PintarJS.Sprite(texture);
 
         // set default colors
-        this.fillColor = options.fillColor || PintarJS.Color.white();
-        this.frameColor = options.frameColor || PintarJS.Color.white();
+        this.fillColor = this.__getFromOptions(options, 'fillColor', PintarJS.Color.white());
+        this.frameColor = this.__getFromOptions(options, 'frameColor', PintarJS.Color.white());
 
         // store frame scale
         this.frameScale = textureScale;

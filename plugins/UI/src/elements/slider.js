@@ -84,19 +84,21 @@ class Slider extends Container
         }
 
         // start piece offset
-        this._startOffset = options.startEdgeSourceRect ? 
-        new PintarJS.Point(options.startEdgeSourceRect.width * textureScale, options.startEdgeSourceRect.height * textureScale) : 
+        var startOffset = this.__getFromOptions(options, 'startEdgeSourceRect');
+        this._startOffset = startOffset ? 
+        new PintarJS.Point(startOffset.width * textureScale, startOffset.height * textureScale) : 
         new PintarJS.Point(0, 0);
 
         // end piece offset
-        this._endOffset = options.endEdgeSourceRect ? 
-        new PintarJS.Point(options.endEdgeSourceRect.width * textureScale, options.endEdgeSourceRect.height * textureScale) : 
+        var endEdgeSourceRect = this.__getFromOptions(options, 'endEdgeSourceRect');
+        this._endOffset = endEdgeSourceRect ? 
+        new PintarJS.Point(endEdgeSourceRect.width * textureScale, endEdgeSourceRect.height * textureScale) : 
         new PintarJS.Point(0, 0);
 
         // create handle sprite
-        this._handle = new PintarJS.Sprite(options.texture);
-        this._handle.sourceRectangle = options.handleSourceRect;
-        this._handle.size.set(options.handleSourceRect.width * textureScale, options.handleSourceRect.height * textureScale);
+        this._handle = new PintarJS.Sprite(this.__getFromOptions(options, 'texture'));
+        this._handle.sourceRectangle = this.__getFromOptions(options, 'handleSourceRect');
+        this._handle.size.set(this._handle.sourceRectangle.width * textureScale, this._handle.sourceRectangle.height * textureScale);
 
         // set handle offset
         this._handleOffset = this.__getFromOptions(options, 'handleOffset', PintarJS.Point.zero());

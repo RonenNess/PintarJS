@@ -26,7 +26,10 @@ class TextSprite extends Renderable
     {
         // set basics
         options = options || {};
-        super(this.__getFromOptions(options, 'position', Point.zero()), this.__getFromOptions(options, 'color', TextSprite.defaults.color), this.__getFromOptions(options, 'blendMode', TextSprite.defaults.blendMode));
+        super(
+            position || Point.zero(), 
+            options.color || TextSprite.defaults.color, 
+            options.blendMode !== undefined ? options.blendMode : TextSprite.defaults.blendMode);
         this._version = 0;
         this.text = text;
         this.font = this.__getFromOptions(options, 'font', TextSprite.defaults.font);

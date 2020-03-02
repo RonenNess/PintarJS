@@ -39,8 +39,8 @@ class Cursor extends UIElement
         this.setBaseOptions(options);
 
         // store params
-        this._textureScale = options.textureScale || 1;
-        this._texture = options.texture;
+        this._textureScale = this.__getFromOptions(options, 'textureScale', 1);
+        this._texture = this.__getFromOptions(options, 'texture');
 
         // store source rects
         this._sourceRects = {}

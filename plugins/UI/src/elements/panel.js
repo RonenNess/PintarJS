@@ -8,6 +8,10 @@
 const PintarJS = require('../pintar');
 const Container = require('./container');
 const SlicedSprite = require('./sliced_sprite');
+const SidesProperties = require('../sides_properties');
+
+// default panel paddings
+const defaultPadding = new SidesProperties(10, 10, 10, 10);
 
 
 /**
@@ -38,7 +42,7 @@ class Panel extends Container
         this.setBaseOptions(options);
         
         // set padding
-        this.padding = options.padding || new SidesProperties(10, 10, 10, 10);
+        this.padding = this.__getFromOptions(options, 'padding', defaultPadding);
 
         // set background
         this._background = new SlicedSprite(options, '_');
