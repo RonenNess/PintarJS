@@ -3784,7 +3784,7 @@ class SidesProperties
     {
         var valueSplit = getValueAndType(value);
         this._left = valueSplit.value;
-        this.leftMode = this.leftMode || valueSplit.mode;
+        this.leftMode = valueSplit.mode || this.leftMode;
     }
 
     /**
@@ -3794,7 +3794,7 @@ class SidesProperties
     {
         var valueSplit = getValueAndType(value);
         this._right = valueSplit.value;
-        this.rightMode = this.rightMode || valueSplit.mode;
+        this.rightMode = valueSplit.mode || this.rightMode;
     }
 
     /**
@@ -3804,7 +3804,7 @@ class SidesProperties
     {
         var valueSplit = getValueAndType(value);
         this._top = valueSplit.value;
-        this.topMode = this.topMode || valueSplit.mode;
+        this.topMode = valueSplit.mode || this.topMode;
     }
 
     /**
@@ -3814,7 +3814,7 @@ class SidesProperties
     {
         var valueSplit = getValueAndType(value);
         this._bottom = valueSplit.value;
-        this.bottomMode = this.bottomMode || valueSplit.mode;
+        this.bottomMode = valueSplit.mode || this.bottomMode;
     }
 
     /**
@@ -3905,7 +3905,7 @@ class UIPoint extends PintarJS.Point
     {
         var valueSplit = getValueAndType(value);
         this._x = valueSplit.value;
-        this.xMode = this.xMode || valueSplit.mode;
+        this.xMode = valueSplit.mode || this.xMode;
     }
 
     /**
@@ -3915,7 +3915,7 @@ class UIPoint extends PintarJS.Point
     {
         var valueSplit = getValueAndType(value);
         this._y = valueSplit.value;
-        this.yMode = this.yMode || valueSplit.mode;
+        this.yMode = valueSplit.mode || this.yMode;
     }
 
     /**

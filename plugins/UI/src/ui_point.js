@@ -47,7 +47,7 @@ class UIPoint extends PintarJS.Point
     {
         var valueSplit = getValueAndType(value);
         this._x = valueSplit.value;
-        this.xMode = this.xMode || valueSplit.mode;
+        this.xMode = valueSplit.mode || this.xMode;
     }
 
     /**
@@ -57,7 +57,7 @@ class UIPoint extends PintarJS.Point
     {
         var valueSplit = getValueAndType(value);
         this._y = valueSplit.value;
-        this.yMode = this.yMode || valueSplit.mode;
+        this.yMode = valueSplit.mode || this.yMode;
     }
 
     /**
