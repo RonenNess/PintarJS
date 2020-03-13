@@ -2902,7 +2902,7 @@ class UIElement
                 this._autoOffset = new PintarJS.Point(lastElementBB.right - parentIBB.left + marginX, lastElementBB.top - parentIBB.top);
 
                 // check if we should break line
-                if ((this.anchor === Anchors.AutoInline) && (this.getBoundingBox().right >= parentIBB.right)) 
+                if ((this.anchor === Anchors.AutoInline) && (this.getBoundingBox(false).right >= parentIBB.right)) 
                 {
                     needBreakLine = true;
                 }
@@ -2998,9 +2998,10 @@ class UIElement
 
     /**
      * Get this element's bounding rectangle, in pixels.
+     * @param {Boolean} calculateAutoAnchors (defaults to true) will also calculate auto anchors positioning if set.
      * @returns {PintarJS.Rectangle} Bounding box, in pixels.
      */
-    getBoundingBox()
+    getBoundingBox(calculateAutoAnchors)
     {
         // if got cached value, return it
         if (this._selfBoundingBoxCache) 
@@ -3009,7 +3010,7 @@ class UIElement
         }
 
         // calculate and return bounding box
-        var position = this.getDestTopLeftPosition();
+        var position = this.getDestTopLeftPosition(calculateAutoAnchors);
         var size = this.getSizeInPixels();
         this._selfBoundingBoxCache = new PintarJS.Rectangle(position.x, position.y, size.x, size.y);
         this._boundingBoxVersion++;
@@ -3187,9 +3188,10 @@ class UIElement
 
     /**
      * Get absolute top-left drawing position.
+     * @param {Boolean} calculateAutoAnchors (defaults to true) will also calculate auto anchors positioning if set.
      * @returns {PintarJS.Point} Element top-left position.
      */
-    getDestTopLeftPosition()
+    getDestTopLeftPosition(calculateAutoAnchors)
     {
         // special case - absolute
         if (this.anchor === Anchors.Fixed)
@@ -3208,7 +3210,9 @@ class UIElement
         var offset = this.getOffsetInPixels();
         
         // update auto-anchor offset if needed
-        this._setOffsetForAutoAnchors();
+        if (calculateAutoAnchors || calculateAutoAnchors === undefined) {
+            this._setOffsetForAutoAnchors();
+        }
         
         // get position based on anchor
         var ret = this.getDestTopLeftPositionForRect(parentRect, selfSize, this.anchor, offset);
