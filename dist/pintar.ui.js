@@ -1466,6 +1466,16 @@ class UIRoot extends Container
         this.inputManager = inputManager || new InputManager(pintar);
         this.size = null;
         this.offset = null;
+        this.padding.set(0,0,0,0);
+        this.margin.set(0,0,0,0);
+    }
+
+    /**
+     * Get root container, ie self.
+     */
+    getRoot()
+    {
+        return this;
     }
 
     /**
@@ -1959,8 +1969,6 @@ const PintarJS = require('../pintar');
 const SizeModes = require('../size_modes');
 const HorizontalLine = require('./horizontal_line');
 const VerticalLine = require('./vertical_line');
-const Paragraph = require('./paragraph');
-const Anchors = require('../anchors');
 const Cursors = require('../cursor_types');
 
 
@@ -2254,7 +2262,7 @@ class Slider extends Container
 }
 
 module.exports = Slider; 
-},{"../anchors":1,"../cursor_types":2,"../pintar":18,"../size_modes":20,"./container":4,"./horizontal_line":6,"./paragraph":8,"./vertical_line":15}],13:[function(require,module,exports){
+},{"../cursor_types":2,"../pintar":18,"../size_modes":20,"./container":4,"./horizontal_line":6,"./vertical_line":15}],13:[function(require,module,exports){
 /**
  * file: sprite.js
  * description: A UI sprite.
@@ -2443,6 +2451,9 @@ class UIElement
         this._prevState = new UIElementState();
         this.__parent = null;
 
+        // set fixed position false by default
+        this.fixedPosition = false;
+
         // set default interactive mode
         this.interactive = this.isNaturallyInteractive;
 
@@ -2472,6 +2483,29 @@ class UIElement
 
         // hold special offset for auto anchors
         this._autoOffset = null;
+    }
+
+    /**
+     * Get if this element is in fixed position mode.
+     */
+    get fixedPosition()
+    {
+        return this._fixedPosition;
+    }
+
+    /**
+     * Set if this element has fixed position.
+     * Elements with fixed position will ignore parents position, padding, margin ect. and will position itself relevant to the root container.
+     */
+    set fixedPosition(value)
+    {
+        value = Boolean(value);
+        if (this._fixedPosition !== value) {
+            this._fixedPosition = value;
+            if (this.__parent) {
+                this._onParentBoundingBoxChange();
+            }
+        }
     }
 
     /**
@@ -2600,6 +2634,18 @@ class UIElement
         this._autoOffset = this._siblingBefore = null;
         this._onParentBoundingBoxChange();
         this.__parent = parent;
+        this._root = null;
+    }
+
+    /**
+     * Get root container.
+     */
+    getRoot()
+    {
+        if (!this._root) {
+            this._root = this.__parent.getRoot();
+        }
+        return this._root;
     }
 
     /**
@@ -3026,6 +3072,11 @@ class UIElement
         var parent = this.parent;
         if (!parent) {
             throw new Error("Missing parent element! Did you forget to create a UI root and add elements to it?");
+        }
+
+        // if in fixed mode, get root bounding box
+        if (this.fixedPosition) {
+            return this.getRoot().getBoundingBox();
         }
 
         // ignore padding - take parent whole bounding box
@@ -3659,6 +3710,7 @@ module.exports = pintar;
  * since: 2019.
  */
 "use strict";
+const getValueAndType = require('./utils').getValueAndType;
 
 /**
  * Implement a simple data structure to hold value for all sides - top, left, bottom, right.
@@ -3689,6 +3741,78 @@ class SidesProperties
     }
 
     /**
+     * Get left value.
+     */
+    get left()
+    {
+        return this._left;
+    }
+
+    /**
+     * Get right value.
+     */
+    get right()
+    {
+        return this._right;
+    }
+
+    /**
+     * Get top value.
+     */
+    get top()
+    {
+        return this._top;
+    }
+
+    /**
+     * Get bottom value.
+     */
+    get bottom()
+    {
+        return this._bottom;
+    }
+
+    /**
+     * Set left value,
+     */
+    set left(value)
+    {
+        var valueSplit = getValueAndType(value);
+        this._left = valueSplit.value;
+        this.leftMode = this.leftMode || valueSplit.mode;
+    }
+
+    /**
+     * Set right value.
+     */
+    set right(value)
+    {
+        var valueSplit = getValueAndType(value);
+        this._right = valueSplit.value;
+        this.rightMode = this.rightMode || valueSplit.mode;
+    }
+
+    /**
+     * Set top value.
+     */
+    set top(value)
+    {
+        var valueSplit = getValueAndType(value);
+        this._top = valueSplit.value;
+        this.topMode = this.topMode || valueSplit.mode;
+    }
+
+    /**
+     * Set bottom value.
+     */
+    set bottom(value)
+    {
+        var valueSplit = getValueAndType(value);
+        this._bottom = valueSplit.value;
+        this.bottomMode = this.bottomMode || valueSplit.mode;
+    }
+
+    /**
      * Return if equal another value.
      */
     equals(other)
@@ -3713,7 +3837,7 @@ class SidesProperties
 
 
 module.exports = SidesProperties;
-},{}],20:[function(require,module,exports){
+},{"./utils":22}],20:[function(require,module,exports){
 /**
  * file: size_modes.js
  * description: Define size modes we can set.
@@ -3736,6 +3860,7 @@ module.exports = {
 "use strict";
 const PintarJS = require('./pintar');
 const SizeModes = require('./size_modes');
+const getValueAndType = require('./utils').getValueAndType;
 
 /**
  * A UI point = regular point + mode.
@@ -3751,7 +3876,43 @@ class UIPoint extends PintarJS.Point
         this.xMode = modeX || SizeModes.Pixels;
         this.yMode = modeY || SizeModes.Pixels;
     }
+
+    /**
+     * Get x value.
+     */
+    get x()
+    {
+        return this._x;
+    }
+
+    /**
+     * Get y value.
+     */
+    get y()
+    {
+        return this._y;
+    }
         
+    /**
+     * Set x value.
+     */
+    set x(value)
+    {
+        var valueSplit = getValueAndType(value);
+        this._x = valueSplit.value;
+        this.xMode = this.xMode || valueSplit.mode;
+    }
+
+    /**
+     * Set y value.
+     */
+    set y(value)
+    {
+        var valueSplit = getValueAndType(value);
+        this._y = valueSplit.value;
+        this.yMode = this.yMode || valueSplit.mode;
+    }
+
     /**
      * Return a clone of this point.
      */
@@ -3796,7 +3957,7 @@ UIPoint.half = function()
 
 // export the UI point
 module.exports = UIPoint;
-},{"./pintar":18,"./size_modes":20}],22:[function(require,module,exports){
+},{"./pintar":18,"./size_modes":20,"./utils":22}],22:[function(require,module,exports){
 /**
  * file: utils.js
  * description: Mixed utility methods.
@@ -3816,7 +3977,6 @@ module.exports = {
         return ((1 - a) * start) + (a * end);
     },
 
-
     /**
      * Move from start to end at constant speed.
      */
@@ -3829,6 +3989,36 @@ module.exports = {
         else if (sign < 0 && ret < end) { ret = end; }
         return ret;
     },
+
+    /**
+     * Split value and mode, returning a dictionary iwth {value, mode}
+     * Values and return examples:
+     * 25       =>  {value: 25, mode: undefined}
+     * '25px'   =>  {value: 25, mode: 'px'}
+     * '25%'    =>  {value: 25, mode: '%'}
+     */
+    getValueAndType: function(value)
+    {
+        // got a number? mode is undefined
+        if (typeof value === 'number') {
+            return {value: value};
+        }
+
+        // convert to string and parse
+        value = String(value);
+
+        // percent mode
+        if (value[value.length-1] === '%') {
+            return {value: Number(value.substr(0, value.length-1)), mode: '%'};
+        }
+        // pixels mode
+        else if (value.substr(value.length-2) === 'px') {
+            return {value: Number(value.substr(0, value.length-2)), mode: 'px'};
+        }
+
+        // unknown
+        return {value: Number(value)};
+    }
 }
 },{}]},{},[16])(16)
 });

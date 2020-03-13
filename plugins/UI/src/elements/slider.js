@@ -10,8 +10,6 @@ const PintarJS = require('../pintar');
 const SizeModes = require('../size_modes');
 const HorizontalLine = require('./horizontal_line');
 const VerticalLine = require('./vertical_line');
-const Paragraph = require('./paragraph');
-const Anchors = require('../anchors');
 const Cursors = require('../cursor_types');
 
 

@@ -28,6 +28,16 @@ class UIRoot extends Container
         this.inputManager = inputManager || new InputManager(pintar);
         this.size = null;
         this.offset = null;
+        this.padding.set(0,0,0,0);
+        this.margin.set(0,0,0,0);
+    }
+
+    /**
+     * Get root container, ie self.
+     */
+    getRoot()
+    {
+        return this;
     }
 
     /**

@@ -5,6 +5,7 @@
  * since: 2019.
  */
 "use strict";
+const getValueAndType = require('./utils').getValueAndType;
 
 /**
  * Implement a simple data structure to hold value for all sides - top, left, bottom, right.
@@ -32,6 +33,78 @@ class SidesProperties
         this.right = right;
         this.top = top;
         this.bottom = bottom;
+    }
+
+    /**
+     * Get left value.
+     */
+    get left()
+    {
+        return this._left;
+    }
+
+    /**
+     * Get right value.
+     */
+    get right()
+    {
+        return this._right;
+    }
+
+    /**
+     * Get top value.
+     */
+    get top()
+    {
+        return this._top;
+    }
+
+    /**
+     * Get bottom value.
+     */
+    get bottom()
+    {
+        return this._bottom;
+    }
+
+    /**
+     * Set left value,
+     */
+    set left(value)
+    {
+        var valueSplit = getValueAndType(value);
+        this._left = valueSplit.value;
+        this.leftMode = this.leftMode || valueSplit.mode;
+    }
+
+    /**
+     * Set right value.
+     */
+    set right(value)
+    {
+        var valueSplit = getValueAndType(value);
+        this._right = valueSplit.value;
+        this.rightMode = this.rightMode || valueSplit.mode;
+    }
+
+    /**
+     * Set top value.
+     */
+    set top(value)
+    {
+        var valueSplit = getValueAndType(value);
+        this._top = valueSplit.value;
+        this.topMode = this.topMode || valueSplit.mode;
+    }
+
+    /**
+     * Set bottom value.
+     */
+    set bottom(value)
+    {
+        var valueSplit = getValueAndType(value);
+        this._bottom = valueSplit.value;
+        this.bottomMode = this.bottomMode || valueSplit.mode;
     }
 
     /**

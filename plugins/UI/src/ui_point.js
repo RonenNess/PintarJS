@@ -7,6 +7,7 @@
 "use strict";
 const PintarJS = require('./pintar');
 const SizeModes = require('./size_modes');
+const getValueAndType = require('./utils').getValueAndType;
 
 /**
  * A UI point = regular point + mode.
@@ -22,7 +23,43 @@ class UIPoint extends PintarJS.Point
         this.xMode = modeX || SizeModes.Pixels;
         this.yMode = modeY || SizeModes.Pixels;
     }
+
+    /**
+     * Get x value.
+     */
+    get x()
+    {
+        return this._x;
+    }
+
+    /**
+     * Get y value.
+     */
+    get y()
+    {
+        return this._y;
+    }
         
+    /**
+     * Set x value.
+     */
+    set x(value)
+    {
+        var valueSplit = getValueAndType(value);
+        this._x = valueSplit.value;
+        this.xMode = this.xMode || valueSplit.mode;
+    }
+
+    /**
+     * Set y value.
+     */
+    set y(value)
+    {
+        var valueSplit = getValueAndType(value);
+        this._y = valueSplit.value;
+        this.yMode = this.yMode || valueSplit.mode;
+    }
+
     /**
      * Return a clone of this point.
      */

@@ -57,6 +57,9 @@ class UIElement
         this._prevState = new UIElementState();
         this.__parent = null;
 
+        // set fixed position false by default
+        this.fixedPosition = false;
+
         // set default interactive mode
         this.interactive = this.isNaturallyInteractive;
 
@@ -86,6 +89,29 @@ class UIElement
 
         // hold special offset for auto anchors
         this._autoOffset = null;
+    }
+
+    /**
+     * Get if this element is in fixed position mode.
+     */
+    get fixedPosition()
+    {
+        return this._fixedPosition;
+    }
+
+    /**
+     * Set if this element has fixed position.
+     * Elements with fixed position will ignore parents position, padding, margin ect. and will position itself relevant to the root container.
+     */
+    set fixedPosition(value)
+    {
+        value = Boolean(value);
+        if (this._fixedPosition !== value) {
+            this._fixedPosition = value;
+            if (this.__parent) {
+                this._onParentBoundingBoxChange();
+            }
+        }
     }
 
     /**
@@ -214,6 +240,18 @@ class UIElement
         this._autoOffset = this._siblingBefore = null;
         this._onParentBoundingBoxChange();
         this.__parent = parent;
+        this._root = null;
+    }
+
+    /**
+     * Get root container.
+     */
+    getRoot()
+    {
+        if (!this._root) {
+            this._root = this.__parent.getRoot();
+        }
+        return this._root;
     }
 
     /**
@@ -640,6 +678,11 @@ class UIElement
         var parent = this.parent;
         if (!parent) {
             throw new Error("Missing parent element! Did you forget to create a UI root and add elements to it?");
+        }
+
+        // if in fixed mode, get root bounding box
+        if (this.fixedPosition) {
+            return this.getRoot().getBoundingBox();
         }
 
         // ignore padding - take parent whole bounding box

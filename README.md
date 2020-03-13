@@ -679,6 +679,11 @@ pintar.adjustToParentSize();
 - Added `mousePositionFactor` to input manager to allow adjustment between different canvas and window size.
 - Unified the way we extract values from options dictionary or theme, to make sure we clone values and never accidentally change shared resource.
 
+### 2.0.3 [WIP]
+
+- Added option to set sizes and sides as strings with '%' or 'px' suffix, to set mode and value in one call.
+- Added fixed position mode.
+
 ## License
 
 PintarJS is distributed under the permissive MIT License and is absolutely free to use for any purpose (commercial included).
