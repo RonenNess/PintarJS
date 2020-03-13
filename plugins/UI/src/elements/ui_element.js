@@ -355,8 +355,9 @@ class UIElement
     /**
      * Draw the UI element.
      * @param {*} pintar Pintar instance to draw this element on.
+     * @param {PintarJS.Rectangle} boundingBoxOverride If provided, will draw element with this bounding box.
      */
-    draw(pintar)
+    draw(pintar, boundingBoxOverride)
     {
         // if not visible, do nothing
         if (!this.visible) {
@@ -369,15 +370,16 @@ class UIElement
 
         // check if visible and draw
         if (this.isVisiblyByViewport()) {
-            this.drawImp(pintar);
+            this.drawImp(pintar, boundingBoxOverride);
         }
     }
 
     /**
      * Actually implements drawing this element.
      * @param {*} pintar Pintar instance to draw this element on.
+     * @param {PintarJS.Rectangle} boundingBoxOverride If provided, will draw element with this bounding box.
      */
-    drawImp(pintar)
+    drawImp(pintar, boundingBoxOverride)
     {
     }
 

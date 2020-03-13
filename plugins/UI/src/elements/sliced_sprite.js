@@ -110,10 +110,10 @@ class SlicedSprite extends UIElement
      * Draw the UI element.
      * @param {*} pintar Pintar instance to draw this element on.
      */
-    drawImp(pintar)
+    drawImp(pintar, boundingBoxOverride)
     {
         // get drawing position and size
-        var destRect = this.getBoundingBox();
+        var destRect = boundingBoxOverride || this.getBoundingBox();
         
         // get scale and adjust position to centerize sprite
         var scaleFactor = this.absoluteScale;

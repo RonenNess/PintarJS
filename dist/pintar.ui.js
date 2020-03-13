@@ -230,10 +230,10 @@ class Button extends Container
     /**
      * Draw the UI element.
      */
-    drawImp(pintar)
+    drawImp(pintar, boundingBoxOverride)
     {
         // get dest rect
-        var destRect = this.getBoundingBox();
+        var destRect = boundingBoxOverride || this.getBoundingBox();
 
         // decide which sprite to draw based on state
         var sprite = this._sprite;
@@ -265,7 +265,7 @@ class Button extends Container
         }
 
         // draw children
-        super.drawImp(pintar);
+        super.drawImp(pintar, boundingBoxOverride);
     }
 
     /**
@@ -411,7 +411,7 @@ class Container extends UIElement
     /**
      * Draw the UI element.
      */
-    drawImp(pintar)
+    drawImp(pintar, boundingBoxOverride)
     {
         // hide exceeding element by using pintar's viewport
         if (this.hideExceedingElements) {
@@ -625,10 +625,9 @@ class Cursor extends UIElement
     /**
      * Draw the UI element.
      */
-    drawImp(pintar)
+    drawImp(pintar, boundingBoxOverride)
     {
-        // draw cursor
-        this._sprite.draw(pintar);
+        this._sprite.draw(pintar, boundingBoxOverride);
     }
     
     /**
@@ -739,10 +738,10 @@ class HorizontalLine extends UIElement
     /**
      * Draw the UI element.
      */
-    drawImp(pintar)
+    drawImp(pintar, boundingBoxOverride)
     {
         // get dest rect
-        var destRect = this.getBoundingBox();
+        var destRect = boundingBoxOverride || this.getBoundingBox();
 
         // width left to draw for center part
         var widthLeft = destRect.width;
@@ -865,13 +864,13 @@ class Panel extends Container
     /**
      * Draw the UI element.
      */
-    drawImp(pintar)
+    drawImp(pintar, boundingBoxOverride)
     {
         // draw background
-        this._background.draw(pintar);
+        this._background.draw(pintar, boundingBoxOverride || this.getBoundingBox());
 
         // draw children
-        super.drawImp(pintar);
+        super.drawImp(pintar, boundingBoxOverride);
     }
 
     /**
@@ -1009,7 +1008,7 @@ class Paragraph extends UIElement
     /**
      * Draw the UI element.
      */
-    drawImp(pintar)
+    drawImp(pintar, boundingBoxOverride)
     {
         // set auto height
         if (this.autoSetHeight) 
@@ -1026,7 +1025,7 @@ class Paragraph extends UIElement
         }
 
         // get position and size
-        var destRect = this.getBoundingBox();
+        var destRect = boundingBoxOverride || this.getBoundingBox();
         var position = destRect.getPosition();
 
         // adjust vertical position
@@ -1321,10 +1320,10 @@ class ProgressBar extends Container
     /**
      * Draw the UI element.
      */
-    drawImp(pintar)
+    drawImp(pintar, boundingBoxOverride)
     {
         // get dest rect
-        var dest = this.getBoundingBox();
+        var dest = boundingBoxOverride || this.getBoundingBox();
 
         // draw background
         this._backgroundSprite.offset = dest.getPosition();
@@ -1382,7 +1381,7 @@ class ProgressBar extends Container
          }
 
          // draw children
-        super.drawImp(pintar);
+        super.drawImp(pintar, boundingBoxOverride);
     }
 
     /**
@@ -1703,10 +1702,10 @@ class SlicedSprite extends UIElement
      * Draw the UI element.
      * @param {*} pintar Pintar instance to draw this element on.
      */
-    drawImp(pintar)
+    drawImp(pintar, boundingBoxOverride)
     {
         // get drawing position and size
-        var destRect = this.getBoundingBox();
+        var destRect = boundingBoxOverride || this.getBoundingBox();
         
         // get scale and adjust position to centerize sprite
         var scaleFactor = this.absoluteScale;
@@ -2191,10 +2190,10 @@ class Slider extends Container
     /**
      * Draw the UI element.
      */
-    drawImp(pintar)
+    drawImp(pintar, boundingBoxOverride)
     {
         // get dest rect
-        var destRect = this.getBoundingBox();
+        var destRect = boundingBoxOverride || this.getBoundingBox();
 
         // draw background line
         this._line.draw(pintar);
@@ -2214,7 +2213,7 @@ class Slider extends Container
         pintar.drawSprite(this._handle);
 
         // draw children
-        super.drawImp(pintar);
+        super.drawImp(pintar, boundingBoxOverride);
     }
 
     /**
@@ -2378,10 +2377,10 @@ class Sprite extends UIElement
      * Draw the UI element.
      * @param {*} pintar Pintar instance to draw this element on.
      */
-    drawImp(pintar)
+    drawImp(pintar, boundingBoxOverride)
     {
         // get drawing position and size and draw element
-        var destRect = this.getBoundingBox();
+        var destRect = boundingBoxOverride || this.getBoundingBox();
         this._sprite.size.set(destRect.width, destRect.height);
         this._sprite.position.set(destRect.x, destRect.y);
         pintar.drawSprite(this._sprite);
@@ -2749,8 +2748,9 @@ class UIElement
     /**
      * Draw the UI element.
      * @param {*} pintar Pintar instance to draw this element on.
+     * @param {PintarJS.Rectangle} boundingBoxOverride If provided, will draw element with this bounding box.
      */
-    draw(pintar)
+    draw(pintar, boundingBoxOverride)
     {
         // if not visible, do nothing
         if (!this.visible) {
@@ -2763,15 +2763,16 @@ class UIElement
 
         // check if visible and draw
         if (this.isVisiblyByViewport()) {
-            this.drawImp(pintar);
+            this.drawImp(pintar, boundingBoxOverride);
         }
     }
 
     /**
      * Actually implements drawing this element.
      * @param {*} pintar Pintar instance to draw this element on.
+     * @param {PintarJS.Rectangle} boundingBoxOverride If provided, will draw element with this bounding box.
      */
-    drawImp(pintar)
+    drawImp(pintar, boundingBoxOverride)
     {
     }
 
@@ -3387,10 +3388,10 @@ class VerticalLine extends UIElement
     /**
      * Draw the UI element.
      */
-    drawImp(pintar)
+    drawImp(pintar, boundingBoxOverride)
     {
         // get dest rect
-        var destRect = this.getBoundingBox();
+        var destRect = boundingBoxOverride || this.getBoundingBox();
 
         // height left to draw for center part
         var heightLeft = destRect.height;

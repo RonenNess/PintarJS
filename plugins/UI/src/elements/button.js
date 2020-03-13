@@ -200,10 +200,10 @@ class Button extends Container
     /**
      * Draw the UI element.
      */
-    drawImp(pintar)
+    drawImp(pintar, boundingBoxOverride)
     {
         // get dest rect
-        var destRect = this.getBoundingBox();
+        var destRect = boundingBoxOverride || this.getBoundingBox();
 
         // decide which sprite to draw based on state
         var sprite = this._sprite;
@@ -235,7 +235,7 @@ class Button extends Container
         }
 
         // draw children
-        super.drawImp(pintar);
+        super.drawImp(pintar, boundingBoxOverride);
     }
 
     /**

@@ -130,7 +130,7 @@ class Container extends UIElement
     /**
      * Draw the UI element.
      */
-    drawImp(pintar)
+    drawImp(pintar, boundingBoxOverride)
     {
         // hide exceeding element by using pintar's viewport
         if (this.hideExceedingElements) {

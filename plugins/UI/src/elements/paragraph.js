@@ -106,7 +106,7 @@ class Paragraph extends UIElement
     /**
      * Draw the UI element.
      */
-    drawImp(pintar)
+    drawImp(pintar, boundingBoxOverride)
     {
         // set auto height
         if (this.autoSetHeight) 
@@ -123,7 +123,7 @@ class Paragraph extends UIElement
         }
 
         // get position and size
-        var destRect = this.getBoundingBox();
+        var destRect = boundingBoxOverride || this.getBoundingBox();
         var position = destRect.getPosition();
 
         // adjust vertical position

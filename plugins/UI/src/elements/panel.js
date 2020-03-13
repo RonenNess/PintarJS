@@ -72,13 +72,13 @@ class Panel extends Container
     /**
      * Draw the UI element.
      */
-    drawImp(pintar)
+    drawImp(pintar, boundingBoxOverride)
     {
         // draw background
-        this._background.draw(pintar);
+        this._background.draw(pintar, boundingBoxOverride || this.getBoundingBox());
 
         // draw children
-        super.drawImp(pintar);
+        super.drawImp(pintar, boundingBoxOverride);
     }
 
     /**

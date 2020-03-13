@@ -82,10 +82,10 @@ class VerticalLine extends UIElement
     /**
      * Draw the UI element.
      */
-    drawImp(pintar)
+    drawImp(pintar, boundingBoxOverride)
     {
         // get dest rect
-        var destRect = this.getBoundingBox();
+        var destRect = boundingBoxOverride || this.getBoundingBox();
 
         // height left to draw for center part
         var heightLeft = destRect.height;

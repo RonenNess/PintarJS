@@ -113,10 +113,10 @@ class Sprite extends UIElement
      * Draw the UI element.
      * @param {*} pintar Pintar instance to draw this element on.
      */
-    drawImp(pintar)
+    drawImp(pintar, boundingBoxOverride)
     {
         // get drawing position and size and draw element
-        var destRect = this.getBoundingBox();
+        var destRect = boundingBoxOverride || this.getBoundingBox();
         this._sprite.size.set(destRect.width, destRect.height);
         this._sprite.position.set(destRect.x, destRect.y);
         pintar.drawSprite(this._sprite);

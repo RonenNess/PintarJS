@@ -232,10 +232,10 @@ class Slider extends Container
     /**
      * Draw the UI element.
      */
-    drawImp(pintar)
+    drawImp(pintar, boundingBoxOverride)
     {
         // get dest rect
-        var destRect = this.getBoundingBox();
+        var destRect = boundingBoxOverride || this.getBoundingBox();
 
         // draw background line
         this._line.draw(pintar);
@@ -255,7 +255,7 @@ class Slider extends Container
         pintar.drawSprite(this._handle);
 
         // draw children
-        super.drawImp(pintar);
+        super.drawImp(pintar, boundingBoxOverride);
     }
 
     /**

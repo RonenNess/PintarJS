@@ -78,10 +78,10 @@ class HorizontalLine extends UIElement
     /**
      * Draw the UI element.
      */
-    drawImp(pintar)
+    drawImp(pintar, boundingBoxOverride)
     {
         // get dest rect
-        var destRect = this.getBoundingBox();
+        var destRect = boundingBoxOverride || this.getBoundingBox();
 
         // width left to draw for center part
         var widthLeft = destRect.width;

@@ -253,10 +253,10 @@ class ProgressBar extends Container
     /**
      * Draw the UI element.
      */
-    drawImp(pintar)
+    drawImp(pintar, boundingBoxOverride)
     {
         // get dest rect
-        var dest = this.getBoundingBox();
+        var dest = boundingBoxOverride || this.getBoundingBox();
 
         // draw background
         this._backgroundSprite.offset = dest.getPosition();
@@ -314,7 +314,7 @@ class ProgressBar extends Container
          }
 
          // draw children
-        super.drawImp(pintar);
+        super.drawImp(pintar, boundingBoxOverride);
     }
 
     /**

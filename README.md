@@ -683,6 +683,7 @@ pintar.adjustToParentSize();
 
 - Added option to set sizes and sides as strings with '%' or 'px' suffix, to set mode and value in one call.
 - Added fixed position mode.
+- Added bounding box override option for UI elements + fixed panels background positioning.
 
 ## License
 

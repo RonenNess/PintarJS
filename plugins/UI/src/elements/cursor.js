@@ -107,10 +107,9 @@ class Cursor extends UIElement
     /**
      * Draw the UI element.
      */
-    drawImp(pintar)
+    drawImp(pintar, boundingBoxOverride)
     {
-        // draw cursor
-        this._sprite.draw(pintar);
+        this._sprite.draw(pintar, boundingBoxOverride);
     }
     
     /**
