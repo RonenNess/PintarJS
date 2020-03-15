@@ -4511,7 +4511,7 @@ class TextSprite extends Renderable
             var ret = {
                 base: new Point(width, height), 
                 absoluteDistance: new Point(width + this.tracking , height),
-                width: width + this.tracking,
+                width: width > 0 ? (width + this.tracking) : 0,
             };
             charsSizeCache[char] = ret;
             return ret;
@@ -4782,6 +4782,10 @@ TextSprite.measureTextHeight = function(fontFamily, fontSize, char)
  */
 TextSprite.measureTextWidth = function(fontFamily, fontSize, char) 
 {
+    // special case to ignore \r and \n when measuring text width
+    if (char === '\n' || char === '\r') { return 0; }
+
+    // measure character width
     var canvas = document.createElement("canvas");
     var context = canvas.getContext("2d");
     context.font = fontSize.toString() + 'px ' + fontFamily;

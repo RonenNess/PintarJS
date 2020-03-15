@@ -685,6 +685,7 @@ pintar.adjustToParentSize();
 - Added fixed position mode.
 - Added bounding box override option for UI elements + fixed panels background positioning.
 - Fixed stack overflow bug with auto-anchors.
+- Fixed character width calculation for \r and \n characters.
 
 ## License
 

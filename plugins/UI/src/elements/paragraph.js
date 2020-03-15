@@ -142,7 +142,7 @@ class Paragraph extends UIElement
 
         // adjust position for alignment
         if (this.alignment == "center") {
-            this._textSprite.position.x += destRect.width / 2 + 1;
+            this._textSprite.position.x += destRect.width / 2;
         }
         if (this.alignment == "right") {
             this._textSprite.position.x += destRect.width;
