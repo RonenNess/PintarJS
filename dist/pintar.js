@@ -4244,6 +4244,7 @@ class TextSprite extends Renderable
         this.strokeWidth = this.__getFromOptions(options, 'strokeWidth', TextSprite.defaults.strokeWidth);
         this.strokeColor = this.__getFromOptions(options, 'strokeColor', TextSprite.defaults.strokeColor);
         this.useStyleCommands = TextSprite.defaults.useStyleCommands;
+        this.extraLineHeight = TextSprite.defaults.extraLineHeight;
         this.tracking = TextSprite.defaults.tracking;
         this.maxWidth = null;
         
@@ -4269,6 +4270,25 @@ class TextSprite extends Renderable
         }
         return hash;
     };
+
+    /**
+     * Get extra line height.
+     */
+    get extraLineHeight()
+    {
+        return this._extraLineHeight;
+    }
+
+    /**
+     * Set extra line height.
+     */
+    set extraLineHeight(value)
+    {
+        if (this._extraLineHeight !== value) {
+            this._extraLineHeight = value;
+            this._cachedLinesAndCommands = null;
+        }
+    }
     
     /**
      * Get unique id representing this text sprite and all its properties.
@@ -4625,7 +4645,7 @@ class TextSprite extends Renderable
 
             // calculate line height
             if (!this._calculatedLineHeight) {
-                this._calculatedLineHeight = currCharSize.absoluteDistance.y;
+                this._calculatedLineHeight = currCharSize.absoluteDistance.y + this.extraLineHeight;
             }
 
             // check if need to break due to exceeding size
@@ -4710,6 +4730,7 @@ class TextSprite extends Renderable
         ret.strokeWidth = this.strokeWidth;
         ret.maxWidth = this.maxWidth;
         ret.strokeColor = this.strokeColor.clone();
+        ret.extraLineHeight = this.extraLineHeight;
         return ret;
     }
 }
@@ -4735,6 +4756,7 @@ TextSprite.defaults = {
     useStyleCommands: false,                    // default if sprite texts should use style commands.
     lineHeightOffsetFactor: 0,                  // default offset based on line calculated height.
     tracking: 0,                                // default extra spacing between characters.
+    extraLineHeight: 0,                         // default extra line height.
 };
 
 /**
