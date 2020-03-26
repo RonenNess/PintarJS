@@ -687,6 +687,7 @@ pintar.adjustToParentSize();
 - Fixed stack overflow bug with auto-anchors.
 - Fixed character width calculation for \r and \n characters.
 - Added `extraLineHeight` to allow better text adjustments.
+- Fixed centered text positioning.
 
 ## License
 

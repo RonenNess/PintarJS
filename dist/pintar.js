@@ -2235,7 +2235,7 @@ class WebGlRenderer extends Renderer
                     drawSpriteMethod(sprite, position, fillColor, strokeWidth, strokeColor);
 
                     // update offset
-                    offset += size.absoluteDistance.x - 1 * ratio;
+                    offset += size.absoluteDistance.x;
                 }
             }
         };
