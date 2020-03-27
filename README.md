@@ -688,6 +688,8 @@ pintar.adjustToParentSize();
 - Fixed character width calculation for \r and \n characters.
 - Added `extraLineHeight` to allow better text adjustments.
 - Fixed centered text positioning.
+- Added auto-center anchor.
+- Added after-draw event for ui elements.
 
 ## License
 

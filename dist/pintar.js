@@ -2136,9 +2136,6 @@ class WebGlRenderer extends Renderer
         var strokeWidth = null;
         var strokeColor = null;
 
-        // calc ratio between font texture and text sprite size
-        var ratio = (textSprite.fontSize / fontTexture.fontSize);
-
         // get text lines and style commands
         var lines = textSprite.getProcessedTextAndCommands();
 

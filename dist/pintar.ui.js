@@ -20,6 +20,7 @@ module.exports = {
     Auto: 'Auto',
     AutoInline: 'AutoInline',
     AutoInlineNoBreak: 'AutoInlineNoBreak',
+    AutoCenter: 'AutoCenter',
     Fixed: 'Fixed',
 };
 },{}],2:[function(require,module,exports){
@@ -2466,6 +2467,7 @@ class UIElement
         this.whileMouseDown = null;
         this.afterValueChanged = null;
         this.beforeUpdate = null;
+        this.afterDraw = null;
 
         // cache some things for faster calculations
         this._selfBoundingBoxCache = null;
@@ -2765,6 +2767,11 @@ class UIElement
         if (this.isVisiblyByViewport()) {
             this.drawImp(pintar, boundingBoxOverride);
         }
+
+        // call the after-draw callback
+        if (this.afterDraw) {
+            this.afterDraw(this);
+        }
     }
 
     /**
@@ -2865,6 +2872,22 @@ class UIElement
     }
 
     /**
+     * Get if using one of the auto-anchor types.
+     */
+    get isAutoAnchor()
+    {
+        return (this.anchor === Anchors.Auto) || (this.anchor === Anchors.AutoInline) || (this.anchor === Anchors.AutoInlineNoBreak) || (this.anchor == Anchors.AutoCenter);
+    }
+
+    /**
+     * Get if using one of the auto-inline-anchor types.
+     */
+    get isAutoInlineAnchor()
+    {
+        return (this.anchor === Anchors.AutoInline) || (this.anchor === Anchors.AutoInlineNoBreak);
+    }
+
+    /**
      * Set offset for auto anchor types.
      */
     _setOffsetForAutoAnchors()
@@ -2889,8 +2912,8 @@ class UIElement
         // do we need to break line? 
         var needBreakLine = false;
 
-        // if auto-inline anchor, arrange it accordingly
-        if ((this.anchor === Anchors.AutoInline) || (this.anchor === Anchors.AutoInlineNoBreak))
+        // if auto anchor, arrange it accordingly
+        if (this.isAutoInlineAnchor)
         {
             // got element before?
             if (lastElement) 
@@ -3123,6 +3146,10 @@ class UIElement
             case Anchors.AutoInline:
             case Anchors.AutoInlineNoBreak:
                 ret.set(parentRect.x, parentRect.y);
+                break;
+
+            case Anchors.AutoCenter:
+                ret.set(parentRect.x + (parentRect.width / 2), parentRect.y);
                 break;
 
             case Anchors.TopCenter:
