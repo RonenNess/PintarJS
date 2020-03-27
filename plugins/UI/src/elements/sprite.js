@@ -94,6 +94,22 @@ class Sprite extends UIElement
     }
 
     /**
+     * Get brightness factor.
+     */
+    get brightness()
+    {
+        return this._sprite.brightness;
+    }
+
+    /**
+     * Set brightness factor.
+     */
+    set brightness(val)
+    {
+        this._sprite.brightness = val;
+    }
+
+    /**
      * Get source rectangle.
      */
     get sourceRectangle()
