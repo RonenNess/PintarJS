@@ -308,6 +308,12 @@ class Container extends UIElement
         this._children = [];
         this.padding = new SidesProperties(0, 0, 0, 0);
         this.hideExceedingElements = false;
+
+        // optional callback to invoke when adding a child to this element (params: parent, child)
+        this.onAddingChild = null;
+
+        // optional callback to invoke when removing a child to this element (params: parent, child)
+        this.onRemovingChild = null;
     }
 
     /**
@@ -327,6 +333,11 @@ class Container extends UIElement
         
         // set starting sibling-before so we can calculate dest rect without waiting for update
         element._siblingBefore = this._children[this._children.length-2];
+
+        // invoke callback
+        if (this.onAddingChild) {
+            this.onAddingChild(this, element);
+        }
     }
 
     /**
@@ -347,6 +358,11 @@ class Container extends UIElement
             this._children.splice(index, 1);
             element._siblingBefore = null;
             element._setParent(null);
+        }
+
+        // invoke callback
+        if (this.onRemovingChild) {
+            this.onRemovingChild(this, element);
         }
     }
 
@@ -2491,6 +2507,9 @@ class UIElement
         this._parentInternalBoundingBoxCache = null;
         this._boundingBoxVersion = 0;
 
+        // if true, will only draw element if currently visible in parent's viewport.
+        this.testViewportVisibility = true;
+
         // is this element currently visible?
         this.visible = true;
 
@@ -2780,7 +2799,7 @@ class UIElement
         this.checkIfSelfBoundingBoxShouldUpdate();
 
         // check if visible and draw
-        if (this.isVisiblyByViewport()) {
+        if (!this.testViewportVisibility || this.isVisiblyByViewport()) {
             this.drawImp(pintar, boundingBoxOverride);
         }
 

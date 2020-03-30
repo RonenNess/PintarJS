@@ -26,6 +26,12 @@ class Container extends UIElement
         this._children = [];
         this.padding = new SidesProperties(0, 0, 0, 0);
         this.hideExceedingElements = false;
+
+        // optional callback to invoke when adding a child to this element (params: parent, child)
+        this.onAddingChild = null;
+
+        // optional callback to invoke when removing a child to this element (params: parent, child)
+        this.onRemovingChild = null;
     }
 
     /**
@@ -45,6 +51,11 @@ class Container extends UIElement
         
         // set starting sibling-before so we can calculate dest rect without waiting for update
         element._siblingBefore = this._children[this._children.length-2];
+
+        // invoke callback
+        if (this.onAddingChild) {
+            this.onAddingChild(this, element);
+        }
     }
 
     /**
@@ -65,6 +76,11 @@ class Container extends UIElement
             this._children.splice(index, 1);
             element._siblingBefore = null;
             element._setParent(null);
+        }
+
+        // invoke callback
+        if (this.onRemovingChild) {
+            this.onRemovingChild(this, element);
         }
     }
 

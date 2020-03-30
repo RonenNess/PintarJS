@@ -81,6 +81,9 @@ class UIElement
         this._parentInternalBoundingBoxCache = null;
         this._boundingBoxVersion = 0;
 
+        // if true, will only draw element if currently visible in parent's viewport.
+        this.testViewportVisibility = true;
+
         // is this element currently visible?
         this.visible = true;
 
@@ -370,7 +373,7 @@ class UIElement
         this.checkIfSelfBoundingBoxShouldUpdate();
 
         // check if visible and draw
-        if (this.isVisiblyByViewport()) {
+        if (!this.testViewportVisibility || this.isVisiblyByViewport()) {
             this.drawImp(pintar, boundingBoxOverride);
         }
 

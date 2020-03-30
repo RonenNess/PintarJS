@@ -690,6 +690,8 @@ pintar.adjustToParentSize();
 - Fixed centered text positioning.
 - Added auto-center anchor.
 - Added after-draw event for ui elements.
+- Added `onAddingChild` and `onRemovingChild` callbacks.
+- Added `testViewportVisibility` flag to control whether or not we cull element when not in screen / viewport boundaries.
 
 ## License
 
