@@ -13,9 +13,8 @@ const TextSprite = require('./../../text_sprite');
 const BlendModes = require('../../blend_modes');
 const Viewport = require('./../../viewport');
 const Rectangle = require('./../../rectangle');
-const Shaders = require('./shaders');
+const DefaultShader = require('./shaders/default_shader');
 const FontTexture = require('./font_texture');
-const WebglUtils = require('./webgl_utils').webglUtils;
 
 
 // null image to use when trying to render invalid textures, so we won't get annoying webgl warnings
@@ -67,107 +66,11 @@ class WebGlRenderer extends Renderer
      */
     _initShadersAndBuffers()
     {
-        // just a shortcut..
-        var gl = this._gl; 
-                
-        // setup GLSL program
-        var program = WebglUtils.createProgramFromSources(gl, [Shaders.vertex, Shaders.fragment], undefined, undefined, (reason) => {
-            throw new PintarConsole.Error(reason);
-        });
-        this._program = program;
-
-        // look up where the vertex data needs to go.
-        var positionLocation = gl.getAttribLocation(program, "a_position");
-        var texcoordLocation = gl.getAttribLocation(program, "a_texCoord");
-
-        // Create a buffer to put three 2d clip space points in
-        var positionBuffer = gl.createBuffer();
-
-        // Bind it to ARRAY_BUFFER (think of it as ARRAY_BUFFER = positionBuffer)
-        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-
-        // disable stuff we don't use
-        gl.disable(gl.DEPTH_TEST);
-        gl.disable(gl.CULL_FACE);
-        gl.disable(gl.STENCIL_TEST);
-
-        // Set a rectangle the same size as the image.  
-        var setRectangle = function(gl, x, y, width, height) {
-            var x1 = x;
-            var x2 = x + width;
-            var y1 = y;
-            var y2 = y + height;
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-                x1, y1,
-                x2, y1,
-                x1, y2,
-                x2, y2,
-            ]), gl.STATIC_DRAW);
-        }
-        setRectangle(gl, 0, 0, 1, 1);
-
-        // provide texture coordinates for the rectangle.
-        var texcoordBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-            0.0,  0.0,
-            1.0,  0.0,
-            0.0,  1.0,
-            1.0,  1.0,
-        ]), gl.STATIC_DRAW);
-
-        // Tell it to use our program (pair of shaders)
-        gl.useProgram(program);
-
-        // Turn on the position attribute
-        gl.enableVertexAttribArray(positionLocation);
-
-        // Bind the position buffer.
-        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-
-        // Tell the position attribute how to get data out of positionBuffer (ARRAY_BUFFER)
-        var size = 2;          // 2 components per iteration
-        var type = gl.FLOAT;   // the data is 32bit floats
-        var normalize = false; // don't normalize the data
-        var stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
-        var offset = 0;        // start at the beginning of the buffer
-        gl.vertexAttribPointer(
-            positionLocation, size, type, normalize, stride, offset);
-
-        // Turn on the teccord attribute
-        gl.enableVertexAttribArray(texcoordLocation);
-
-        // Bind the position buffer.
-        gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
-
-        // Tell the position attribute how to get data out of positionBuffer (ARRAY_BUFFER)
-        var size = 2;          // 2 components per iteration
-        var type = gl.FLOAT;   // the data is 32bit floats
-        var normalize = false; // don't normalize the data
-        var stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
-        var offset = 0;        // start at the beginning of the buffer
-        gl.vertexAttribPointer(
-            texcoordLocation, size, type, normalize, stride, offset);
-
-        // init all shader uniforms
-        this._uniforms = {
-            offset: gl.getUniformLocation(this._program, "u_offset"),
-            size: gl.getUniformLocation(this._program, "u_size"),
-            skew: gl.getUniformLocation(this._program, "u_skew"),
-            textureOffset: gl.getUniformLocation(this._program, "u_textureOffset"),
-            textureSize: gl.getUniformLocation(this._program, "u_textureSize"),
-            color: gl.getUniformLocation(this._program, "u_color"),
-            colorBooster: gl.getUniformLocation(this._program, "u_colorBooster"),
-            rotation: gl.getUniformLocation(this._program, "u_rotation"),
-            origin: gl.getUniformLocation(this._program, "u_origin"),
-        }
-
-        // set default 'last value' so we'll only update them when needed
-        for (var key in this._uniforms) {
-            if (this._uniforms.hasOwnProperty(key)) {
-                this._uniforms[key]._lastVal = {};
-            }
-        }
+        // create and init shader
+        this.shader = new DefaultShader();
+        this.shader.init(this._gl);
+        this.shader.setAsActive();
+        this.shader.setResolution(this._gl.canvas.width, this._gl.canvas.height);
 
         // Update size
         this._onResize();
@@ -180,8 +83,7 @@ class WebGlRenderer extends Renderer
     {
         // set the resolution
         var gl = this._gl;
-        var resolutionLocation = gl.getUniformLocation(this._program, "u_resolution");
-        gl.uniform2f(resolutionLocation, gl.canvas.width, gl.canvas.height);
+        this.shader.setResolution(gl.canvas.width, gl.canvas.height);
        
         // tell WebGL how to convert from clip space to pixels
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
@@ -444,42 +346,6 @@ class WebGlRenderer extends Renderer
     }
 
     /**
-     * Set uniform vec2 value with check if changed.
-     */
-    _setUniform2(uniform, x, y)
-    {
-        // only update if values changed
-        if (uniform._lastVal.x !== x || uniform._lastVal.y !== y) {
-        
-            // update cached values
-            uniform._lastVal.x = x; 
-            uniform._lastVal.y = y;
-
-            // set values
-            this._gl.uniform2f(uniform, x, y);
-        }
-    }
-
-    /**
-     * Set uniform vec4 value with check if changed.
-     */
-    _setUniform4(uniform, x, y, z, w)
-    {
-        // only update if values changed
-        if (uniform._lastVal.x !== x || uniform._lastVal.y !== y || uniform._lastVal.z !== z || uniform._lastVal.w !== w) {
-        
-            // update cached values
-            uniform._lastVal.x = x; 
-            uniform._lastVal.y = y;
-            uniform._lastVal.z = z;
-            uniform._lastVal.w = w;
-
-            // set values
-            this._gl.uniform4f(uniform, x, y, z, w);
-        }
-    }
-
-    /**
      * Set uniform image with check if changed.
      * @param {Texture} texture Texture instance.
      * @param {Number} textureMode Should be either gl.RGBA, gl.RGB or gl.LUMINANCE.
@@ -653,38 +519,15 @@ class WebGlRenderer extends Renderer
         // set texture
         var textureMode = this._calcTextureMode(sprite);
         this._setTexture(sprite.texture, textureMode);
-
-        // set position and size
-        this._gl.uniform2f(this._uniforms.offset, sprite.position.x - this._viewport.offset.x, -sprite.position.y + this._viewport.offset.y);
-        this._setUniform2(this._uniforms.size, sprite.width * sprite.scale.x, sprite.height * sprite.scale.y);
         
-        // set source rect
-        var srcRect = sprite.sourceRectangleRelative;
-        this._setUniform2(this._uniforms.textureOffset, srcRect.x, srcRect.y);
-        this._setUniform2(this._uniforms.textureSize, srcRect.width, srcRect.height); 
-
-        // set color
-        this._setUniform4(this._uniforms.color, sprite.color.r * sprite.brightness, sprite.color.g * sprite.brightness, sprite.color.b * sprite.brightness, sprite.color.a);
-        this._setUniform4(this._uniforms.colorBooster, sprite.colorBoost.r, sprite.colorBoost.g, sprite.colorBoost.b, sprite.colorBoost.a);
-        
-        // set skew
-        this._setUniform2(this._uniforms.skew, sprite.skew.x, sprite.skew.y);
-
-        // set rotation
-        var rotation = sprite.rotationVector;
-        this._setUniform2(this._uniforms.rotation, rotation.x, rotation.y)
-
-        // set origin
-        this._setUniform2(this._uniforms.origin, sprite.origin.x, sprite.origin.y)
-
         // set smoothing mode
         this._setSmoothingEnabled(sprite.smoothingEnabled);
 
         // set blend mode
         this._setBlendMode(sprite.blendMode);
 
-        // draw the textured quad.
-        this._gl.drawArrays(this._gl.TRIANGLE_STRIP, 0, 4);
+        // draw sprite using active shader
+        this.shader.draw(sprite, this._viewport);
     }
 }
 
