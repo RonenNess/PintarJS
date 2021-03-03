@@ -602,6 +602,9 @@ class WebGlRenderer extends Renderer
     {
         // set shader
         this._setShapesShaderIfNeeded();
+
+        // draw pixel
+        this.shader.draw(pixel, this._viewport);
     }
     
     /**
