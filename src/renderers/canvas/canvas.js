@@ -272,6 +272,61 @@ class CanvasRenderer extends Renderer
         // restore ctx after drawing
         this._ctx.restore();
     }
+   
+    /**
+     * Draw a rectangle.
+     * @param {PintarJS.ColoredRectangle} coloredRectangle Colored rectangle to draw.
+     */
+    drawRectangle(coloredRectangle)
+    {
+        // save current context state
+        this._ctx.save();
+
+        // set blend mode
+        this._setBlendMode(coloredRectangle.blendMode);
+
+        // draw filled rectangle
+        if (coloredRectangle.filled)
+        {     
+            this._ctx.fillStyle = coloredRectangle.color.asHex();
+            this._ctx.fillRect(coloredRectangle.position.x, coloredRectangle.position.y, coloredRectangle.width, coloredRectangle.height);
+        }
+        // draw rectangle stroke
+        else
+        {
+            this._ctx.strokeStyle = coloredRectangle.color.asHex();
+            this._ctx.strokeRect(coloredRectangle.position.x, coloredRectangle.position.y, coloredRectangle.width, coloredRectangle.height);
+        }
+
+        // restore ctx after drawing
+        this._ctx.restore();
+    }    
+
+    /**
+     * Draw a single pixel.
+     * @param {PintarJS.Pixel} pixel Pixel to draw.
+     */
+    drawPixel(pixel)
+    {
+        this._ctx.fillStyle = pixel.color.asHex();
+        this._ctx.fillRect(pixel.position.x, pixel.position.y, pixel.scale, pixel.scale);
+    }
+    
+    /**
+     * Draw a colored line.
+     * @param {PintarJS.ColoredLine} coloredLine Line to draw.
+     */
+    drawLine(coloredLine)
+    {
+        this._ctx.save();
+        this._setBlendMode(coloredLine.blendMode);
+        this._ctx.strokeStyle = coloredLine.color.asHex();
+        this._ctx.beginPath();
+        this._ctx.moveTo(coloredLine.position.x, coloredLine.position.y);
+        this._ctx.lineTo(coloredLine.toPosition.x, coloredLine.toPosition.y);
+        this._ctx.stroke();
+        this._ctx.restore();
+    }
 }
 
 // export CanvasRenderer

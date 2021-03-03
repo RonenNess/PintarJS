@@ -316,7 +316,98 @@ Color.fromDecimal = function(val)
 
 // export Color
 module.exports = Color;
-},{"./console":3}],3:[function(require,module,exports){
+},{"./console":5}],3:[function(require,module,exports){
+const Renderable = require("./renderable");
+
+/**
+ * Implement a simple 2d line with color.
+ */
+class ColoredLine extends Renderable
+{
+    /**
+     * Create the line.
+     * @param {PintarJS.Point} fromPoint Line starting point.
+     * @param {PintarJS.Point} toPoint Line ending point.
+     * @param {PintarJS.Color} color Rectangle color.
+     * @param {PintarJS.BlendModes} blendMode Blend mode to draw this rect with.
+     */
+    constructor(fromPoint, toPoint, color, blendMode)
+    {
+        super(fromPoint, color, blendMode);
+        this.toPosition = toPoint;
+    }
+}
+
+// export Colored line
+module.exports = ColoredLine;
+},{"./renderable":10}],4:[function(require,module,exports){
+const Rectangle = require("./rectangle");
+const Renderable = require("./renderable");
+
+/**
+ * Implement a simple 2d Rectangle with color.
+ */
+class ColoredRectangle extends Renderable
+{
+    /**
+     * Create the rectangle.
+     * @param {PintarJS.Point} position Rectangle top-left position.
+     * @param {PintarJS.Point} size Rectangle size.
+     * @param {PintarJS.Color} color Rectangle color.
+     * @param {PintarJS.BlendModes} blendMode Blend mode to draw this rect with.
+     * @param {Boolean} filled Is this rectangle filled or just outline.
+     */
+    constructor(position, size, color, blendMode, filled)
+    {
+        super(position, color, blendMode);
+        this.size = size;
+        this.filled = Boolean(filled);
+    }
+
+    /**
+     * Return this shape as a regular rectangle.
+     */
+    getAsRect()
+    {
+        return new Rectangle(this.position.x, this.position.y, this.size.x, this.size.y);
+    }
+
+    /**
+     * Get width.
+     */
+    get width()
+    {
+        return this.size.x;
+    }
+
+    /**
+     * Get height.
+     */
+    get height()
+    {
+        return this.size.y;
+    }
+
+    /**
+     * Set width.
+     */
+    set width(val)
+    {
+        this.size.x = val;
+    }
+
+    /**
+     * Set height.
+     */
+    set height(val)
+    {
+        this.size.y = val;
+    }
+}
+
+// export Colored Rect
+module.exports = ColoredRectangle;
+},{"./rectangle":9,"./renderable":10}],5:[function(require,module,exports){
 /**
  * file: console.js
  * description: For internal errors and logging.
@@ -400,7 +491,7 @@ Console.Error = PintarError;
 
 // export Console
 module.exports = Console;
-},{}],4:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 /**
  * file: PintarJS.js
  * description: main class that wraps the API.
@@ -420,6 +511,9 @@ const Texture = require('./texture');
 const BlendModes = require('./blend_modes');
 const Viewport = require('./viewport');
 const PintarConsole = require('./console');
+const ColoredRectangle = require('./colored_rectangle');
+const ColoredLine = require('./colored_line');
+const Pixel = require('./pixel');
 
 // current version and author
 const __version__ = "2.1.0";
@@ -754,6 +848,36 @@ class PintarJS
     }
 
     /**
+     * Draw a rectangle.
+     * @param {PintarJS.ColoredRectangle} coloredRectangle Colored rectangle to draw.
+     */
+    drawRectangle(coloredRectangle)
+    {
+        if (!this._frameStarted) { throw new PintarConsole.Error("Must call 'startFrame()' before drawing!"); }
+        this._renderer.drawRectangle(coloredRectangle);
+    }
+
+    /**
+     * Draw a single pixel.
+     * @param {PintarJS.Pixel} pixel Pixel to draw.
+     */
+    drawPixel(pixel)
+    {
+        if (!this._frameStarted) { throw new PintarConsole.Error("Must call 'startFrame()' before drawing!"); }
+        this._renderer.drawPixel(pixel);
+    }
+
+    /**
+     * Draw a colored line.
+     * @param {PintarJS.ColoredLine} coloredLine Line to draw.
+     */
+    drawLine(coloredLine)
+    {
+        if (!this._frameStarted) { throw new PintarConsole.Error("Must call 'startFrame()' before drawing!"); }
+        this._renderer.drawLine(coloredLine);
+    }
+
+    /**
      * Draw any object.
      * @param {*} obj Object to draw.
      */
@@ -764,6 +888,9 @@ class PintarJS
         }
         else if (obj instanceof TextSprite) {
             this.drawText(obj);
+        }
+        else if (obj instanceof ColoredRectangle) {
+            this.drawRectangle(obj);
         }
         else {
             throw new PintarConsole.Error("Unknown object type to draw!");
@@ -786,6 +913,9 @@ PintarJS.Texture = Texture;
 PintarJS.Viewport = Viewport;
 PintarJS.silent = PintarConsole.silent;
 PintarJS.enableDebugMessages = PintarConsole.enableDebugMessages;
+PintarJS.ColoredRectangle = ColoredRectangle;
+PintarJS.ColoredLine = ColoredLine;
+PintarJS.Pixel = Pixel;
 
 // show version
 PintarJS._version = __version__;
@@ -795,7 +925,31 @@ PintarConsole.log("PintarJS v" + __version__ + " ready! 🎨");
 // export main module
 module.exports = PintarJS;
 
-},{"./blend_modes":1,"./color":2,"./console":3,"./point":5,"./rectangle":6,"./renderers":10,"./sprite":19,"./text_sprite":20,"./texture":21,"./viewport":22}],5:[function(require,module,exports){
+},{"./blend_modes":1,"./color":2,"./colored_line":3,"./colored_rectangle":4,"./console":5,"./pixel":7,"./point":8,"./rectangle":9,"./renderers":13,"./sprite":22,"./text_sprite":23,"./texture":24,"./viewport":25}],7:[function(require,module,exports){
+const PintarJS = require("./pintar");
+
+/**
+ * Implement a simple 2d pixel with color to draw.
+ */
+class Pixel
+{
+    /**
+     * A drawable pixel.
+     * @param {PintarJS.Point} position Pixel position.
+     * @param {PintarJS.Color} color Pixel color.
+     * @param {Number} scale Optional scale to make the pixel into a square in a given size.
+     */
+    constructor(position, color, scale)
+    {
+        this.position = position;
+        this.color = color;
+        this.scale = scale || 1;
+    }
+}
+
+// export Pixel
+module.exports = Pixel;
+},{"./pintar":6}],8:[function(require,module,exports){
 /**
  * file: point.js
  * description: Simple 2d point object.
@@ -995,7 +1149,7 @@ Point.fromAngle = function(degrees)
 
 // export Point
 module.exports = Point;
-},{}],6:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 /**
  * file: rect.js
  * description: Simple 2d rectangle object.
@@ -1117,7 +1271,7 @@ class Rectangle
 
 // export Rect
 module.exports = Rectangle;
-},{"./point":5}],7:[function(require,module,exports){
+},{"./point":8}],10:[function(require,module,exports){
 /**
  * file: renderable.js
  * description: A renderable object base class.
@@ -1184,7 +1338,7 @@ class Renderable
 
 // export Renderable class
 module.exports = Renderable;
-},{}],8:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 /**
  * file: canvas.js
  * description: Implement canvas renderer.
@@ -1459,11 +1613,66 @@ class CanvasRenderer extends Renderer
         // restore ctx after drawing
         this._ctx.restore();
     }
+   
+    /**
+     * Draw a rectangle.
+     * @param {PintarJS.ColoredRectangle} coloredRectangle Colored rectangle to draw.
+     */
+    drawRectangle(coloredRectangle)
+    {
+        // save current context state
+        this._ctx.save();
+
+        // set blend mode
+        this._setBlendMode(coloredRectangle.blendMode);
+
+        // draw filled rectangle
+        if (coloredRectangle.filled)
+        {     
+            this._ctx.fillStyle = coloredRectangle.color.asHex();
+            this._ctx.fillRect(coloredRectangle.position.x, coloredRectangle.position.y, coloredRectangle.width, coloredRectangle.height);
+        }
+        // draw rectangle stroke
+        else
+        {
+            this._ctx.strokeStyle = coloredRectangle.color.asHex();
+            this._ctx.strokeRect(coloredRectangle.position.x, coloredRectangle.position.y, coloredRectangle.width, coloredRectangle.height);
+        }
+
+        // restore ctx after drawing
+        this._ctx.restore();
+    }    
+
+    /**
+     * Draw a single pixel.
+     * @param {PintarJS.Pixel} pixel Pixel to draw.
+     */
+    drawPixel(pixel)
+    {
+        this._ctx.fillStyle = pixel.color.asHex();
+        this._ctx.fillRect(pixel.position.x, pixel.position.y, pixel.scale, pixel.scale);
+    }
+    
+    /**
+     * Draw a colored line.
+     * @param {PintarJS.ColoredLine} coloredLine Line to draw.
+     */
+    drawLine(coloredLine)
+    {
+        this._ctx.save();
+        this._setBlendMode(coloredLine.blendMode);
+        this._ctx.strokeStyle = coloredLine.color.asHex();
+        this._ctx.beginPath();
+        this._ctx.moveTo(coloredLine.position.x, coloredLine.position.y);
+        this._ctx.lineTo(coloredLine.toPosition.x, coloredLine.toPosition.y);
+        this._ctx.stroke();
+        this._ctx.restore();
+    }
 }
 
 // export CanvasRenderer
 module.exports = CanvasRenderer;
-},{"./../../blend_modes":1,"./../../console":3,"./../../point":5,"./../../rectangle":6,"./../../text_sprite":20,"./../../viewport":22,"./../renderer":11}],9:[function(require,module,exports){
+},{"./../../blend_modes":1,"./../../console":5,"./../../point":8,"./../../rectangle":9,"./../../text_sprite":23,"./../../viewport":25,"./../renderer":14}],12:[function(require,module,exports){
 /**
  * file: index.js
  * description: Index file for canvas renderer.
@@ -1474,7 +1683,7 @@ module.exports = CanvasRenderer;
 
 // export the canvas renderer.
 module.exports = require('./canvas')
-},{"./canvas":8}],10:[function(require,module,exports){
+},{"./canvas":11}],13:[function(require,module,exports){
 /**
  * file: index.js
  * description: Index file for renderer types.
@@ -1489,7 +1698,7 @@ module.exports = {
     WebGL: require('./webgl'),
     WebGLHybrid: require('./webgl/webgl_hybrid'),
 };
-},{"./canvas":9,"./webgl":13,"./webgl/webgl_hybrid":18}],11:[function(require,module,exports){
+},{"./canvas":12,"./webgl":16,"./webgl/webgl_hybrid":21}],14:[function(require,module,exports){
 /**
  * file: renderer.js
  * description: Define the renderer interface, which is the low-level layer that draw stuff.
@@ -1542,6 +1751,36 @@ class Renderer
     }
 
     /**
+     * Draw a rectangle.
+     * @param {PintarJS.ColoredRectangle} coloredRectangle Colored rectangle to draw.
+     */
+    drawRectangle(coloredRectangle)
+    {
+        throw new PintarConsole.Error("Not Implemented.");
+    }
+
+    /**
+     * Draw a single color.
+     * @param {PintarJS.Point} position Pixel position.
+     * @param {PintarJS.Color} color Pixel color.
+     */
+    drawPixel(position, color)
+    {
+        throw new PintarConsole.Error("Not Implemented.");
+    }
+
+    /**
+     * Draw a line.
+     * @param {PintarJS.Point} pointA Line starting point.
+     * @param {PintarJS.Point} pointB Line ending point.
+     * @param {PintarJS.Color} color Line color.
+     */
+    drawLine(pointA, pointB, color)
+    {
+        throw new PintarConsole.Error("Not Implemented.");
+    }
+
+    /**
      * Set the currently active viewport.
      * @param {PintarJS.Viewport} viewport Viewport to set.
      */
@@ -1567,7 +1806,7 @@ class Renderer
 
 // export Renderer interface
 module.exports = Renderer;
-},{"./../console":3}],12:[function(require,module,exports){
+},{"./../console":5}],15:[function(require,module,exports){
 /**
  * file: webgl.js
  * description: Implement webgl renderer.
@@ -1725,7 +1964,7 @@ FontTexture.enforceValidTexureSize = true;
 
 // export the font texture class
 module.exports = FontTexture;
-},{"../../point":5,"../../rectangle":6,"./../../console":3,"./../../text_sprite":20,"./../../texture":21}],13:[function(require,module,exports){
+},{"../../point":8,"../../rectangle":9,"./../../console":5,"./../../text_sprite":23,"./../../texture":24}],16:[function(require,module,exports){
 /**
  * file: index.js
  * description: Index file for webgl renderer.
@@ -1736,7 +1975,7 @@ module.exports = FontTexture;
 
 // export the webgl renderer.
 module.exports = require('./webgl')
-},{"./webgl":17}],14:[function(require,module,exports){
+},{"./webgl":20}],17:[function(require,module,exports){
 /**
  * file: default_shader.js
  * description: Default shader to draw sprites.
@@ -1848,52 +2087,42 @@ class DefaultShader extends ShaderBase
      */
     get uniformNames()
     {
-        return ["u_offset", "u_size", "u_skew", "u_textureOffset", "u_textureSize", "u_color", "u_colorBooster", "u_rotation", "u_origin"];
-    }
-        
-    /**
-     * Update shader about new resolution.
-     */
-    setResolution(w, h)
-    {
-        var gl = this._gl;
-        var resolutionLocation = gl.getUniformLocation(this._program, "u_resolution");
-        gl.uniform2f(resolutionLocation, w, h);
+        return ["u_resolution", "u_offset", "u_size", "u_skew", "u_textureOffset", "u_textureSize", "u_color", "u_colorBooster", "u_rotation", "u_origin"];
     }
 
     /**
-     * Prepare to draw a sprite - need to set all uniforms etc.
+     * Prepare to draw a renderable - need to set all uniforms etc.
      */
-    prepare(sprite, viewport)
+    prepare(renderable, viewport)
     {
         // set position and size
-        this.setUniform2f(this.uniforms.u_offset, sprite.position.x - viewport.offset.x, -sprite.position.y + viewport.offset.y);
-        this.setUniform2f(this.uniforms.u_size, sprite.width * sprite.scale.x, sprite.height * sprite.scale.y);
+        this.setUniform2f(this.uniforms.u_offset, renderable.position.x - viewport.offset.x, -renderable.position.y + viewport.offset.y);
+        this.setUniform2f(this.uniforms.u_size, renderable.width * renderable.scale.x, renderable.height * renderable.scale.y);
         
         // set source rect
-        var srcRect = sprite.sourceRectangleRelative;
+        var srcRect = renderable.sourceRectangleRelative;
         this.setUniform2f(this.uniforms.u_textureOffset, srcRect.x, srcRect.y);
         this.setUniform2f(this.uniforms.u_textureSize, srcRect.width, srcRect.height); 
 
         // set color
-        this.setUniform4f(this.uniforms.u_color, sprite.color.r * sprite.brightness, sprite.color.g * sprite.brightness, sprite.color.b * sprite.brightness, sprite.color.a);
-        this.setUniform4f(this.uniforms.u_colorBooster, sprite.colorBoost.r, sprite.colorBoost.g, sprite.colorBoost.b, sprite.colorBoost.a);
+        this.setUniform4f(this.uniforms.u_color, renderable.color.r * renderable.brightness, renderable.color.g * renderable.brightness, renderable.color.b * renderable.brightness, renderable.color.a);
+        this.setUniform4f(this.uniforms.u_colorBooster, renderable.colorBoost.r, renderable.colorBoost.g, renderable.colorBoost.b, renderable.colorBoost.a);
         
         // set skew
-        this.setUniform2f(this.uniforms.u_skew, sprite.skew.x, sprite.skew.y);
+        this.setUniform2f(this.uniforms.u_skew, renderable.skew.x, renderable.skew.y);
 
         // set rotation
-        var rotation = sprite.rotationVector;
+        var rotation = renderable.rotationVector;
         this.setUniform2f(this.uniforms.u_rotation, rotation.x, rotation.y)
 
         // set origin
-        this.setUniform2f(this.uniforms.u_origin, sprite.origin.x, sprite.origin.y)
+        this.setUniform2f(this.uniforms.u_origin, renderable.origin.x, renderable.origin.y)
     }
 };
 
 // export the shader
 module.exports = DefaultShader
-},{"./shader_base":15}],15:[function(require,module,exports){
+},{"./shader_base":18}],18:[function(require,module,exports){
 /**
  * file: shader_base.js
  * description: Base class for all shaders.
@@ -1935,51 +2164,28 @@ class ShaderBase
     /**
      * Prepare to draw a sprite - need to set all uniforms etc.
      */
-    prepare(sprite, viewport)
+    prepare(renderable, viewport)
     {
         throw new Error("Not implemented!");
     }
-
+    
     /**
      * Update shader about new resolution.
      */
     setResolution(w, h)
     {
-        throw new Error("Not implemented!");
+        if (this.uniforms.u_resolution) {
+            this._gl.uniform2f(this.uniforms.u_resolution, w, h);
+        }
     }
 
     /**
      * Draw the sprite.
      */
-    draw(sprite, viewport)
+    draw(renderable, viewport)
     {  
-        this.prepare(sprite, viewport);
-        this.finalizeDraw();
-    }
-
-    /**
-     * Finish drawing a sprite.
-     */
-    finalizeDraw()
-    {
-        var gl = this._gl;
-        gl.drawArrays(gl[this.drawMode], 0, this.primitivesCount);
-    }
-
-    /**
-     * Primitives count per drawArrays call at the end of drawing a sprite or shape.
-     */
-    get primitivesCount()
-    {
-        return 4;
-    }
-
-    /**
-     * Drawing primitive mode.
-     */
-    get drawMode()
-    {
-        return "TRIANGLE_STRIP";
+        this.prepare(renderable, viewport);
+        this._gl.drawArrays(this._gl.TRIANGLE_STRIP, 0, 4);
     }
 
     /**
@@ -2169,7 +2375,7 @@ class ShaderBase
 
 
 module.exports = ShaderBase;
-},{"./webgl_utils":16}],16:[function(require,module,exports){
+},{"./webgl_utils":19}],19:[function(require,module,exports){
 /*
  * Copyright 2012, Gregg Tavares.
  * All rights reserved.
@@ -3467,7 +3673,7 @@ module.exports = ShaderBase;
   }));
   
   
-},{}],17:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 /**
  * file: webgl.js
  * description: Implement webgl renderer.
@@ -3541,6 +3747,11 @@ class WebGlRenderer extends Renderer
         this.shader.init(this._gl);
         this.shader.setAsActive();
         this.shader.setResolution(this._gl.canvas.width, this._gl.canvas.height);
+
+        // init texture mode
+        var gl = this._gl;
+        gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE );
+        gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE );
 
         // Update size
         this._onResize();
@@ -3846,8 +4057,6 @@ class WebGlRenderer extends Renderer
                 if (!gltexture) {throw new PintarConsole.Error("Invalid texture! Internal error?");}
                 gl.bindTexture(gl.TEXTURE_2D, gltexture);
                 gl.texImage2D(gl.TEXTURE_2D, 0, textureMode, img.width, img.height, 0, textureMode, gl.UNSIGNED_BYTE, img);
-                gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE );
-                gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE );
                 texture._glTextures[textureMode] = gltexture;
             }
             // if already got a gl texture, just bind to existing texture
@@ -3999,11 +4208,35 @@ class WebGlRenderer extends Renderer
         // draw sprite using active shader
         this.shader.draw(sprite, this._viewport);
     }
+
+    /**
+     * Draw a rectangle.
+     * @param {PintarJS.ColoredRectangle} coloredRectangle Colored rectangle to draw.
+     */
+    drawRectangle(coloredRectangle)
+    {
+    }
+    
+    /**
+     * Draw a single pixel.
+     * @param {PintarJS.Pixel} pixel Pixel to draw.
+     */
+    drawPixel(pixel)
+    {
+    }
+    
+    /**
+     * Draw a colored line.
+     * @param {PintarJS.ColoredLine} coloredLine Line to draw.
+     */
+    drawLine(coloredLine)
+    {
+    }
 }
 
 // export WebGlRenderer
 module.exports = WebGlRenderer;
-},{"../../blend_modes":1,"./../../console":3,"./../../point":5,"./../../rectangle":6,"./../../sprite":19,"./../../text_sprite":20,"./../../viewport":22,"./../renderer":11,"./font_texture":12,"./shaders/default_shader":14}],18:[function(require,module,exports){
+},{"../../blend_modes":1,"./../../console":5,"./../../point":8,"./../../rectangle":9,"./../../sprite":22,"./../../text_sprite":23,"./../../viewport":25,"./../renderer":14,"./font_texture":15,"./shaders/default_shader":17}],21:[function(require,module,exports){
 /**
  * file: webgl.js
  * description: Implement webgl renderer.
@@ -4126,7 +4359,7 @@ class WebGlHybridRenderer extends WebGlBase
 
 // export WebGlHybridRenderer
 module.exports = WebGlHybridRenderer;
-},{"../../color":2,"../../console":3,"../canvas":9,"./webgl":17}],19:[function(require,module,exports){
+},{"../../color":2,"../../console":5,"../canvas":12,"./webgl":20}],22:[function(require,module,exports){
 /**
  * file: sprite.js
  * description: A drawable sprite.
@@ -4385,7 +4618,7 @@ Sprite.defaults = {
 
 // export Sprite
 module.exports = Sprite;
-},{"./blend_modes":1,"./color":2,"./point":5,"./rectangle":6,"./renderable":7}],20:[function(require,module,exports){
+},{"./blend_modes":1,"./color":2,"./point":8,"./rectangle":9,"./renderable":10}],23:[function(require,module,exports){
 /**
  * file: text_sprite.js
  * description: A drawable text sprite.
@@ -5011,7 +5244,7 @@ TextSprite.charForLineBreak = function(char)
 
 // export TextSprite
 module.exports = TextSprite;
-},{"./blend_modes":1,"./color":2,"./point":5,"./renderable":7}],21:[function(require,module,exports){
+},{"./blend_modes":1,"./color":2,"./point":8,"./renderable":10}],24:[function(require,module,exports){
 /**
  * file: texture.js
  * description: A drawable texture class.
@@ -5101,7 +5334,7 @@ class Texture
 
 // export Texture
 module.exports = Texture;
-},{"./console":3,"./point":5}],22:[function(require,module,exports){
+},{"./console":5,"./point":8}],25:[function(require,module,exports){
 /**
  * file: viewport.js
  * description: Viewport to define rendering region and offset.
@@ -5148,5 +5381,5 @@ class Viewport
 
 // export Viewport
 module.exports = Viewport;
-},{"./point":5}]},{},[4])(4)
+},{"./point":8}]},{},[6])(6)
 });

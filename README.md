@@ -25,7 +25,7 @@ If you have similar requirements, ie you just want to draw stuff on screen while
 
 Using PintarJS is super easy!
 
-```js
+```javascript
 var pintar = new PintarJS();	// <-- HTML body must have a canvas element
 var sprite = new PintarJS.Sprite(new PintarJS.Texture("imgs/skeleton.png");
 
@@ -68,6 +68,10 @@ Or you can download `dist/pinter.js` and include in your HTML file.
     - Multiline
 	- Bitmap Font Rendering
 	- In-text style commands
+- Shapes drawing
+    - Rectangle
+    - Line
+    - Pixels
 - Sprites
     - Color Effects
         - Tint (reduce color compontents)
@@ -103,7 +107,7 @@ Lets see how to use PintarJS..
 
 To initialize PintarJS you need to have a Canvas element in your HTML page. You can then initialize with one of the following methods:
 
-```js
+```javascript
 // will init on the first canvas element found on page
 var pintar = new PintarJS();
 
@@ -117,7 +121,7 @@ var pintar = new PintarJS(document.getElementById("canvas3"));
 By default, PintarJS will try to use WebGL2. If not found, will use WebGL, and if not found either will fallback to Canvas API.
 To control the order of renderers PintarJS will attempt to use you can provide a second parameter, for example:
 
-```js
+```javascript
 var canvasPintar = new PintarJS(null, PintarJS.Renderers.Canvas);
 ```
 
@@ -160,7 +164,7 @@ Its slower than WebGL and don't support all effects / blend modes, but its prett
 
 To draw with PintarJS you need to start / end every frame:
 
-```js
+```javascript
 // init pintar
 var pintar = new PintarJS();
 
@@ -182,20 +186,20 @@ Normally, you would put your drawing function in an interval, or use `requestAni
 
 To draw a sprite you first need to load a texture and create a sprite instance:
 
-```js
+```javascript
 var texture = new PintarJS.Texture("imgs/my_texture_file.png");
 var sprite = new PintarJS.Sprite(texture);
 ```
 
 Then draw it:
 
-```js
+```javascript
 pintar.drawSprite(sprite);
 ```
 
 So with the full example from before we now have:
 
-```js
+```javascript
 // init pintar
 var pintar = new PintarJS();
 
@@ -223,7 +227,7 @@ Sprites support the following properties:
 
 Texture to draw:
 
-```js
+```javascript
 sprite.texture = new PintarJS.Texture("my/texture/file/url.png");
 ```
 
@@ -231,7 +235,7 @@ sprite.texture = new PintarJS.Texture("my/texture/file/url.png");
 
 Set the position to draw the sprite:
 
-```js
+```javascript
 sprite.position = new PintarJS.Point(100, 100);
 ```
 
@@ -239,7 +243,7 @@ sprite.position = new PintarJS.Point(100, 100);
 
 Set the sprite size:
 
-```js
+```javascript
 sprite.size = new PintarJS.Point(50, 50);
 ```
 
@@ -247,7 +251,7 @@ sprite.size = new PintarJS.Point(50, 50);
 
 Tint / amplify sprite colors. This color is multiplied with the sprite texture color, meaning a value between 0-1 will weaken colors, while values above 1 will amplify them:
 
-```js
+```javascript
 // will draw sprite with just red colors (disable green and blue)
 sprite.color = new PintarJS.Color(1, 0, 0, 1);
 
@@ -259,7 +263,7 @@ sprite.color = new PintarJS.Color(5, 1, 1, 1);
 
 How we blend this sprite. Most common modes you'll need are:
 
-```js
+```javascript
 sprite.blendMode = PintarJS.BlendModes.AlphaBlend;     // default blend with alpha channels and opacity
 sprite.blendMode = PintarJS.BlendModes.Opaque;         // disable blending, can be faster when you draw opaque textures
 sprite.blendMode = PintarJS.BlendModes.Additive;       // add sprite colors to the colors below - useful for fire / light effects
@@ -271,7 +275,7 @@ sprite.blendMode = PintarJS.BlendModes.Multiply;       // multiply sprite colors
 
 Scale sprite, or flip if values are negative:
 
-```js
+```javascript
 // will draw sprite at double size
 sprite.scale = new PintarJS.Point(2, 2);
 
@@ -283,7 +287,7 @@ sprite.scale = new PintarJS.Point(-1, 1);
 
 The region to draw from the source texture:
 
-```js
+```javascript
 // will draw the region starting at 100,100 with size of 50,50 pixels
 sprite.sourceRectangle = new PintarJS.Rectangle(100, 100, 50, 50);
 
@@ -295,7 +299,7 @@ sprite.setSourceFromSpritesheet(new PintarJS.Point(2, 0), new PintarJS.Point(6, 
 
 Will enable / disable smoothing filter when scaling the sprite. When dealing with pixel art, usually you want to disable smoothing:
 
-```js
+```javascript
 // disable smoothing for pixel art
 sprite.smoothingEnabled = false;
 ```
@@ -304,7 +308,7 @@ sprite.smoothingEnabled = false;
 
 The transformations origin of the sprite, ranging from 0 to 1. This property will affect rotation, scaling, position, etc. Often called 'anchor' in other engines:
 
-```js
+```javascript
 // set origin to be the sprite bottom center position. This means that the position you set would represent its bottom center, and if you
 // rotate the sprite it will rotate around its bottom center point.
 sprite.origin = new PintarJS.Point(0.5, 1);
@@ -314,7 +318,7 @@ sprite.origin = new PintarJS.Point(0.5, 1);
 
 Rotate the sprite:
 
-```js
+```javascript
 // rotate the sprite by 90 degrees
 sprite.rotation = 90;
 ```
@@ -323,7 +327,7 @@ sprite.rotation = 90;
 
 Set sprite brightness:
 
-```js
+```javascript
 // turn sprite 50% darker
 sprite.brightness = 0.5;
 
@@ -336,7 +340,7 @@ sprite.brightness = 1.5;
 Add / subtract color components from the sprite. Unlike the 'color' property, this property uses 'add' operator.
 This means that you can actually add colors that were originally non-existent (0) in texture. In addition you can use this property to create silhouette of sprites:
 
-```js
+```javascript
 // will add 100% red color to all pixels. this means black pixels will now be red.
 sprite.colorBoost = new PintarJS.Color(1, 0, 0, 0);
 
@@ -349,7 +353,7 @@ sprite.color = PintarJS.Color.green();
 
 Skew sprite on X and Y axis:
 
-```js
+```javascript
 // skew sprite by factor of 1 on X axis, and 0.5 on Y axis.
 sprite.skew = new PintarJS.Point(1, 0.5);
 ```
@@ -358,7 +362,7 @@ sprite.skew = new PintarJS.Point(1, 0.5);
 
 If true, will render this sprite in black and white. Only works with WebGL renderer.
 
-```js
+```javascript
 // will draw sprite in black and white
 sprite.greyscale = true;
 ```
@@ -367,18 +371,48 @@ sprite.greyscale = true;
 
 You can set some of the default properties of all new sprites by changing `PintarJS.Sprite.defaults`. To learn more, check out the keys contained in the defaults dictionary.
 
+### Drawing Shapes
+
+PintarJS provides an API to draw some basic shapes. Lets explore these APIs: 
+
+#### Pixels
+
+To draw a single pixel use:
+
+```javascript
+pintar.drawPixel(new PintarJS.Pixel(point, color, scale));
+```
+
+Note: scale is an optional factor to "scale" the pixel and actually make it a square in a given size. If you don't provide scale, it will just be a single 1x1 pixel.
+
+#### Lines
+
+To draw a line use:
+
+```javascript
+pintar.drawLine(new PintarJS.ColoredLine(startPoint, endPoint, color));
+```
+
+####  Rectangles
+
+To draw a rectangle use:
+
+```javascript
+pintar.drawRectangle(new PintarJS.ColoredRectangle(topLeftPosition, size, color, blendMode, isFilled));
+```
+
 ### Text Sprite
 
 Text sprites are used to draw text on screen. It support line breaks and stroke. 
 To create a text sprite:
 
-```js
+```javascript
 var text = new PintarJS.TextSprite("Hello World!\nBye.");
 ```
 
 Then draw it:
 
-```js
+```javascript
 pintar.drawText(text);
 ```
 
@@ -389,7 +423,7 @@ Style commands are special tags you can put in text to change colors and styles 
 
 For example, the following TextSprite:
 
-```js
+```javascript
 textSprite.useStyleCommands = true;
 textSprite.color = PintarJS.Color.black();
 textSprite.text = "Hello world, this is {{fc:red}}RED{{fc:black}}.";
@@ -426,7 +460,7 @@ Text Sprites support the following properties:
 
 Set the position to draw the text:
 
-```js
+```javascript
 text.position = new PintarJS.Point(100, 100);
 ```
 
@@ -434,7 +468,7 @@ text.position = new PintarJS.Point(100, 100);
 
 Set the text fill color:
 
-```js
+```javascript
 text.color = new PintarJS.Color(1, 0, 0, 1);  // <-- red color
 
 // or, you can do this:
@@ -449,7 +483,7 @@ Text blending mode. See sprite.blendMode for more info.
 
 Text font to use:
 
-```js
+```javascript
 text.font = "Ariel";
 ```
 
@@ -457,7 +491,7 @@ text.font = "Ariel";
 
 Text font size (in pixels):
 
-```js
+```javascript
 text.fontSize = 30;
 ```
 
@@ -469,7 +503,7 @@ Set to true to support style commands. If false, will draw text as-is.
 
 Text alignment:
 
-```js
+```javascript
 text.alignment = PintarJS.TextAlignment.Left;
 ```
 
@@ -477,7 +511,7 @@ text.alignment = PintarJS.TextAlignment.Left;
 
 Text stroke width (or 0 to disable stroke):
 
-```js
+```javascript
 text.strokeWidth = 2;
 ```
 
@@ -485,7 +519,7 @@ text.strokeWidth = 2;
 
 Text stroke color:
 
-```js
+```javascript
 text.strokeColor = PintarJS.Color.blue();
 ```
 
@@ -500,7 +534,7 @@ Viewports can define rendering area (ie a rectangle region that we'll only draw 
 
 Using the offset property its easy to utilize Viewports to create simple 2D cameras:
 
-```js
+```javascript
 // create viewport and set as active
 var camera = new PintarJS.Viewport();
 pintar.setViewport(camera);
@@ -531,7 +565,7 @@ To get the texture for a given font, PintarJS will generate it at runtime automa
 
 You can, however, ask the renderer to generate a font texture on demand with your own custom parameters. To do so, use the following method:
 
-```js
+```javascript
 // will only work if you use the WebGL renderer!
 pintar._renderer.generateFontTexture(fontName, fontSize, charsSet, maxTextureWidth, missingCharPlaceholder);
 ```
@@ -595,14 +629,14 @@ Note that because you have no control over the browser size (and users can chang
 
 In this case, you either set desired width or desired height, and PintarJS will adjust the canvas' other dimention to match this size whild keeping 1:1 ratio.
 
-```js
+```javascript
 // will make width exactly 800 pixels, and adjust height accordingly
 pintar.fixedResolutionX = 800;
 ```
 
 Note that when you scale a canvas and there's no match between its width/height and the actual DOM element size, smoothing filter will occur (which will make pixel art seem blurry). To prevent this effect, you can use `makePixelatedScaling()`:
 
-```js
+```javascript
 // will make sure that canvas scales with nearest neighbor filter, ie no blur
 pintar.makePixelatedScaling();
 ```
@@ -611,7 +645,7 @@ pintar.makePixelatedScaling();
 
 You can use PintarJS to automatically adjust canvas size to fullscreen:
 
-```js
+```javascript
 pintar.makeFullscreen();
 ```
 
@@ -621,7 +655,7 @@ This will set the canvas style properties to make always fixed and fullscreen.
 
 You can use PintarJS to adjust the canvas size to its parent:
 
-```js
+```javascript
 pintar.adjustToParentSize();
 ```
 
@@ -692,6 +726,13 @@ pintar.adjustToParentSize();
 - Added after-draw event for ui elements.
 - Added `onAddingChild` and `onRemovingChild` callbacks.
 - Added `testViewportVisibility` flag to control whether or not we cull element when not in screen / viewport boundaries.
+
+### 2.1.0
+
+- Added shaders support.
+- Added drawing rectangles functionality.
+- Added drawing pixels functionality.
+- Added drawing line functionality.
 
 ## License
 

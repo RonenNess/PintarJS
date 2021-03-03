@@ -39,51 +39,28 @@ class ShaderBase
     /**
      * Prepare to draw a sprite - need to set all uniforms etc.
      */
-    prepare(sprite, viewport)
+    prepare(renderable, viewport)
     {
         throw new Error("Not implemented!");
     }
-
+    
     /**
      * Update shader about new resolution.
      */
     setResolution(w, h)
     {
-        throw new Error("Not implemented!");
+        if (this.uniforms.u_resolution) {
+            this._gl.uniform2f(this.uniforms.u_resolution, w, h);
+        }
     }
 
     /**
      * Draw the sprite.
      */
-    draw(sprite, viewport)
+    draw(renderable, viewport)
     {  
-        this.prepare(sprite, viewport);
-        this.finalizeDraw();
-    }
-
-    /**
-     * Finish drawing a sprite.
-     */
-    finalizeDraw()
-    {
-        var gl = this._gl;
-        gl.drawArrays(gl[this.drawMode], 0, this.primitivesCount);
-    }
-
-    /**
-     * Primitives count per drawArrays call at the end of drawing a sprite or shape.
-     */
-    get primitivesCount()
-    {
-        return 4;
-    }
-
-    /**
-     * Drawing primitive mode.
-     */
-    get drawMode()
-    {
-        return "TRIANGLE_STRIP";
+        this.prepare(renderable, viewport);
+        this._gl.drawArrays(this._gl.TRIANGLE_STRIP, 0, 4);
     }
 
     /**

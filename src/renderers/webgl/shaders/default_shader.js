@@ -109,46 +109,36 @@ class DefaultShader extends ShaderBase
      */
     get uniformNames()
     {
-        return ["u_offset", "u_size", "u_skew", "u_textureOffset", "u_textureSize", "u_color", "u_colorBooster", "u_rotation", "u_origin"];
-    }
-        
-    /**
-     * Update shader about new resolution.
-     */
-    setResolution(w, h)
-    {
-        var gl = this._gl;
-        var resolutionLocation = gl.getUniformLocation(this._program, "u_resolution");
-        gl.uniform2f(resolutionLocation, w, h);
+        return ["u_resolution", "u_offset", "u_size", "u_skew", "u_textureOffset", "u_textureSize", "u_color", "u_colorBooster", "u_rotation", "u_origin"];
     }
 
     /**
-     * Prepare to draw a sprite - need to set all uniforms etc.
+     * Prepare to draw a renderable - need to set all uniforms etc.
      */
-    prepare(sprite, viewport)
+    prepare(renderable, viewport)
     {
         // set position and size
-        this.setUniform2f(this.uniforms.u_offset, sprite.position.x - viewport.offset.x, -sprite.position.y + viewport.offset.y);
-        this.setUniform2f(this.uniforms.u_size, sprite.width * sprite.scale.x, sprite.height * sprite.scale.y);
+        this.setUniform2f(this.uniforms.u_offset, renderable.position.x - viewport.offset.x, -renderable.position.y + viewport.offset.y);
+        this.setUniform2f(this.uniforms.u_size, renderable.width * renderable.scale.x, renderable.height * renderable.scale.y);
         
         // set source rect
-        var srcRect = sprite.sourceRectangleRelative;
+        var srcRect = renderable.sourceRectangleRelative;
         this.setUniform2f(this.uniforms.u_textureOffset, srcRect.x, srcRect.y);
         this.setUniform2f(this.uniforms.u_textureSize, srcRect.width, srcRect.height); 
 
         // set color
-        this.setUniform4f(this.uniforms.u_color, sprite.color.r * sprite.brightness, sprite.color.g * sprite.brightness, sprite.color.b * sprite.brightness, sprite.color.a);
-        this.setUniform4f(this.uniforms.u_colorBooster, sprite.colorBoost.r, sprite.colorBoost.g, sprite.colorBoost.b, sprite.colorBoost.a);
+        this.setUniform4f(this.uniforms.u_color, renderable.color.r * renderable.brightness, renderable.color.g * renderable.brightness, renderable.color.b * renderable.brightness, renderable.color.a);
+        this.setUniform4f(this.uniforms.u_colorBooster, renderable.colorBoost.r, renderable.colorBoost.g, renderable.colorBoost.b, renderable.colorBoost.a);
         
         // set skew
-        this.setUniform2f(this.uniforms.u_skew, sprite.skew.x, sprite.skew.y);
+        this.setUniform2f(this.uniforms.u_skew, renderable.skew.x, renderable.skew.y);
 
         // set rotation
-        var rotation = sprite.rotationVector;
+        var rotation = renderable.rotationVector;
         this.setUniform2f(this.uniforms.u_rotation, rotation.x, rotation.y)
 
         // set origin
-        this.setUniform2f(this.uniforms.u_origin, sprite.origin.x, sprite.origin.y)
+        this.setUniform2f(this.uniforms.u_origin, renderable.origin.x, renderable.origin.y)
     }
 };
 

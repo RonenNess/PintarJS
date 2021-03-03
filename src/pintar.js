@@ -17,6 +17,9 @@ const Texture = require('./texture');
 const BlendModes = require('./blend_modes');
 const Viewport = require('./viewport');
 const PintarConsole = require('./console');
+const ColoredRectangle = require('./colored_rectangle');
+const ColoredLine = require('./colored_line');
+const Pixel = require('./pixel');
 
 // current version and author
 const __version__ = "2.1.0";
@@ -351,6 +354,36 @@ class PintarJS
     }
 
     /**
+     * Draw a rectangle.
+     * @param {PintarJS.ColoredRectangle} coloredRectangle Colored rectangle to draw.
+     */
+    drawRectangle(coloredRectangle)
+    {
+        if (!this._frameStarted) { throw new PintarConsole.Error("Must call 'startFrame()' before drawing!"); }
+        this._renderer.drawRectangle(coloredRectangle);
+    }
+
+    /**
+     * Draw a single pixel.
+     * @param {PintarJS.Pixel} pixel Pixel to draw.
+     */
+    drawPixel(pixel)
+    {
+        if (!this._frameStarted) { throw new PintarConsole.Error("Must call 'startFrame()' before drawing!"); }
+        this._renderer.drawPixel(pixel);
+    }
+
+    /**
+     * Draw a colored line.
+     * @param {PintarJS.ColoredLine} coloredLine Line to draw.
+     */
+    drawLine(coloredLine)
+    {
+        if (!this._frameStarted) { throw new PintarConsole.Error("Must call 'startFrame()' before drawing!"); }
+        this._renderer.drawLine(coloredLine);
+    }
+
+    /**
      * Draw any object.
      * @param {*} obj Object to draw.
      */
@@ -361,6 +394,9 @@ class PintarJS
         }
         else if (obj instanceof TextSprite) {
             this.drawText(obj);
+        }
+        else if (obj instanceof ColoredRectangle) {
+            this.drawRectangle(obj);
         }
         else {
             throw new PintarConsole.Error("Unknown object type to draw!");
@@ -383,6 +419,9 @@ PintarJS.Texture = Texture;
 PintarJS.Viewport = Viewport;
 PintarJS.silent = PintarConsole.silent;
 PintarJS.enableDebugMessages = PintarConsole.enableDebugMessages;
+PintarJS.ColoredRectangle = ColoredRectangle;
+PintarJS.ColoredLine = ColoredLine;
+PintarJS.Pixel = Pixel;
 
 // show version
 PintarJS._version = __version__;

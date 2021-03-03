@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>PintarJS - Demos</title>
+    <script src="../dist/pintar.js"></script>
+    <link href="style.css" rel="stylesheet" type="text/css" media="all">
+  </head>
+  <body>
+    <div class="container container-int">
+      <br />
+      <h1>Example 10: Drawing Shapes</h1>
+      <p>This example shows how to draw basic shapes</p> <br /><br />
+
+      <div style="display:block; height:100%;width:100%;">
+        <canvas></canvas>
+      </div>
+    </div>
+
+  </body>
+  <script>
+    // enable debug mode
+    //PintarJS.enableDebugMessages();
+
+    // set default renderer
+    var mode = location.search.substr(1).split('?')[0];
+    PintarJS.DefaultRenderers = PintarJS.Renderers[mode] || PintarJS.DefaultRenderers;
+
+    // initialize pintar
+    var pintar = new PintarJS();
+    pintar.clearColor = PintarJS.Color.lavender();
+
+    // adjust size
+    pintar.adjustToParentSize();
+    window.onresize = () => {
+      pintar.adjustToParentSize();
+    };
+
+    // draw shapes
+    function drawShapes()
+    {
+      // start frame
+      pintar.startFrame();
+
+      // draw rectangles
+      pintar.drawRectangle(new PintarJS.ColoredRectangle(new PintarJS.Point(40, 40), new PintarJS.Point(120, 100), PintarJS.Color.red(), null, false));
+      pintar.drawRectangle(new PintarJS.ColoredRectangle(new PintarJS.Point(180, 40), new PintarJS.Point(120, 100), PintarJS.Color.green(), null, true));
+      for (var i = 0; i < 200; ++i) {
+        pintar.drawPixel(new PintarJS.Pixel(new PintarJS.Point(40 + Math.floor(Math.random() * 70), 150 + Math.floor(Math.random() * 70)), 
+                                            PintarJS.Color.black()));
+      }
+      for (var i = 0; i < 50; ++i) {
+        pintar.drawPixel(new PintarJS.Pixel(new PintarJS.Point(140 + Math.floor(Math.random() * 70), 150 + Math.floor(Math.random() * 70)), 
+                                            PintarJS.Color.black(), 4));
+      }
+
+      // draw lines
+      pintar.drawLine(new PintarJS.ColoredLine(new PintarJS.Point(350, 40), new PintarJS.Point(500, 150), PintarJS.Color.black()));
+
+      // end frame
+      pintar.endFrame();
+    }
+
+    // draw shapes
+    setInterval(drawShapes, 1000 / 24);
+
+  </script>
+</html>

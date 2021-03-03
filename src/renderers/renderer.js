@@ -50,6 +50,36 @@ class Renderer
     }
 
     /**
+     * Draw a rectangle.
+     * @param {PintarJS.ColoredRectangle} coloredRectangle Colored rectangle to draw.
+     */
+    drawRectangle(coloredRectangle)
+    {
+        throw new PintarConsole.Error("Not Implemented.");
+    }
+
+    /**
+     * Draw a single color.
+     * @param {PintarJS.Point} position Pixel position.
+     * @param {PintarJS.Color} color Pixel color.
+     */
+    drawPixel(position, color)
+    {
+        throw new PintarConsole.Error("Not Implemented.");
+    }
+
+    /**
+     * Draw a line.
+     * @param {PintarJS.Point} pointA Line starting point.
+     * @param {PintarJS.Point} pointB Line ending point.
+     * @param {PintarJS.Color} color Line color.
+     */
+    drawLine(pointA, pointB, color)
+    {
+        throw new PintarConsole.Error("Not Implemented.");
+    }
+
+    /**
      * Set the currently active viewport.
      * @param {PintarJS.Viewport} viewport Viewport to set.
      */
