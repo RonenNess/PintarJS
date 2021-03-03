@@ -925,7 +925,7 @@ PintarConsole.log("PintarJS v" + __version__ + " ready! 🎨");
 // export main module
 module.exports = PintarJS;
 
-},{"./blend_modes":1,"./color":2,"./colored_line":3,"./colored_rectangle":4,"./console":5,"./pixel":7,"./point":8,"./rectangle":9,"./renderers":13,"./sprite":22,"./text_sprite":23,"./texture":24,"./viewport":25}],7:[function(require,module,exports){
+},{"./blend_modes":1,"./color":2,"./colored_line":3,"./colored_rectangle":4,"./console":5,"./pixel":7,"./point":8,"./rectangle":9,"./renderers":13,"./sprite":23,"./text_sprite":24,"./texture":25,"./viewport":26}],7:[function(require,module,exports){
 const PintarJS = require("./pintar");
 
 /**
@@ -1672,7 +1672,7 @@ class CanvasRenderer extends Renderer
 
 // export CanvasRenderer
 module.exports = CanvasRenderer;
-},{"./../../blend_modes":1,"./../../console":5,"./../../point":8,"./../../rectangle":9,"./../../text_sprite":23,"./../../viewport":25,"./../renderer":14}],12:[function(require,module,exports){
+},{"./../../blend_modes":1,"./../../console":5,"./../../point":8,"./../../rectangle":9,"./../../text_sprite":24,"./../../viewport":26,"./../renderer":14}],12:[function(require,module,exports){
 /**
  * file: index.js
  * description: Index file for canvas renderer.
@@ -1698,7 +1698,7 @@ module.exports = {
     WebGL: require('./webgl'),
     WebGLHybrid: require('./webgl/webgl_hybrid'),
 };
-},{"./canvas":12,"./webgl":16,"./webgl/webgl_hybrid":21}],14:[function(require,module,exports){
+},{"./canvas":12,"./webgl":16,"./webgl/webgl_hybrid":22}],14:[function(require,module,exports){
 /**
  * file: renderer.js
  * description: Define the renderer interface, which is the low-level layer that draw stuff.
@@ -1964,7 +1964,7 @@ FontTexture.enforceValidTexureSize = true;
 
 // export the font texture class
 module.exports = FontTexture;
-},{"../../point":8,"../../rectangle":9,"./../../console":5,"./../../text_sprite":23,"./../../texture":24}],16:[function(require,module,exports){
+},{"../../point":8,"../../rectangle":9,"./../../console":5,"./../../text_sprite":24,"./../../texture":25}],16:[function(require,module,exports){
 /**
  * file: index.js
  * description: Index file for webgl renderer.
@@ -1975,7 +1975,7 @@ module.exports = FontTexture;
 
 // export the webgl renderer.
 module.exports = require('./webgl')
-},{"./webgl":20}],17:[function(require,module,exports){
+},{"./webgl":21}],17:[function(require,module,exports){
 /**
  * file: default_shader.js
  * description: Default shader to draw sprites.
@@ -2090,6 +2090,14 @@ class DefaultShader extends ShaderBase
         return ["u_resolution", "u_offset", "u_size", "u_skew", "u_textureOffset", "u_textureSize", "u_color", "u_colorBooster", "u_rotation", "u_origin"];
     }
 
+    /**
+     * Does this shader have a texture?
+     */
+    get haveTexture()
+    {
+        return true;
+    }
+    
     /**
      * Prepare to draw a renderable - need to set all uniforms etc.
      */
@@ -2327,15 +2335,37 @@ class ShaderBase
         gl.vertexAttribPointer(this._positionLocation, this.is3d ? 3 : 2, gl.FLOAT, this.normalizeVertexData, 0, 0);
 
         // define attributes for texture coords vector
-        gl.enableVertexAttribArray(this._texcoordLocation);
-        gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
-        gl.vertexAttribPointer(this._texcoordLocation, 2, gl.FLOAT, this.normalizeVertexData, 0, 0);
+        if (this._texcoordLocation) {
+            gl.enableVertexAttribArray(this._texcoordLocation);
+            gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
+            gl.vertexAttribPointer(this._texcoordLocation, 2, gl.FLOAT, this.normalizeVertexData, 0, 0);
+        }
 
         // set default 'last value' to uniforms so we'll only update them when needed
         for (var key in this.uniforms) {
             if (this.uniforms.hasOwnProperty(key)) {
                 this.uniforms[key]._lastVal = {};
             }
+        }
+    }
+
+    /**
+     * Does this shader have a texture?
+     */
+    get haveTexture()
+    {
+        return true;
+    }
+
+    /**
+     * Init shader if needed.
+     */
+    initIfNeeded(gl)
+    {
+        if (!this._wasInit)
+        {
+            this.init(gl);
+            this._wasInit = true;
         }
     }
 
@@ -2355,7 +2385,7 @@ class ShaderBase
 
         // look up where the vertex data needs to go.
         this._positionLocation = gl.getAttribLocation(program, "a_position");
-        this._texcoordLocation = gl.getAttribLocation(program, "a_texCoord");
+        if (this.haveTexture) { this._texcoordLocation = gl.getAttribLocation(program, "a_texCoord"); }
 
         // Create a buffer to put three 2d clip space points in
         var positionBuffer = gl.createBuffer();
@@ -2375,7 +2405,109 @@ class ShaderBase
 
 
 module.exports = ShaderBase;
-},{"./webgl_utils":19}],19:[function(require,module,exports){
+},{"./webgl_utils":20}],19:[function(require,module,exports){
+/**
+ * file: shapes_shader.js
+ * description: Default shader to draw shapes with.
+ * author: Ronen Ness.
+ * since: 2021.
+ */
+"use strict";
+const ShaderBase = require('./shader_base');
+
+// vertex shader source:
+const vsSource = `
+// input position
+attribute vec2 a_position;
+
+// screen resolution to project quad
+uniform vec2 u_resolution;
+
+// main vertex shader func
+void main() 
+{
+    // convert from pixels into 0-2 values
+    vec2 zeroToTwo = (a_position / u_resolution) * 2.0;
+
+    // convert from 0->2 to -1->+1 (clipspace) and invert position y
+    vec2 clipSpace = zeroToTwo - 1.0;
+    clipSpace.y *= -1.0;
+
+    // set output position
+    gl_Position = vec4(clipSpace + ((a_position * 2.0) / u_resolution), 0, 1);
+}
+`;
+
+// fragment (pixel) shader source:
+const fsSource = `
+precision mediump float;
+
+// shape color
+uniform vec4 u_color;
+
+// main fragment shader func
+void main() 
+{
+   gl_FragColor = u_color;
+}
+`;
+
+/**
+ * Default shapes shader implementation.
+ */
+class ShapesShader extends ShaderBase
+{
+    /**
+     * Return vertex shader code.
+     */
+    get vertexShaderCode()
+    {
+        return vsSource;
+    }
+    
+    /**
+     * Return vertex shader code.
+     */
+    get fragmentShaderCode()
+    {
+        return fsSource;
+    }
+
+    /**
+     * Return a list with all uniform names to load.
+     */
+    get uniformNames()
+    {
+        return ["u_color", "u_resolution"];
+    }
+
+    /**
+     * Does this shader have a texture?
+     */
+    get haveTexture()
+    {
+        return false;
+    }
+
+    /**
+     * Prepare to draw a renderable - need to set all uniforms etc.
+     */
+    prepare(renderable, viewport)
+    {
+    }
+    
+    /**
+     * Draw the sprite.
+     */
+    draw(renderable, viewport)
+    {  
+        this._gl.drawArrays(this._gl.TRIANGLE_STRIP, 0, 4);
+    }
+};
+
+// export the shader
+module.exports = ShapesShader
+},{"./shader_base":18}],20:[function(require,module,exports){
 /*
  * Copyright 2012, Gregg Tavares.
  * All rights reserved.
@@ -3673,7 +3805,7 @@ module.exports = ShaderBase;
   }));
   
   
-},{}],20:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 /**
  * file: webgl.js
  * description: Implement webgl renderer.
@@ -3690,6 +3822,7 @@ const BlendModes = require('../../blend_modes');
 const Viewport = require('./../../viewport');
 const Rectangle = require('./../../rectangle');
 const DefaultShader = require('./shaders/default_shader');
+const ShapesShader = require('./shaders/shapes_shader');
 const FontTexture = require('./font_texture');
 
 
@@ -3742,11 +3875,12 @@ class WebGlRenderer extends Renderer
      */
     _initShadersAndBuffers()
     {
-        // create and init shader
-        this.shader = new DefaultShader();
-        this.shader.init(this._gl);
-        this.shader.setAsActive();
-        this.shader.setResolution(this._gl.canvas.width, this._gl.canvas.height);
+        // create default shaders
+        this._defaultSpritesShader = new DefaultShader();
+        this._defaultShapesShader = new ShapesShader();
+
+        // set default shader
+        this.setShader(this._defaultSpritesShader);
 
         // init texture mode
         var gl = this._gl;
@@ -3755,6 +3889,46 @@ class WebGlRenderer extends Renderer
 
         // Update size
         this._onResize();
+    }
+
+    /**
+     * Are we currently using a default shader?
+     */
+    get usingDefaultShader()
+    {
+        return this.shader === this._defaultSpritesShader || this.shader === this._defaultShapesShader;
+    }
+
+    /**
+     * Set default sprites shader, but only if needed and using the default shapes shader.
+     */
+    _setSpritesShaderIfNeeded()
+    {
+        if (this.shader === this._defaultShapesShader) {
+            this.setShader(this._defaultSpritesShader);
+        }
+    }
+
+    /**
+     * Set default sprites shader, but only if needed and using the default shapes shader.
+     */
+    _setShapesShaderIfNeeded()
+    {
+        if (this.shader === this._defaultSpritesShader) {
+            this.setShader(this._defaultShapesShader);
+        }
+    }
+
+    /**
+     * Set the currently active shader.
+     */
+    setShader(shader)
+    {
+        if (!shader) { shader = this._defaultSpritesShader; }
+        shader.initIfNeeded(this._gl);
+        shader.setAsActive();
+        shader.setResolution(this._gl.canvas.width, this._gl.canvas.height);
+        this.shader = shader;
     }
 
     /**
@@ -3878,6 +4052,9 @@ class WebGlRenderer extends Renderer
      */
     drawText(textSprite)
     {
+        // set shader
+        this._setSpritesShaderIfNeeded();
+
         // get font texture to use
         var fontTexture = this._getOrCreateFontTexture(textSprite.font);
 
@@ -3993,6 +4170,9 @@ class WebGlRenderer extends Renderer
         // draw strokes
         drawText((sprite, position, fillColor, strokeWidth, strokeColor) => 
         {
+            // set shader
+            this._setSpritesShaderIfNeeded();
+
             // get width and height
             var width = sprite.width;
             var height = sprite.height;
@@ -4195,6 +4375,9 @@ class WebGlRenderer extends Renderer
         // if texture is not yet ready, don't render
         if (!sprite.texture.isReady) { return; }
 
+        // set shader
+        this._setSpritesShaderIfNeeded();
+
         // set texture
         var textureMode = this._calcTextureMode(sprite);
         this._setTexture(sprite.texture, textureMode);
@@ -4215,14 +4398,18 @@ class WebGlRenderer extends Renderer
      */
     drawRectangle(coloredRectangle)
     {
+        // set shader
+        this._setShapesShaderIfNeeded();
     }
-    
+
     /**
      * Draw a single pixel.
      * @param {PintarJS.Pixel} pixel Pixel to draw.
      */
     drawPixel(pixel)
     {
+        // set shader
+        this._setShapesShaderIfNeeded();
     }
     
     /**
@@ -4231,12 +4418,14 @@ class WebGlRenderer extends Renderer
      */
     drawLine(coloredLine)
     {
+        // set shader
+        this._setShapesShaderIfNeeded();
     }
 }
 
 // export WebGlRenderer
 module.exports = WebGlRenderer;
-},{"../../blend_modes":1,"./../../console":5,"./../../point":8,"./../../rectangle":9,"./../../sprite":22,"./../../text_sprite":23,"./../../viewport":25,"./../renderer":14,"./font_texture":15,"./shaders/default_shader":17}],21:[function(require,module,exports){
+},{"../../blend_modes":1,"./../../console":5,"./../../point":8,"./../../rectangle":9,"./../../sprite":23,"./../../text_sprite":24,"./../../viewport":26,"./../renderer":14,"./font_texture":15,"./shaders/default_shader":17,"./shaders/shapes_shader":19}],22:[function(require,module,exports){
 /**
  * file: webgl.js
  * description: Implement webgl renderer.
@@ -4359,7 +4548,7 @@ class WebGlHybridRenderer extends WebGlBase
 
 // export WebGlHybridRenderer
 module.exports = WebGlHybridRenderer;
-},{"../../color":2,"../../console":5,"../canvas":12,"./webgl":20}],22:[function(require,module,exports){
+},{"../../color":2,"../../console":5,"../canvas":12,"./webgl":21}],23:[function(require,module,exports){
 /**
  * file: sprite.js
  * description: A drawable sprite.
@@ -4618,7 +4807,7 @@ Sprite.defaults = {
 
 // export Sprite
 module.exports = Sprite;
-},{"./blend_modes":1,"./color":2,"./point":8,"./rectangle":9,"./renderable":10}],23:[function(require,module,exports){
+},{"./blend_modes":1,"./color":2,"./point":8,"./rectangle":9,"./renderable":10}],24:[function(require,module,exports){
 /**
  * file: text_sprite.js
  * description: A drawable text sprite.
@@ -5244,7 +5433,7 @@ TextSprite.charForLineBreak = function(char)
 
 // export TextSprite
 module.exports = TextSprite;
-},{"./blend_modes":1,"./color":2,"./point":8,"./renderable":10}],24:[function(require,module,exports){
+},{"./blend_modes":1,"./color":2,"./point":8,"./renderable":10}],25:[function(require,module,exports){
 /**
  * file: texture.js
  * description: A drawable texture class.
@@ -5334,7 +5523,7 @@ class Texture
 
 // export Texture
 module.exports = Texture;
-},{"./console":5,"./point":8}],25:[function(require,module,exports){
+},{"./console":5,"./point":8}],26:[function(require,module,exports){
 /**
  * file: viewport.js
  * description: Viewport to define rendering region and offset.

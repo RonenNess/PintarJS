@@ -21,7 +21,7 @@ class ShaderBase
     }
     
     /**
-     * Return vertex shader code.
+     * Return fragment shader code.
      */
     get fragmentShaderCode()
     {
@@ -202,15 +202,37 @@ class ShaderBase
         gl.vertexAttribPointer(this._positionLocation, this.is3d ? 3 : 2, gl.FLOAT, this.normalizeVertexData, 0, 0);
 
         // define attributes for texture coords vector
-        gl.enableVertexAttribArray(this._texcoordLocation);
-        gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
-        gl.vertexAttribPointer(this._texcoordLocation, 2, gl.FLOAT, this.normalizeVertexData, 0, 0);
+        if (this._texcoordLocation) {
+            gl.enableVertexAttribArray(this._texcoordLocation);
+            gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
+            gl.vertexAttribPointer(this._texcoordLocation, 2, gl.FLOAT, this.normalizeVertexData, 0, 0);
+        }
 
         // set default 'last value' to uniforms so we'll only update them when needed
         for (var key in this.uniforms) {
             if (this.uniforms.hasOwnProperty(key)) {
                 this.uniforms[key]._lastVal = {};
             }
+        }
+    }
+
+    /**
+     * Does this shader have a texture?
+     */
+    get haveTexture()
+    {
+        return true;
+    }
+
+    /**
+     * Init shader if needed.
+     */
+    initIfNeeded(gl)
+    {
+        if (!this._wasInit)
+        {
+            this.init(gl);
+            this._wasInit = true;
         }
     }
 
@@ -230,7 +252,7 @@ class ShaderBase
 
         // look up where the vertex data needs to go.
         this._positionLocation = gl.getAttribLocation(program, "a_position");
-        this._texcoordLocation = gl.getAttribLocation(program, "a_texCoord");
+        if (this.haveTexture) { this._texcoordLocation = gl.getAttribLocation(program, "a_texCoord"); }
 
         // Create a buffer to put three 2d clip space points in
         var positionBuffer = gl.createBuffer();

@@ -97,7 +97,7 @@ class DefaultShader extends ShaderBase
     }
     
     /**
-     * Return vertex shader code.
+     * Return fragment shader code.
      */
     get fragmentShaderCode()
     {
@@ -110,6 +110,14 @@ class DefaultShader extends ShaderBase
     get uniformNames()
     {
         return ["u_resolution", "u_offset", "u_size", "u_skew", "u_textureOffset", "u_textureSize", "u_color", "u_colorBooster", "u_rotation", "u_origin"];
+    }
+
+    /**
+     * Does this shader have a texture?
+     */
+    get haveTexture()
+    {
+        return true;
     }
 
     /**

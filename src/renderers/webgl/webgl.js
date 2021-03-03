@@ -14,6 +14,7 @@ const BlendModes = require('../../blend_modes');
 const Viewport = require('./../../viewport');
 const Rectangle = require('./../../rectangle');
 const DefaultShader = require('./shaders/default_shader');
+const ShapesShader = require('./shaders/shapes_shader');
 const FontTexture = require('./font_texture');
 
 
@@ -66,11 +67,12 @@ class WebGlRenderer extends Renderer
      */
     _initShadersAndBuffers()
     {
-        // create and init shader
-        this.shader = new DefaultShader();
-        this.shader.init(this._gl);
-        this.shader.setAsActive();
-        this.shader.setResolution(this._gl.canvas.width, this._gl.canvas.height);
+        // create default shaders
+        this._defaultSpritesShader = new DefaultShader();
+        this._defaultShapesShader = new ShapesShader();
+
+        // set default shader
+        this.setShader(this._defaultSpritesShader);
 
         // init texture mode
         var gl = this._gl;
@@ -79,6 +81,46 @@ class WebGlRenderer extends Renderer
 
         // Update size
         this._onResize();
+    }
+
+    /**
+     * Are we currently using a default shader?
+     */
+    get usingDefaultShader()
+    {
+        return this.shader === this._defaultSpritesShader || this.shader === this._defaultShapesShader;
+    }
+
+    /**
+     * Set default sprites shader, but only if needed and using the default shapes shader.
+     */
+    _setSpritesShaderIfNeeded()
+    {
+        if (this.shader === this._defaultShapesShader) {
+            this.setShader(this._defaultSpritesShader);
+        }
+    }
+
+    /**
+     * Set default sprites shader, but only if needed and using the default shapes shader.
+     */
+    _setShapesShaderIfNeeded()
+    {
+        if (this.shader === this._defaultSpritesShader) {
+            this.setShader(this._defaultShapesShader);
+        }
+    }
+
+    /**
+     * Set the currently active shader.
+     */
+    setShader(shader)
+    {
+        if (!shader) { shader = this._defaultSpritesShader; }
+        shader.initIfNeeded(this._gl);
+        shader.setAsActive();
+        shader.setResolution(this._gl.canvas.width, this._gl.canvas.height);
+        this.shader = shader;
     }
 
     /**
@@ -202,6 +244,9 @@ class WebGlRenderer extends Renderer
      */
     drawText(textSprite)
     {
+        // set shader
+        this._setSpritesShaderIfNeeded();
+
         // get font texture to use
         var fontTexture = this._getOrCreateFontTexture(textSprite.font);
 
@@ -317,6 +362,9 @@ class WebGlRenderer extends Renderer
         // draw strokes
         drawText((sprite, position, fillColor, strokeWidth, strokeColor) => 
         {
+            // set shader
+            this._setSpritesShaderIfNeeded();
+
             // get width and height
             var width = sprite.width;
             var height = sprite.height;
@@ -519,6 +567,9 @@ class WebGlRenderer extends Renderer
         // if texture is not yet ready, don't render
         if (!sprite.texture.isReady) { return; }
 
+        // set shader
+        this._setSpritesShaderIfNeeded();
+
         // set texture
         var textureMode = this._calcTextureMode(sprite);
         this._setTexture(sprite.texture, textureMode);
@@ -539,14 +590,18 @@ class WebGlRenderer extends Renderer
      */
     drawRectangle(coloredRectangle)
     {
+        // set shader
+        this._setShapesShaderIfNeeded();
     }
-    
+
     /**
      * Draw a single pixel.
      * @param {PintarJS.Pixel} pixel Pixel to draw.
      */
     drawPixel(pixel)
     {
+        // set shader
+        this._setShapesShaderIfNeeded();
     }
     
     /**
@@ -555,6 +610,8 @@ class WebGlRenderer extends Renderer
      */
     drawLine(coloredLine)
     {
+        // set shader
+        this._setShapesShaderIfNeeded();
     }
 }
 

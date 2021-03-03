@@ -58,7 +58,7 @@ class ShapesShader extends ShaderBase
     }
     
     /**
-     * Return vertex shader code.
+     * Return fragment shader code.
      */
     get fragmentShaderCode()
     {
@@ -71,6 +71,14 @@ class ShapesShader extends ShaderBase
     get uniformNames()
     {
         return ["u_color", "u_resolution"];
+    }
+
+    /**
+     * Does this shader have a texture?
+     */
+    get haveTexture()
+    {
+        return false;
     }
 
     /**
@@ -90,4 +98,4 @@ class ShapesShader extends ShaderBase
 };
 
 // export the shader
-module.exports = DefaultShader
+module.exports = ShapesShader

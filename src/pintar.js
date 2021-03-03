@@ -20,6 +20,7 @@ const PintarConsole = require('./console');
 const ColoredRectangle = require('./colored_rectangle');
 const ColoredLine = require('./colored_line');
 const Pixel = require('./pixel');
+const ShaderBase = require('./renderers/webgl/shaders/shader_base');
 
 // current version and author
 const __version__ = "2.1.0";
@@ -422,6 +423,7 @@ PintarJS.enableDebugMessages = PintarConsole.enableDebugMessages;
 PintarJS.ColoredRectangle = ColoredRectangle;
 PintarJS.ColoredLine = ColoredLine;
 PintarJS.Pixel = Pixel;
+PintarJS.ShaderBase = ShaderBase;
 
 // show version
 PintarJS._version = __version__;

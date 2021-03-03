@@ -619,6 +619,117 @@ Using multiple fonts will result in multiple textures, and multiple languages in
 If all your texts are small you can generate Font Textures manually with smaller size than PintarJS default, which is pretty large.
 
 
+### Shaders
+
+When using WebGL renderer, you can create and use custom shaders.
+
+By default, `PintarJS` comes with two built-in shaders - one to draw sprites and text, and another to draw shapes. The WebGL renderer will automatically switch between them based on what you render, unless you set a custom shader; When a custom shader is used, the WebGL renderer will not touch it until you set active shader back to null.
+
+First, lets see how we set a custom shader:
+
+```javascript
+pintarjs._renderer.setShader(shader);
+```
+
+And when you're done with it and want to use the built-in shaders:
+
+```javascript
+pintarjs._renderer.setShader(null);
+```
+
+Now that we know how to set an active shader, lets see how we create a custom shader:
+
+```javascript
+class MyShader extends PintarJS.ShaderBase
+{
+    /**
+     * Return vertex shader code.
+     */
+    get vertexShaderCode()
+    {
+        return "<put vertex shader code here>";
+    }
+    
+    /**
+     * Return fragment shader code.
+     */
+    get fragmentShaderCode()
+    {
+        return "<put fragment shader code here>";
+    }
+
+    /**
+     * Return a list with all uniform names to load.
+     * Note: if you have a 'u_resolution' uniform in your shader, PintarJS will set it automatically to match canvas size.
+     */
+    get uniformNames()
+    {
+        return ["u_resolution", "u_myuniform", ...];
+    }
+
+    /**
+     * Does this shader have a texture?
+     */
+    get haveTexture()
+    {
+        return true;
+    }
+    
+    /**
+     * Prepare to draw a renderable - need to set all uniforms etc.
+     */
+    prepare(renderable, viewport)
+    {
+        // set uniforms before rendering a sprite or other renderable.
+        // for example, you can set a uniform with 2 floats like this (u_myuniform is defined in `uniformNames`):
+        this.setUniform2f(this.uniforms.u_myuniform, x, y);
+    }
+    
+    /**
+     * Draw the renderable.
+     * You don't have to override this method; the default implementation is seen below, override only if you need to change it.
+     */
+    draw(renderable, viewport)
+    {  
+        this.prepare(renderable, viewport);
+        this._gl.drawArrays(this._gl.TRIANGLE_STRIP, 0, 4);
+    }
+
+    /**
+     * Should we enable depth test for this shader?
+     */
+    get enableDepthTest()
+    {
+        return false;
+    }
+
+    /**
+     * Should we enable face culling for this shader?
+     */
+    get enableFaceCulling()
+    {
+        return false;
+    }
+
+    /**
+     * Should we enable stencil test for this shader?
+     */
+    get enableStencilTest()
+    {
+        return false;
+    }
+}
+```
+
+As you can see we inherit from a shaders base class, which will handle most of the heavy lifting for us. 
+
+The main things you need to define are `vertexShaderCode` and `fragmentShaderCode`, which will return the actual shader code.
+In addition there are some getters you can set to configure the shader, like if we want to enable face culling, stencil, etc.
+
+Another important thing we need to set is uniformNames. The shader will load all these uniforms during init and put them under `this.uniforms`, so you can later easily set them. If you set a `u_resolution` uniform, it will be set automatically to match canvas size.
+
+Last thing you need to set is `prepare(renderable, viewport)`, which is a method to setup a renderable before drawing it. This is the place to set all uniforms etc.
+
 
 ### Extras
 
