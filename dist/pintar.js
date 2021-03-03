@@ -514,6 +514,7 @@ const PintarConsole = require('./console');
 const ColoredRectangle = require('./colored_rectangle');
 const ColoredLine = require('./colored_line');
 const Pixel = require('./pixel');
+const ShaderBase = require('./renderers/webgl/shaders/shader_base');
 
 // current version and author
 const __version__ = "2.1.0";
@@ -916,6 +917,7 @@ PintarJS.enableDebugMessages = PintarConsole.enableDebugMessages;
 PintarJS.ColoredRectangle = ColoredRectangle;
 PintarJS.ColoredLine = ColoredLine;
 PintarJS.Pixel = Pixel;
+PintarJS.ShaderBase = ShaderBase;
 
 // show version
 PintarJS._version = __version__;
@@ -925,7 +927,7 @@ PintarConsole.log("PintarJS v" + __version__ + " ready! 🎨");
 // export main module
 module.exports = PintarJS;
 
-},{"./blend_modes":1,"./color":2,"./colored_line":3,"./colored_rectangle":4,"./console":5,"./pixel":7,"./point":8,"./rectangle":9,"./renderers":13,"./sprite":23,"./text_sprite":24,"./texture":25,"./viewport":26}],7:[function(require,module,exports){
+},{"./blend_modes":1,"./color":2,"./colored_line":3,"./colored_rectangle":4,"./console":5,"./pixel":7,"./point":8,"./rectangle":9,"./renderers":13,"./renderers/webgl/shaders/shader_base":18,"./sprite":23,"./text_sprite":24,"./texture":25,"./viewport":26}],7:[function(require,module,exports){
 const PintarJS = require("./pintar");
 
 /**
@@ -2075,7 +2077,7 @@ class DefaultShader extends ShaderBase
     }
     
     /**
-     * Return vertex shader code.
+     * Return fragment shader code.
      */
     get fragmentShaderCode()
     {
@@ -2097,7 +2099,7 @@ class DefaultShader extends ShaderBase
     {
         return true;
     }
-    
+
     /**
      * Prepare to draw a renderable - need to set all uniforms etc.
      */
@@ -2154,7 +2156,7 @@ class ShaderBase
     }
     
     /**
-     * Return vertex shader code.
+     * Return fragment shader code.
      */
     get fragmentShaderCode()
     {
@@ -2466,7 +2468,7 @@ class ShapesShader extends ShaderBase
     }
     
     /**
-     * Return vertex shader code.
+     * Return fragment shader code.
      */
     get fragmentShaderCode()
     {

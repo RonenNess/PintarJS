@@ -730,6 +730,16 @@ Another important thing we need to set is uniformNames. The shader will load all
 
 Last thing you need to set is `prepare(renderable, viewport)`, which is a method to setup a renderable before drawing it. This is the place to set all uniforms etc.
 
+You can also override the `draw()` method if you want to change how it renders completely.
+
+#### Wait where are the vertices?
+
+You probably wonder where do we actually set the vertices to draw in all this.
+
+The answer is that every shader will create a default buffer with 4 vertices, for a 1x1 square. This base vertices buffer will be used for all renderings, and it is constant. The default shaders use attributes and uniforms to actually set position, size, etc.
+
+If you want to change this behavior, you'll need to override the init() and draw() methods, and there you can create and use your own buffers the way you see fit.
+
 
 ### Extras
 
