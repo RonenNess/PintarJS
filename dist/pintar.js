@@ -519,6 +519,8 @@ const ColoredRectangle = require('./colored_rectangle');
 const ColoredLine = require('./colored_line');
 const Pixel = require('./pixel');
 const ShaderBase = require('./renderers/webgl/shaders/shader_base');
+const DefaultShader = require('./renderers/webgl/shaders/default_shader');
+const ShapesShader = require('./renderers/webgl/shaders/shapes_shader');
 
 // current version and author
 const __version__ = "2.1.0";
@@ -922,6 +924,8 @@ PintarJS.ColoredRectangle = ColoredRectangle;
 PintarJS.ColoredLine = ColoredLine;
 PintarJS.Pixel = Pixel;
 PintarJS.ShaderBase = ShaderBase;
+PintarJS.DefaultShader = DefaultShader;
+PintarJS.ShapesShader = ShapesShader;
 
 // show version
 PintarJS._version = __version__;
@@ -931,7 +935,7 @@ PintarConsole.log("PintarJS v" + __version__ + " ready! 🎨");
 // export main module
 module.exports = PintarJS;
 
-},{"./blend_modes":1,"./color":2,"./colored_line":3,"./colored_rectangle":4,"./console":5,"./pixel":7,"./point":8,"./rectangle":9,"./renderers":13,"./renderers/webgl/shaders/shader_base":18,"./sprite":23,"./text_sprite":24,"./texture":25,"./viewport":26}],7:[function(require,module,exports){
+},{"./blend_modes":1,"./color":2,"./colored_line":3,"./colored_rectangle":4,"./console":5,"./pixel":7,"./point":8,"./rectangle":9,"./renderers":13,"./renderers/webgl/shaders/default_shader":17,"./renderers/webgl/shaders/shader_base":18,"./renderers/webgl/shaders/shapes_shader":19,"./sprite":23,"./text_sprite":24,"./texture":25,"./viewport":26}],7:[function(require,module,exports){
 const PintarJS = require("./pintar");
 
 /**
@@ -2022,32 +2026,9 @@ varying vec2 v_texCoord;
 // main vertex shader func
 void main() 
 {
-    // apply size and origin
-    vec2 position = (a_position * u_size - u_origin * u_size);
+    __vertex_shader_position_calc__
 
-    // apply skew
-    position.y += u_skew.y * position.x;
-    position.x += u_skew.x * position.y;
-
-    // apply rotation and resolution
-    position = (vec2(
-        position.x * u_rotation.y + position.y * u_rotation.x,
-        position.y * u_rotation.y - position.x * u_rotation.x
-    ));
-
-    // convert from pixels into 0-2 values
-    vec2 zeroToTwo = (position / u_resolution) * 2.0;
-
-    // convert from 0->2 to -1->+1 (clipspace) and invert position y
-    vec2 clipSpace = zeroToTwo - 1.0;
-    clipSpace.y *= -1.0;
-
-    // set output position
-    gl_Position = vec4(clipSpace + ((u_offset * 2.0) / u_resolution), 0, 1);
-
-    // pass the texCoord to the fragment shader
-    // The GPU will interpolate this value between points.
-    v_texCoord = a_texCoord * u_textureSize + u_textureOffset;
+    __vertex_shader_texture_coord_calc__
 }
 `;
 
@@ -2068,8 +2049,7 @@ varying vec2 v_texCoord;
 // main fragment shader func
 void main() 
 {
-   gl_FragColor = clamp(texture2D(u_image, v_texCoord) + u_colorBooster, 0.0, 1.0) * u_color;
-   gl_FragColor.rgb *= min(gl_FragColor.a, 1.0);
+   __fragment_shader_color__
 }
 `;
 
@@ -2079,11 +2059,77 @@ void main()
 class DefaultShader extends ShaderBase
 {
     /**
+     * Return the code part responsible to calculate vertex position.
+     */
+    get vertexShaderPositionCode()
+    {
+        return `
+            // apply size and origin
+            vec2 position = (a_position * u_size - u_origin * u_size);
+        
+            // apply skew
+            position.y += u_skew.y * position.x;
+            position.x += u_skew.x * position.y;
+        
+            // apply rotation
+            position = (vec2(
+                position.x * u_rotation.y + position.y * u_rotation.x,
+                position.y * u_rotation.y - position.x * u_rotation.x
+            ));
+        
+            // convert from pixels into 0-2 values
+            vec2 zeroToTwo = (position / u_resolution) * 2.0;
+        
+            // convert from 0->2 to -1->+1 (clipspace) and invert position y
+            vec2 clipSpace = zeroToTwo - 1.0;
+            clipSpace.y *= -1.0;
+        
+            // set output position
+            gl_Position = vec4(clipSpace + ((u_offset * 2.0) / u_resolution), 0, 1);
+        `;
+    }
+
+    /**
+     * Return the code part responsible to calculate texture coord.
+     */
+    get vertexShaderTextureCoordCode()
+    {
+        return `
+            // pass the texCoord to the fragment shader
+            // The GPU will interpolate this value between points.
+            v_texCoord = a_texCoord * u_textureSize + u_textureOffset;
+        `;
+    }
+
+    /**
+     * Get the fragment shader code that handle textures.
+     */
+    get fragmentShaderTextureCode()
+    {
+        return `
+            gl_FragColor = clamp(texture2D(u_image, v_texCoord) + u_colorBooster, 0.0, 1.0) * u_color;
+            gl_FragColor.rgb *= min(gl_FragColor.a, 1.0);
+        `;
+    }
+
+    /**
+     * Get the fragment shader code that handle just color without texture.
+     */
+    get fragmentShaderNoTextureCode()
+    {
+        return `
+            gl_FragColor = u_color;
+        `;
+    }
+
+    /**
      * Return vertex shader code.
      */
     get vertexShaderCode()
     {
-        return vsSource;
+        return vsSource
+        .replace("__vertex_shader_position_calc__", this.vertexShaderPositionCode)
+        .replace("__vertex_shader_texture_coord_calc__", this.haveTexture ? this.vertexShaderTextureCoordCode : "");
     }
     
     /**
@@ -2091,7 +2137,8 @@ class DefaultShader extends ShaderBase
      */
     get fragmentShaderCode()
     {
-        return fsSource;
+        return fsSource
+            .replace("__fragment_shader_color__", this.haveTexture ? this.fragmentShaderTextureCode : this.fragmentShaderNoTextureCode);
     }
 
     /**
