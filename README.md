@@ -1,6 +1,6 @@
 # PintarJS
 
-Micro JS lib (65KB minified) for direct WebGL and canvas rendering.
+Micro JS lib (80KB minified) for direct WebGL and canvas rendering.
 
 ## Demo
 
@@ -95,6 +95,7 @@ Or you can download `dist/pinter.js` and include in your HTML file.
         - Flip
         - Skew
     - Source rectangle from spritesheet
+- Custom shaders
 - Built-in UI plugin
 - Fixed resolution
 
@@ -744,6 +745,81 @@ The answer is that every shader will create a default buffer with 4 vertices, fo
 
 If you want to change this behavior, you'll need to override the init() and draw() methods, and there you can create and use your own buffers the way you see fit.
 
+
+#### Using the default shader as base
+
+You can also use the default sprites shader as a base class for your shader, and override just specific parts of it:
+
+```javascript
+class MyShader extends PintarJS.DefaultShader
+{
+    /**
+     * Implement the vertex shader code part responsible to calculate vertex final position.
+     */
+    get vertexShaderPositionCode()
+    {
+        return "// your code here...";
+    }
+
+    /**
+     * Implement the code part responsible to calculate texture coord in vertex shader.
+     */
+    get vertexShaderTextureCoordCode()
+    {
+        return "// your code here...";
+    }
+
+    /**
+     * Implement the fragment shader code that handle textures.
+     */
+    get fragmentShaderTextureCode()
+    {
+        return "// your code here...";
+    }
+
+    /**
+     * Implement the fragment shader code that handle just color without texture.
+     */
+    get fragmentShaderNoTextureCode()
+    {
+        return "// your code here...";
+    }
+}
+```
+
+The method above return strings which are part of the final shaders code you can replace with your own logic. Its best to look at the source code of this file to understand better, but generally you have the following attributes and uniforms to work with in the vertex shader:
+
+```javascript
+// input position and texture coord
+attribute vec2 a_position;
+attribute vec2 a_texCoord;
+
+// screen resolution to project quad
+uniform vec2 u_resolution;
+
+// sprite uniforms
+uniform vec2 u_offset;
+uniform vec2 u_size;
+uniform vec2 u_textureOffset;
+uniform vec2 u_textureSize;
+uniform vec2 u_rotation;
+uniform vec2 u_origin;
+uniform vec2 u_skew;
+```
+
+And these uniforms and attributes in the fragment shader:
+
+```javascript
+// main texture
+uniform sampler2D u_image;
+
+// color tint and color booster
+uniform vec4 u_color;
+uniform vec4 u_colorBooster;
+
+// the texCoords passed in from the vertex shader
+varying vec2 v_texCoord;
+```
 
 ### Extras
 
