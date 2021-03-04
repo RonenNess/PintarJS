@@ -45,6 +45,7 @@
       // draw rectangles
       pintar.drawRectangle(new PintarJS.ColoredRectangle(new PintarJS.Point(40, 40), new PintarJS.Point(120, 100), PintarJS.Color.red(), null, false));
       pintar.drawRectangle(new PintarJS.ColoredRectangle(new PintarJS.Point(180, 40), new PintarJS.Point(120, 100), PintarJS.Color.green(), null, true));
+      pintar.drawRectangle(new PintarJS.ColoredRectangle(new PintarJS.Point(320, 40), new PintarJS.Point(120, 100), PintarJS.Color.red(), null, false, 8));
       for (var i = 0; i < 200; ++i) {
         pintar.drawPixel(new PintarJS.Pixel(new PintarJS.Point(40 + Math.floor(Math.random() * 70), 150 + Math.floor(Math.random() * 70)), 
                                             PintarJS.Color.black()));
@@ -55,7 +56,8 @@
       }
 
       // draw lines
-      pintar.drawLine(new PintarJS.ColoredLine(new PintarJS.Point(350, 40), new PintarJS.Point(500, 150), PintarJS.Color.black()));
+      pintar.drawLine(new PintarJS.ColoredLine(new PintarJS.Point(460, 40), new PintarJS.Point(600, 150), PintarJS.Color.black()));
+      pintar.drawLine(new PintarJS.ColoredLine(new PintarJS.Point(460, 80), new PintarJS.Point(600, 190), PintarJS.Color.red(), null, 6));
 
       // end frame
       pintar.endFrame();

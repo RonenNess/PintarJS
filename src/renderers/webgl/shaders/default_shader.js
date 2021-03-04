@@ -6,6 +6,7 @@
  */
 "use strict";
 const ShaderBase = require('./shader_base');
+const PintarConsole = require('./../../../console');
 
 // vertex shader source:
 const vsSource = `

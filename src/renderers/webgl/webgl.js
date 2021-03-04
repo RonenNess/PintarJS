@@ -74,11 +74,6 @@ class WebGlRenderer extends Renderer
         // set default shader
         this.setShader(this._defaultSpritesShader);
 
-        // init texture mode
-        var gl = this._gl;
-        gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE );
-        gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE );
-
         // Update size
         this._onResize();
     }
@@ -436,6 +431,10 @@ class WebGlRenderer extends Renderer
                 var gltexture = texture._glTextures[textureMode];
                 gl.bindTexture(gl.TEXTURE_2D, gltexture);
             }
+
+            // init texture params
+            gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE );
+            gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE );
         }
     }
 
@@ -592,6 +591,9 @@ class WebGlRenderer extends Renderer
     {
         // set shader
         this._setShapesShaderIfNeeded();
+
+        // draw rectangle
+        this.shader.draw(coloredRectangle, this._viewport);
     }
 
     /**
@@ -615,6 +617,9 @@ class WebGlRenderer extends Renderer
     {
         // set shader
         this._setShapesShaderIfNeeded();
+
+        // draw colored line
+        this.shader.draw(coloredLine, this._viewport);
     }
 }
 

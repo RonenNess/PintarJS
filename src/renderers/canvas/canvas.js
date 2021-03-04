@@ -285,6 +285,9 @@ class CanvasRenderer extends Renderer
         // set blend mode
         this._setBlendMode(coloredRectangle.blendMode);
 
+        // set line width
+        this._ctx.lineWidth = coloredRectangle.pixelScale || 1;
+
         // draw filled rectangle
         if (coloredRectangle.filled)
         {     
@@ -309,7 +312,8 @@ class CanvasRenderer extends Renderer
     drawPixel(pixel)
     {
         this._ctx.fillStyle = pixel.color.asHex();
-        this._ctx.fillRect(pixel.position.x, pixel.position.y, pixel.scale, pixel.scale);
+        this._ctx.lineWidth = 1;
+        this._ctx.fillRect(pixel.position.x, pixel.position.y, pixel.pixelScale, pixel.pixelScale);
     }
     
     /**
@@ -321,6 +325,7 @@ class CanvasRenderer extends Renderer
         this._ctx.save();
         this._setBlendMode(coloredLine.blendMode);
         this._ctx.strokeStyle = coloredLine.color.asHex();
+        this._ctx.lineWidth = coloredLine.pixelScale || 1;
         this._ctx.beginPath();
         this._ctx.moveTo(coloredLine.position.x, coloredLine.position.y);
         this._ctx.lineTo(coloredLine.toPosition.x, coloredLine.toPosition.y);

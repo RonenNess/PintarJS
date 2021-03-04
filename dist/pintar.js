@@ -330,11 +330,13 @@ class ColoredLine extends Renderable
      * @param {PintarJS.Point} toPoint Line ending point.
      * @param {PintarJS.Color} color Rectangle color.
      * @param {PintarJS.BlendModes} blendMode Blend mode to draw this rect with.
+     * @param {Number} strokeWidth Line width.
      */
-    constructor(fromPoint, toPoint, color, blendMode)
+    constructor(fromPoint, toPoint, color, blendMode, strokeWidth)
     {
         super(fromPoint, color, blendMode);
         this.toPosition = toPoint;
+        this.pixelScale = strokeWidth || 1;
     }
 }
 
@@ -356,12 +358,14 @@ class ColoredRectangle extends Renderable
      * @param {PintarJS.Color} color Rectangle color.
      * @param {PintarJS.BlendModes} blendMode Blend mode to draw this rect with.
      * @param {Boolean} filled Is this rectangle filled or just outline.
+     * @param {Number} strokeWidth Lines width.
      */
-    constructor(position, size, color, blendMode, filled)
+    constructor(position, size, color, blendMode, filled, strokeWidth)
     {
         super(position, color, blendMode);
         this.size = size;
         this.filled = Boolean(filled);
+        this.pixelScale = strokeWidth || 1;
     }
 
     /**
@@ -945,7 +949,7 @@ class Pixel
     {
         this.position = position;
         this.color = color;
-        this.scale = scale || 1;
+        this.pixelScale = scale || 1;
     }
 }
 
@@ -1628,6 +1632,9 @@ class CanvasRenderer extends Renderer
         // set blend mode
         this._setBlendMode(coloredRectangle.blendMode);
 
+        // set line width
+        this._ctx.lineWidth = coloredRectangle.pixelScale || 1;
+
         // draw filled rectangle
         if (coloredRectangle.filled)
         {     
@@ -1652,7 +1659,8 @@ class CanvasRenderer extends Renderer
     drawPixel(pixel)
     {
         this._ctx.fillStyle = pixel.color.asHex();
-        this._ctx.fillRect(pixel.position.x, pixel.position.y, pixel.scale, pixel.scale);
+        this._ctx.lineWidth = 1;
+        this._ctx.fillRect(pixel.position.x, pixel.position.y, pixel.pixelScale, pixel.pixelScale);
     }
     
     /**
@@ -1664,6 +1672,7 @@ class CanvasRenderer extends Renderer
         this._ctx.save();
         this._setBlendMode(coloredLine.blendMode);
         this._ctx.strokeStyle = coloredLine.color.asHex();
+        this._ctx.lineWidth = coloredLine.pixelScale || 1;
         this._ctx.beginPath();
         this._ctx.moveTo(coloredLine.position.x, coloredLine.position.y);
         this._ctx.lineTo(coloredLine.toPosition.x, coloredLine.toPosition.y);
@@ -1986,6 +1995,7 @@ module.exports = require('./webgl')
  */
 "use strict";
 const ShaderBase = require('./shader_base');
+const PintarConsole = require('./../../../console');
 
 // vertex shader source:
 const vsSource = `
@@ -2132,7 +2142,7 @@ class DefaultShader extends ShaderBase
 
 // export the shader
 module.exports = DefaultShader
-},{"./shader_base":18}],18:[function(require,module,exports){
+},{"./../../../console":5,"./shader_base":18}],18:[function(require,module,exports){
 /**
  * file: shader_base.js
  * description: Base class for all shaders.
@@ -2141,6 +2151,7 @@ module.exports = DefaultShader
  */
 "use strict";
 const WebglUtils = require('./webgl_utils').webglUtils;
+const PintarConsole = require('./../../../console');
 
 /**
  * Base class for shaders.
@@ -2250,7 +2261,7 @@ class ShaderBase
             uniform._lastVal.val = val;
 
             // set values
-            this._gl.uniformf(uniform, val);
+            this._gl.uniform1f(uniform, val);
         }
     }
 
@@ -2270,7 +2281,25 @@ class ShaderBase
             this._gl.uniform2f(uniform, x, y);
         }
     }
-        
+     
+    /**
+     * Set uniform vec3 value with check if changed.
+     */
+    setUniform3f(uniform, x, y, z)
+    {
+        // only update if values changed
+        if (uniform._lastVal.x !== x || uniform._lastVal.y !== y || uniform._lastVal.z !== z) 
+        {
+            // update cached values
+            uniform._lastVal.x = x; 
+            uniform._lastVal.y = y;
+            uniform._lastVal.z = z;
+
+            // set values
+            this._gl.uniform3f(uniform, x, y, z);
+        }
+    }
+
     /**
      * Set uniform vec4 value with check if changed.
      */
@@ -2289,7 +2318,77 @@ class ShaderBase
             this._gl.uniform4f(uniform, x, y, z, w);
         }
     }
+   
+    /**
+     * Set uniform vec2 value with check if changed.
+     */
+    setUniformi(uniform, val)
+    {
+        // only update if values changed
+        if (uniform._lastVal.val !== val) 
+        {
+            // update cached values
+            uniform._lastVal.val = val;
 
+            // set values
+            this._gl.uniform1i(uniform, val);
+        }
+    }
+
+    /**
+     * Set uniform vec2 value with check if changed.
+     */
+    setUniform2i(uniform, x, y)
+    {
+        // only update if values changed
+        if (uniform._lastVal.x !== x || uniform._lastVal.y !== y) 
+        {
+            // update cached values
+            uniform._lastVal.x = x; 
+            uniform._lastVal.y = y;
+
+            // set values
+            this._gl.uniform2i(uniform, x, y);
+        }
+    }
+     
+    /**
+     * Set uniform vec3 value with check if changed.
+     */
+    setUniform3i(uniform, x, y, z)
+    {
+        // only update if values changed
+        if (uniform._lastVal.x !== x || uniform._lastVal.y !== y || uniform._lastVal.z !== z) 
+        {
+            // update cached values
+            uniform._lastVal.x = x; 
+            uniform._lastVal.y = y;
+            uniform._lastVal.z = z;
+
+            // set values
+            this._gl.uniform3i(uniform, x, y, z);
+        }
+    }
+
+    /**
+     * Set uniform vec4 value with check if changed.
+     */
+    setUniform4i(uniform, x, y, z, w)
+    {
+        // only update if values changed
+        if (uniform._lastVal.x !== x || uniform._lastVal.y !== y || uniform._lastVal.z !== z || uniform._lastVal.w !== w) {
+        
+            // update cached values
+            uniform._lastVal.x = x; 
+            uniform._lastVal.y = y;
+            uniform._lastVal.z = z;
+            uniform._lastVal.w = w;
+
+            // set values
+            this._gl.uniform4i(uniform, x, y, z, w);
+        }
+    }
+    
     /**
      * Set this shader as active
      */
@@ -2306,15 +2405,11 @@ class ShaderBase
         // bind position buffer
         gl.bindBuffer(gl.ARRAY_BUFFER, this._positionBuffer);
         var setRectangle = function(gl, x, y, width, height) {
-            var x1 = x;
-            var x2 = x + width;
-            var y1 = y;
-            var y2 = y + height;
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-                x1, y1,
-                x2, y1,
-                x1, y2,
-                x2, y2,
+                x, y,
+                x + width, y,
+                x, y + height,
+                x + width, y + height,
             ]), gl.STATIC_DRAW);
         }
         setRectangle(gl, 0, 0, 1, 1);
@@ -2391,9 +2486,6 @@ class ShaderBase
 
         // Create a buffer to put three 2d clip space points in
         var positionBuffer = gl.createBuffer();
-
-        // Bind it to ARRAY_BUFFER (think of it as ARRAY_BUFFER = positionBuffer)
-        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
         this._positionBuffer = positionBuffer;
         
         // init all shader uniforms
@@ -2407,7 +2499,7 @@ class ShaderBase
 
 
 module.exports = ShaderBase;
-},{"./webgl_utils":20}],19:[function(require,module,exports){
+},{"./../../../console":5,"./webgl_utils":20}],19:[function(require,module,exports){
 /**
  * file: shapes_shader.js
  * description: Default shader to draw shapes with.
@@ -2417,24 +2509,33 @@ module.exports = ShaderBase;
 "use strict";
 const Pixel = require('../../../pixel');
 const ShaderBase = require('./shader_base');
+const PintarConsole = require('./../../../console');
+const ColoredRectangle = require('../../../colored_rectangle');
+const ColoredLine = require('../../../colored_line');
 
 // vertex shader source:
 const vsSource = `
+attribute vec2 a_position;
 uniform vec2 u_resolution;
-uniform vec2 u_position;
+uniform float u_scale;
 
 // main vertex shader func
 void main() 
 {
-    // convert from pixels into 0-2 values
-    vec2 zeroToTwo = (u_position / u_resolution) * 2.0;
+    // set point size
+    gl_PointSize = u_scale;
 
-    // convert from 0->2 to -1->+1 (clipspace) and invert position y
+    // convert the rectangle from pixels to 0.0 to 1.0
+    vec2 zeroToOne = a_position / u_resolution;
+
+    // convert from 0 -> 1 to 0 -> 2
+    vec2 zeroToTwo = zeroToOne * 2.0;
+
+    // convert from 0 -> 2 to -1 -> +1 (clipspace)
     vec2 clipSpace = zeroToTwo - 1.0;
-    clipSpace.y *= -1.0;
 
-    // set output position
-    gl_Position = vec4(clipSpace + ((u_position * 2.0) / u_resolution), 0, 1);
+    // flip 0,0 from bottom left to conventional 2D top left.
+    gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
 }
 `;
 
@@ -2478,7 +2579,7 @@ class ShapesShader extends ShaderBase
      */
     get uniformNames()
     {
-        return ["u_color", "u_resolution", "u_position"];
+        return ["u_color", "u_scale", "u_resolution"];
     }
 
     /**
@@ -2502,23 +2603,60 @@ class ShapesShader extends ShaderBase
     draw(renderable, viewport)
     {  
         // set uniforms
-        this.setUniform2f(this.uniforms.u_position, renderable.position.x, renderable.position.y);
         this.setUniform4f(this.uniforms.u_color, renderable.color.r, renderable.color.g, renderable.color.b, renderable.color.a);
+        this.setUniformf(this.uniforms.u_scale, renderable.pixelScale || 1);
 
         // draw pixels
-        if (renderable instanceof Pixel) {
-            this._gl.drawArrays(this._gl.POINTS, 0, 1);
-        }
-        else
+        if (renderable instanceof Pixel) 
         {
+            this._gl.bufferData( this._gl.ARRAY_BUFFER, new Float32Array([renderable.position.x+0.5, renderable.position.y+0.5]), this._gl.STATIC_DRAW );
+            this._gl.drawArrays( this._gl.POINTS, 0, 1 );
+        }
+        // draw rectangles
+        else if (renderable instanceof ColoredRectangle)
+        {
+            var x = renderable.position.x;
+            var y = renderable.position.y;
+            var width = renderable.size.x;
+            var height = renderable.size.y;
 
+            // filled rect
+            if (renderable.filled) {
+                this._gl.bufferData( this._gl.ARRAY_BUFFER, 
+                    new Float32Array([x, y,
+                        x + width, y,
+                        x, y + height,
+                        x + width, y + height]), 
+                    this._gl.STATIC_DRAW );
+                this._gl.drawArrays(this._gl.TRIANGLE_STRIP, 0, 4);
+            }
+            // lines rect
+            else {
+                this._gl.lineWidth(renderable.pixelScale);
+                this._gl.bufferData( this._gl.ARRAY_BUFFER, 
+                    new Float32Array([x, y,
+                        x + width, y,
+                        x + width, y + height,
+                        x, y + height,]), 
+                    this._gl.STATIC_DRAW );
+                this._gl.drawArrays(this._gl.LINE_LOOP, 0, 4);
+            }
+        }
+        // colored line
+        else if (renderable instanceof ColoredLine)
+        {
+            this._gl.lineWidth(renderable.pixelScale);
+            this._gl.bufferData( this._gl.ARRAY_BUFFER, 
+                new Float32Array([renderable.position.x, renderable.position.y, renderable.toPosition.x, renderable.toPosition.y]), 
+                this._gl.STATIC_DRAW );
+            this._gl.drawArrays(this._gl.LINE_STRIP, 0, 2);
         }
     }
 };
 
 // export the shader
 module.exports = ShapesShader
-},{"../../../pixel":7,"./shader_base":18}],20:[function(require,module,exports){
+},{"../../../colored_line":3,"../../../colored_rectangle":4,"../../../pixel":7,"./../../../console":5,"./shader_base":18}],20:[function(require,module,exports){
 /*
  * Copyright 2012, Gregg Tavares.
  * All rights reserved.
@@ -3893,11 +4031,6 @@ class WebGlRenderer extends Renderer
         // set default shader
         this.setShader(this._defaultSpritesShader);
 
-        // init texture mode
-        var gl = this._gl;
-        gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE );
-        gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE );
-
         // Update size
         this._onResize();
     }
@@ -4255,6 +4388,10 @@ class WebGlRenderer extends Renderer
                 var gltexture = texture._glTextures[textureMode];
                 gl.bindTexture(gl.TEXTURE_2D, gltexture);
             }
+
+            // init texture params
+            gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE );
+            gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE );
         }
     }
 
@@ -4411,6 +4548,9 @@ class WebGlRenderer extends Renderer
     {
         // set shader
         this._setShapesShaderIfNeeded();
+
+        // draw rectangle
+        this.shader.draw(coloredRectangle, this._viewport);
     }
 
     /**
@@ -4434,6 +4574,9 @@ class WebGlRenderer extends Renderer
     {
         // set shader
         this._setShapesShaderIfNeeded();
+
+        // draw colored line
+        this.shader.draw(coloredLine, this._viewport);
     }
 }
 

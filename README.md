@@ -390,16 +390,20 @@ Note: scale is an optional factor to "scale" the pixel and actually make it a sq
 To draw a line use:
 
 ```javascript
-pintar.drawLine(new PintarJS.ColoredLine(startPoint, endPoint, color));
+pintar.drawLine(new PintarJS.ColoredLine(startPoint, endPoint, color, blendMode, strokeWidth));
 ```
+
+Note: at the time of writing this, gl.lineWidth() is not yet functional in WebGL and will not work on most, if not all browsers. PintarJS will still set this param though for future usage, when it becomes available.
 
 ####  Rectangles
 
 To draw a rectangle use:
 
 ```javascript
-pintar.drawRectangle(new PintarJS.ColoredRectangle(topLeftPosition, size, color, blendMode, isFilled));
+pintar.drawRectangle(new PintarJS.ColoredRectangle(topLeftPosition, size, color, blendMode, isFilled, strokeWidth));
 ```
+
+Note: at the time of writing this, gl.lineWidth() is not yet functional in WebGL and will not work on most, if not all browsers. PintarJS will still set this param though for future usage, when it becomes available.
 
 ### Text Sprite
 
@@ -851,9 +855,9 @@ pintar.adjustToParentSize();
 ### 2.1.0
 
 - Added shaders support.
-- Added drawing rectangles functionality.
-- Added drawing pixels functionality.
-- Added drawing line functionality.
+- Added drawing rectangles.
+- Added drawing pixels.
+- Added drawing line.
 
 ## License
 

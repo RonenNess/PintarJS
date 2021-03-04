@@ -13,12 +13,14 @@ class ColoredRectangle extends Renderable
      * @param {PintarJS.Color} color Rectangle color.
      * @param {PintarJS.BlendModes} blendMode Blend mode to draw this rect with.
      * @param {Boolean} filled Is this rectangle filled or just outline.
+     * @param {Number} strokeWidth Lines width.
      */
-    constructor(position, size, color, blendMode, filled)
+    constructor(position, size, color, blendMode, filled, strokeWidth)
     {
         super(position, color, blendMode);
         this.size = size;
         this.filled = Boolean(filled);
+        this.pixelScale = strokeWidth || 1;
     }
 
     /**

@@ -6,6 +6,7 @@
  */
 "use strict";
 const WebglUtils = require('./webgl_utils').webglUtils;
+const PintarConsole = require('./../../../console');
 
 /**
  * Base class for shaders.
@@ -115,7 +116,7 @@ class ShaderBase
             uniform._lastVal.val = val;
 
             // set values
-            this._gl.uniformf(uniform, val);
+            this._gl.uniform1f(uniform, val);
         }
     }
 
@@ -135,7 +136,25 @@ class ShaderBase
             this._gl.uniform2f(uniform, x, y);
         }
     }
-        
+     
+    /**
+     * Set uniform vec3 value with check if changed.
+     */
+    setUniform3f(uniform, x, y, z)
+    {
+        // only update if values changed
+        if (uniform._lastVal.x !== x || uniform._lastVal.y !== y || uniform._lastVal.z !== z) 
+        {
+            // update cached values
+            uniform._lastVal.x = x; 
+            uniform._lastVal.y = y;
+            uniform._lastVal.z = z;
+
+            // set values
+            this._gl.uniform3f(uniform, x, y, z);
+        }
+    }
+
     /**
      * Set uniform vec4 value with check if changed.
      */
@@ -154,7 +173,77 @@ class ShaderBase
             this._gl.uniform4f(uniform, x, y, z, w);
         }
     }
+   
+    /**
+     * Set uniform vec2 value with check if changed.
+     */
+    setUniformi(uniform, val)
+    {
+        // only update if values changed
+        if (uniform._lastVal.val !== val) 
+        {
+            // update cached values
+            uniform._lastVal.val = val;
 
+            // set values
+            this._gl.uniform1i(uniform, val);
+        }
+    }
+
+    /**
+     * Set uniform vec2 value with check if changed.
+     */
+    setUniform2i(uniform, x, y)
+    {
+        // only update if values changed
+        if (uniform._lastVal.x !== x || uniform._lastVal.y !== y) 
+        {
+            // update cached values
+            uniform._lastVal.x = x; 
+            uniform._lastVal.y = y;
+
+            // set values
+            this._gl.uniform2i(uniform, x, y);
+        }
+    }
+     
+    /**
+     * Set uniform vec3 value with check if changed.
+     */
+    setUniform3i(uniform, x, y, z)
+    {
+        // only update if values changed
+        if (uniform._lastVal.x !== x || uniform._lastVal.y !== y || uniform._lastVal.z !== z) 
+        {
+            // update cached values
+            uniform._lastVal.x = x; 
+            uniform._lastVal.y = y;
+            uniform._lastVal.z = z;
+
+            // set values
+            this._gl.uniform3i(uniform, x, y, z);
+        }
+    }
+
+    /**
+     * Set uniform vec4 value with check if changed.
+     */
+    setUniform4i(uniform, x, y, z, w)
+    {
+        // only update if values changed
+        if (uniform._lastVal.x !== x || uniform._lastVal.y !== y || uniform._lastVal.z !== z || uniform._lastVal.w !== w) {
+        
+            // update cached values
+            uniform._lastVal.x = x; 
+            uniform._lastVal.y = y;
+            uniform._lastVal.z = z;
+            uniform._lastVal.w = w;
+
+            // set values
+            this._gl.uniform4i(uniform, x, y, z, w);
+        }
+    }
+    
     /**
      * Set this shader as active
      */
@@ -171,15 +260,11 @@ class ShaderBase
         // bind position buffer
         gl.bindBuffer(gl.ARRAY_BUFFER, this._positionBuffer);
         var setRectangle = function(gl, x, y, width, height) {
-            var x1 = x;
-            var x2 = x + width;
-            var y1 = y;
-            var y2 = y + height;
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-                x1, y1,
-                x2, y1,
-                x1, y2,
-                x2, y2,
+                x, y,
+                x + width, y,
+                x, y + height,
+                x + width, y + height,
             ]), gl.STATIC_DRAW);
         }
         setRectangle(gl, 0, 0, 1, 1);
@@ -256,9 +341,6 @@ class ShaderBase
 
         // Create a buffer to put three 2d clip space points in
         var positionBuffer = gl.createBuffer();
-
-        // Bind it to ARRAY_BUFFER (think of it as ARRAY_BUFFER = positionBuffer)
-        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
         this._positionBuffer = positionBuffer;
         
         // init all shader uniforms

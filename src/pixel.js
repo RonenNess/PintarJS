@@ -15,7 +15,7 @@ class Pixel
     {
         this.position = position;
         this.color = color;
-        this.scale = scale || 1;
+        this.pixelScale = scale || 1;
     }
 }
 

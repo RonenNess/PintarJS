@@ -12,8 +12,8 @@
   },
   "keywords": [
     "webgl",
-	  "canvas",
-	  "rendering",
+    "canvas",
+    "rendering",
     "drawing",
     "graphics",
     "game"
@@ -23,5 +23,8 @@
   "bugs": {
     "url": "https://github.com/RonenNess/PintarJS/issues"
   },
-  "homepage": "https://github.com/RonenNess/PintarJS/"
+  "homepage": "https://github.com/RonenNess/PintarJS/",
+  "dependencies": {
+    "freepats": "^1.0.3"
+  }
 }
