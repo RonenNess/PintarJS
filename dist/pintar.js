@@ -342,7 +342,7 @@ class ColoredLine extends Renderable
 
 // export Colored line
 module.exports = ColoredLine;
-},{"./renderable":10}],4:[function(require,module,exports){
+},{"./renderable":11}],4:[function(require,module,exports){
 const Rectangle = require("./rectangle");
 const Renderable = require("./renderable");
 
@@ -411,7 +411,7 @@ class ColoredRectangle extends Renderable
 
 // export Colored Rect
 module.exports = ColoredRectangle;
-},{"./rectangle":9,"./renderable":10}],5:[function(require,module,exports){
+},{"./rectangle":9,"./renderable":11}],5:[function(require,module,exports){
 /**
  * file: console.js
  * description: For internal errors and logging.
@@ -903,6 +903,24 @@ class PintarJS
             throw new PintarConsole.Error("Unknown object type to draw!");
         }
     }
+
+    /**
+     * Create and return a render target.
+     * @param {PintarJS.Point} size Texture size.
+     */
+    createRenderTarget(size)
+    {
+        return this._renderer.createRenderTarget(size);
+    }
+        
+    /**
+     * Set currently active render target, or null to remove render target.
+     * @param {PintarJS.RenderTarget} renderTarget Render target to set.
+     */
+    setRenderTarget(renderTarget)
+    {
+        this._renderer.setRenderTarget(renderTarget);
+    }
 }
 
 
@@ -935,7 +953,7 @@ PintarConsole.log("PintarJS v" + __version__ + " ready! 🎨");
 // export main module
 module.exports = PintarJS;
 
-},{"./blend_modes":1,"./color":2,"./colored_line":3,"./colored_rectangle":4,"./console":5,"./pixel":7,"./point":8,"./rectangle":9,"./renderers":13,"./renderers/webgl/shaders/default_shader":17,"./renderers/webgl/shaders/shader_base":18,"./renderers/webgl/shaders/shapes_shader":19,"./sprite":23,"./text_sprite":24,"./texture":25,"./viewport":26}],7:[function(require,module,exports){
+},{"./blend_modes":1,"./color":2,"./colored_line":3,"./colored_rectangle":4,"./console":5,"./pixel":7,"./point":8,"./rectangle":9,"./renderers":14,"./renderers/webgl/shaders/default_shader":18,"./renderers/webgl/shaders/shader_base":19,"./renderers/webgl/shaders/shapes_shader":20,"./sprite":24,"./text_sprite":25,"./texture":26,"./viewport":27}],7:[function(require,module,exports){
 const PintarJS = require("./pintar");
 
 /**
@@ -1283,6 +1301,64 @@ class Rectangle
 module.exports = Rectangle;
 },{"./point":8}],10:[function(require,module,exports){
 /**
+ * file: render_target.js
+ * description: A texture you can draw on, and later use as texture.
+ * author: Ronen Ness.
+ * since: 2021.
+ */
+"use strict";
+
+const Viewpor = require("./viewport");
+const Point = require("./point");
+const Rectangle = require("./rectangle");
+
+
+/**
+ * A texture you can render on and later use as regular texture.
+ */
+class RenderTarget
+{
+    /**
+     * Create the render target.
+     * @param {PintarJS.Point} size Render target size.
+     * @param {*} data Internal data used by the renderer.
+     */
+    constructor(size, data)
+    {
+        this.size = size.clone();
+        this._data = data;
+    }
+
+    /**
+     * Get texture width.
+     */
+    get width()
+    {
+        return this.size.x;
+    }
+
+    /**
+     * Get texture height.
+     */
+    get height()
+    {
+        return this.size.y;
+    }
+
+    /**
+     * Get render target viewport.
+     */
+    get viewport()
+    {
+        return new Viewport(Point.zero(), new Rectangle(0, 0, this.width, this.height));
+    }
+    
+}
+
+// export render target
+module.exports = RenderTarget;
+},{"./point":8,"./rectangle":9,"./viewport":27}],11:[function(require,module,exports){
+/**
  * file: renderable.js
  * description: A renderable object base class.
  * author: Ronen Ness.
@@ -1348,7 +1424,7 @@ class Renderable
 
 // export Renderable class
 module.exports = Renderable;
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 /**
  * file: canvas.js
  * description: Implement canvas renderer.
@@ -1362,7 +1438,7 @@ const Rectangle = require('./../../rectangle');
 const BlendModes = require('./../../blend_modes');
 const Point = require('./../../point');
 const Viewport = require('./../../viewport');
-const TextSprite = require('./../../text_sprite');
+const Texture = require('../../texture');
 
 /**
  * Implement the built-in canvas renderer.
@@ -1657,6 +1733,15 @@ class CanvasRenderer extends Renderer
     }    
 
     /**
+     * Create and return an empty texture.
+     * @param {PintarJS.Point} size Texture size.
+     */
+    createEmptyTexture(size)
+    {
+        return new Texture(size);
+    }
+
+    /**
      * Draw a single pixel.
      * @param {PintarJS.Pixel} pixel Pixel to draw.
      */
@@ -1687,7 +1772,7 @@ class CanvasRenderer extends Renderer
 
 // export CanvasRenderer
 module.exports = CanvasRenderer;
-},{"./../../blend_modes":1,"./../../console":5,"./../../point":8,"./../../rectangle":9,"./../../text_sprite":24,"./../../viewport":26,"./../renderer":14}],12:[function(require,module,exports){
+},{"../../texture":26,"./../../blend_modes":1,"./../../console":5,"./../../point":8,"./../../rectangle":9,"./../../viewport":27,"./../renderer":15}],13:[function(require,module,exports){
 /**
  * file: index.js
  * description: Index file for canvas renderer.
@@ -1698,7 +1783,7 @@ module.exports = CanvasRenderer;
 
 // export the canvas renderer.
 module.exports = require('./canvas')
-},{"./canvas":11}],13:[function(require,module,exports){
+},{"./canvas":12}],14:[function(require,module,exports){
 /**
  * file: index.js
  * description: Index file for renderer types.
@@ -1713,7 +1798,7 @@ module.exports = {
     WebGL: require('./webgl'),
     WebGLHybrid: require('./webgl/webgl_hybrid'),
 };
-},{"./canvas":12,"./webgl":16,"./webgl/webgl_hybrid":22}],14:[function(require,module,exports){
+},{"./canvas":13,"./webgl":17,"./webgl/webgl_hybrid":23}],15:[function(require,module,exports){
 /**
  * file: renderer.js
  * description: Define the renderer interface, which is the low-level layer that draw stuff.
@@ -1805,6 +1890,15 @@ class Renderer
     }
     
     /**
+     * Create and return a render target.
+     * @param {PintarJS.Point} size Texture size.
+     */
+    createRenderTarget(size)
+    {
+        throw new PintarConsole.Error("Not Implemented.");
+    }
+
+    /**
      * Start a rendering frame.
      */
     startFrame()
@@ -1821,7 +1915,7 @@ class Renderer
 
 // export Renderer interface
 module.exports = Renderer;
-},{"./../console":5}],15:[function(require,module,exports){
+},{"./../console":5}],16:[function(require,module,exports){
 /**
  * file: webgl.js
  * description: Implement webgl renderer.
@@ -1979,7 +2073,7 @@ FontTexture.enforceValidTexureSize = true;
 
 // export the font texture class
 module.exports = FontTexture;
-},{"../../point":8,"../../rectangle":9,"./../../console":5,"./../../text_sprite":24,"./../../texture":25}],16:[function(require,module,exports){
+},{"../../point":8,"../../rectangle":9,"./../../console":5,"./../../text_sprite":25,"./../../texture":26}],17:[function(require,module,exports){
 /**
  * file: index.js
  * description: Index file for webgl renderer.
@@ -1990,7 +2084,7 @@ module.exports = FontTexture;
 
 // export the webgl renderer.
 module.exports = require('./webgl')
-},{"./webgl":21}],17:[function(require,module,exports){
+},{"./webgl":22}],18:[function(require,module,exports){
 /**
  * file: default_shader.js
  * description: Default shader to draw sprites.
@@ -2189,7 +2283,7 @@ class DefaultShader extends ShaderBase
 
 // export the shader
 module.exports = DefaultShader
-},{"./../../../console":5,"./shader_base":18}],18:[function(require,module,exports){
+},{"./../../../console":5,"./shader_base":19}],19:[function(require,module,exports){
 /**
  * file: shader_base.js
  * description: Base class for all shaders.
@@ -2546,7 +2640,7 @@ class ShaderBase
 
 
 module.exports = ShaderBase;
-},{"./../../../console":5,"./webgl_utils":20}],19:[function(require,module,exports){
+},{"./../../../console":5,"./webgl_utils":21}],20:[function(require,module,exports){
 /**
  * file: shapes_shader.js
  * description: Default shader to draw shapes with.
@@ -2703,7 +2797,7 @@ class ShapesShader extends ShaderBase
 
 // export the shader
 module.exports = ShapesShader
-},{"../../../colored_line":3,"../../../colored_rectangle":4,"../../../pixel":7,"./../../../console":5,"./shader_base":18}],20:[function(require,module,exports){
+},{"../../../colored_line":3,"../../../colored_rectangle":4,"../../../pixel":7,"./../../../console":5,"./shader_base":19}],21:[function(require,module,exports){
 /*
  * Copyright 2012, Gregg Tavares.
  * All rights reserved.
@@ -4001,7 +4095,7 @@ module.exports = ShapesShader
   }));
   
   
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 /**
  * file: webgl.js
  * description: Implement webgl renderer.
@@ -4020,6 +4114,7 @@ const Rectangle = require('./../../rectangle');
 const DefaultShader = require('./shaders/default_shader');
 const ShapesShader = require('./shaders/shapes_shader');
 const FontTexture = require('./font_texture');
+const RenderTarget = require('../../render_target');
 
 
 // null image to use when trying to render invalid textures, so we won't get annoying webgl warnings
@@ -4095,7 +4190,7 @@ class WebGlRenderer extends Renderer
      */
     _setSpritesShaderIfNeeded()
     {
-        if (this.shader === this._defaultShapesShader) {
+        if (!this.shader || this.shader === this._defaultShapesShader) {
             this.setShader(this._defaultSpritesShader);
         }
     }
@@ -4105,7 +4200,7 @@ class WebGlRenderer extends Renderer
      */
     _setShapesShaderIfNeeded()
     {
-        if (this.shader === this._defaultSpritesShader) {
+        if (!this.shader || this.shader === this._defaultSpritesShader) {
             this.setShader(this._defaultShapesShader);
         }
     }
@@ -4119,6 +4214,7 @@ class WebGlRenderer extends Renderer
         shader.initIfNeeded(this._gl);
         shader.setAsActive();
         shader.setResolution(this._gl.canvas.width, this._gl.canvas.height);
+        this._gl.viewport(0, 0, this._gl.canvas.width, this._gl.canvas.height);
         this.shader = shader;
     }
 
@@ -4127,6 +4223,11 @@ class WebGlRenderer extends Renderer
      */
     _onResize()
     {
+        // set default texture
+        if (!this.shader) {
+            this._setSpritesShaderIfNeeded();
+        }
+
         // set the resolution
         var gl = this._gl;
         this.shader.setResolution(gl.canvas.width, gl.canvas.height);
@@ -4408,7 +4509,7 @@ class WebGlRenderer extends Renderer
 
         // get image from texture
         var img = texture.image;
-
+        
         // if first call, generate gl textures dict
         texture._glTextures = texture._glTextures || {};
 
@@ -4625,11 +4726,89 @@ class WebGlRenderer extends Renderer
         // draw colored line
         this.shader.draw(coloredLine, this._viewport);
     }
+    
+    /**
+     * Create and return a render target.
+     * @param {PintarJS.Point} size Texture size.
+     */
+    createRenderTarget(size)
+    {     
+        // reset shader
+        this.shader = null;
+
+        // create a texture
+        const gl = this._gl;
+        const targetTexture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, targetTexture);
+
+        // define size and format of level 0
+        const level = 0;
+        const internalFormat = gl.RGBA;
+        const border = 0;
+        const format = gl.RGBA;
+        const type = gl.UNSIGNED_BYTE;
+        const data = null;
+        gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
+                        size.x, size.y, border,
+                        format, type, data);
+
+        // set the filtering so we don't need mips
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        
+        // create the framebuffer
+        const fb = gl.createFramebuffer();
+
+        // create and return render target
+        var ret = new RenderTarget(size, {fb: fb, texture: targetTexture});
+        
+        // store texture internal handle
+        ret._glTextures = {};
+        ret._glTextures[gl.RGBA] = ret._glTextures[gl.RGB] = ret._glTextures[gl.LUMINANCE] = targetTexture;
+
+        // return default shader
+        this._setSpritesShaderIfNeeded();
+        ret.isReady = true;
+
+        // return render target
+        return ret;
+    }
+    
+    /**
+     * Set currently active render target, or null to remove render target.
+     * @param {PintarJS.RenderTarget} renderTarget Render target to set.
+     */
+    setRenderTarget(renderTarget)
+    {
+        // get gl
+        const gl = this._gl;
+
+        // set current render target
+        this._renderTarget = renderTarget;
+
+        // if we just canceled render targer, reset viewport and stop here
+        if (!renderTarget) {
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+            return;
+        }
+
+        // get render target data
+        const data = renderTarget._data;
+
+        // render to our targetTexture by binding the framebuffer
+        gl.bindFramebuffer(gl.FRAMEBUFFER, data.fb);
+
+        // attach the texture as the first color attachment
+        const attachmentPoint = gl.COLOR_ATTACHMENT0;
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, data.texture, 0);
+    }
 }
 
 // export WebGlRenderer
 module.exports = WebGlRenderer;
-},{"../../blend_modes":1,"./../../console":5,"./../../point":8,"./../../rectangle":9,"./../../sprite":23,"./../../text_sprite":24,"./../../viewport":26,"./../renderer":14,"./font_texture":15,"./shaders/default_shader":17,"./shaders/shapes_shader":19}],22:[function(require,module,exports){
+},{"../../blend_modes":1,"../../render_target":10,"./../../console":5,"./../../point":8,"./../../rectangle":9,"./../../sprite":24,"./../../text_sprite":25,"./../../viewport":27,"./../renderer":15,"./font_texture":16,"./shaders/default_shader":18,"./shaders/shapes_shader":20}],23:[function(require,module,exports){
 /**
  * file: webgl.js
  * description: Implement webgl renderer.
@@ -4752,7 +4931,7 @@ class WebGlHybridRenderer extends WebGlBase
 
 // export WebGlHybridRenderer
 module.exports = WebGlHybridRenderer;
-},{"../../color":2,"../../console":5,"../canvas":12,"./webgl":21}],23:[function(require,module,exports){
+},{"../../color":2,"../../console":5,"../canvas":13,"./webgl":22}],24:[function(require,module,exports){
 /**
  * file: sprite.js
  * description: A drawable sprite.
@@ -5011,7 +5190,7 @@ Sprite.defaults = {
 
 // export Sprite
 module.exports = Sprite;
-},{"./blend_modes":1,"./color":2,"./point":8,"./rectangle":9,"./renderable":10}],24:[function(require,module,exports){
+},{"./blend_modes":1,"./color":2,"./point":8,"./rectangle":9,"./renderable":11}],25:[function(require,module,exports){
 /**
  * file: text_sprite.js
  * description: A drawable text sprite.
@@ -5637,7 +5816,7 @@ TextSprite.charForLineBreak = function(char)
 
 // export TextSprite
 module.exports = TextSprite;
-},{"./blend_modes":1,"./color":2,"./point":8,"./renderable":10}],25:[function(require,module,exports){
+},{"./blend_modes":1,"./color":2,"./point":8,"./renderable":11}],26:[function(require,module,exports){
 /**
  * file: texture.js
  * description: A drawable texture class.
@@ -5665,7 +5844,7 @@ class Texture
         if (imageOrSize instanceof Image) {
 
             // store image
-            PintarConsole.log("Create new texture from existing image:", imageOrSize);
+            PintarConsole.log("Create new texture from existing image:", (imageOrSize.src || imageOrSize).toString().substring(0, 32));
             this.image = imageOrSize;
 
             // if ready, call init and callback
@@ -5727,7 +5906,7 @@ class Texture
 
 // export Texture
 module.exports = Texture;
-},{"./console":5,"./point":8}],26:[function(require,module,exports){
+},{"./console":5,"./point":8}],27:[function(require,module,exports){
 /**
  * file: viewport.js
  * description: Viewport to define rendering region and offset.

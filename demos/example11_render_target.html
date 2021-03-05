@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>PintarJS - Demos</title>
+    <script src="../dist/pintar.js"></script>
+    <link href="style.css" rel="stylesheet" type="text/css" media="all">
+  </head>
+  <body>
+    <div class="container container-int">
+      <br />
+      <h1>Example 10: Drawing Shapes</h1>
+      <p>This example shows how to draw basic shapes</p> <br /><br />
+
+      <div style="display:block; height:100%;width:100%;">
+        <canvas></canvas>
+      </div>
+    </div>
+
+  </body>
+  <script>
+    // enable debug mode
+    //PintarJS.enableDebugMessages();
+
+    // set default renderer
+    var mode = location.search.substr(1).split('?')[0];
+    PintarJS.DefaultRenderers = PintarJS.Renderers[mode] || PintarJS.DefaultRenderers;
+
+    // initialize pintar
+    var pintar = new PintarJS();
+    pintar.clearColor = PintarJS.Color.lavender();
+
+    // adjust size
+    pintar.adjustToParentSize();
+    window.onresize = () => {
+      pintar.adjustToParentSize();
+    };
+
+    // load texture and set callback to invoke when ready
+    var texture = new PintarJS.Texture("imgs/necro.png", () => {  
+
+      // create a render target and paint on it
+      var rt = pintar.createRenderTarget(new PintarJS.Point(512,512));
+      pintar.startFrame();
+      pintar.setRenderTarget(rt);
+      pintar.drawText(new PintarJS.TextSprite("You can draw on texture\nThen use this texture in sprites.", new PintarJS.Point(5, 145)));
+      pintar.drawRectangle(new PintarJS.ColoredRectangle(new PintarJS.Point(40, 100), new PintarJS.Point(120, 100), PintarJS.Color.red(), null, false));
+      pintar.drawSprite(new PintarJS.Sprite(texture, new PintarJS.Point(100, 150)));
+      pintar.endFrame();
+      pintar.setRenderTarget(null);
+
+      // create a sprite that uses the render target
+      var sprite = new PintarJS.Sprite(rt);
+      sprite.smoothingEnabled = false;
+      sprite.size.set(512, 512);
+      sprite.position.set(500, 10);
+
+      // draw shapes
+      function drawShapes()
+      {
+        // start frame
+        pintar.startFrame();
+
+        // draw the texture we rendered on
+        pintar.drawSprite(sprite);
+
+
+        pintar.drawText(new PintarJS.TextSprite("You can draw on texture\nThen use this texture in sprites.", new PintarJS.Point(5, 45)));
+      pintar.drawRectangle(new PintarJS.ColoredRectangle(new PintarJS.Point(40, 100), new PintarJS.Point(120, 100), PintarJS.Color.red(), null, false));
+      pintar.drawSprite(new PintarJS.Sprite(texture, new PintarJS.Point(100, 150)));
+
+   
+        // end frame
+        pintar.endFrame();
+      }
+
+      // draw shapes
+      setInterval(drawShapes, 1000 / 24);
+  });
+
+  </script>
+</html>

@@ -89,6 +89,15 @@ class Renderer
     }
     
     /**
+     * Create and return a render target.
+     * @param {PintarJS.Point} size Texture size.
+     */
+    createRenderTarget(size)
+    {
+        throw new PintarConsole.Error("Not Implemented.");
+    }
+
+    /**
      * Start a rendering frame.
      */
     startFrame()

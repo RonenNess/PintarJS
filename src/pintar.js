@@ -405,6 +405,24 @@ class PintarJS
             throw new PintarConsole.Error("Unknown object type to draw!");
         }
     }
+
+    /**
+     * Create and return a render target.
+     * @param {PintarJS.Point} size Texture size.
+     */
+    createRenderTarget(size)
+    {
+        return this._renderer.createRenderTarget(size);
+    }
+        
+    /**
+     * Set currently active render target, or null to remove render target.
+     * @param {PintarJS.RenderTarget} renderTarget Render target to set.
+     */
+    setRenderTarget(renderTarget)
+    {
+        this._renderer.setRenderTarget(renderTarget);
+    }
 }
 
 

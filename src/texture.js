@@ -25,7 +25,7 @@ class Texture
         if (imageOrSize instanceof Image) {
 
             // store image
-            PintarConsole.log("Create new texture from existing image:", imageOrSize);
+            PintarConsole.log("Create new texture from existing image:", (imageOrSize.src || imageOrSize).toString().substring(0, 32));
             this.image = imageOrSize;
 
             // if ready, call init and callback

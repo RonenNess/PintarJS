@@ -16,6 +16,7 @@ const Rectangle = require('./../../rectangle');
 const DefaultShader = require('./shaders/default_shader');
 const ShapesShader = require('./shaders/shapes_shader');
 const FontTexture = require('./font_texture');
+const RenderTarget = require('../../render_target');
 
 
 // null image to use when trying to render invalid textures, so we won't get annoying webgl warnings
@@ -91,7 +92,7 @@ class WebGlRenderer extends Renderer
      */
     _setSpritesShaderIfNeeded()
     {
-        if (this.shader === this._defaultShapesShader) {
+        if (!this.shader || this.shader === this._defaultShapesShader) {
             this.setShader(this._defaultSpritesShader);
         }
     }
@@ -101,7 +102,7 @@ class WebGlRenderer extends Renderer
      */
     _setShapesShaderIfNeeded()
     {
-        if (this.shader === this._defaultSpritesShader) {
+        if (!this.shader || this.shader === this._defaultSpritesShader) {
             this.setShader(this._defaultShapesShader);
         }
     }
@@ -115,6 +116,7 @@ class WebGlRenderer extends Renderer
         shader.initIfNeeded(this._gl);
         shader.setAsActive();
         shader.setResolution(this._gl.canvas.width, this._gl.canvas.height);
+        this._gl.viewport(0, 0, this._gl.canvas.width, this._gl.canvas.height);
         this.shader = shader;
     }
 
@@ -123,6 +125,11 @@ class WebGlRenderer extends Renderer
      */
     _onResize()
     {
+        // set default texture
+        if (!this.shader) {
+            this._setSpritesShaderIfNeeded();
+        }
+
         // set the resolution
         var gl = this._gl;
         this.shader.setResolution(gl.canvas.width, gl.canvas.height);
@@ -404,7 +411,7 @@ class WebGlRenderer extends Renderer
 
         // get image from texture
         var img = texture.image;
-
+        
         // if first call, generate gl textures dict
         texture._glTextures = texture._glTextures || {};
 
@@ -620,6 +627,84 @@ class WebGlRenderer extends Renderer
 
         // draw colored line
         this.shader.draw(coloredLine, this._viewport);
+    }
+    
+    /**
+     * Create and return a render target.
+     * @param {PintarJS.Point} size Texture size.
+     */
+    createRenderTarget(size)
+    {     
+        // reset shader
+        this.shader = null;
+
+        // create a texture
+        const gl = this._gl;
+        const targetTexture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, targetTexture);
+
+        // define size and format of level 0
+        const level = 0;
+        const internalFormat = gl.RGBA;
+        const border = 0;
+        const format = gl.RGBA;
+        const type = gl.UNSIGNED_BYTE;
+        const data = null;
+        gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
+                        size.x, size.y, border,
+                        format, type, data);
+
+        // set the filtering so we don't need mips
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        
+        // create the framebuffer
+        const fb = gl.createFramebuffer();
+
+        // create and return render target
+        var ret = new RenderTarget(size, {fb: fb, texture: targetTexture});
+        
+        // store texture internal handle
+        ret._glTextures = {};
+        ret._glTextures[gl.RGBA] = ret._glTextures[gl.RGB] = ret._glTextures[gl.LUMINANCE] = targetTexture;
+
+        // return default shader
+        this._setSpritesShaderIfNeeded();
+        ret.isReady = true;
+
+        // return render target
+        return ret;
+    }
+    
+    /**
+     * Set currently active render target, or null to remove render target.
+     * @param {PintarJS.RenderTarget} renderTarget Render target to set.
+     */
+    setRenderTarget(renderTarget)
+    {
+        // get gl
+        const gl = this._gl;
+
+        // set current render target
+        this._renderTarget = renderTarget;
+
+        // if we just canceled render targer, reset viewport and stop here
+        if (!renderTarget) {
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+            return;
+        }
+
+        // get render target data
+        const data = renderTarget._data;
+
+        // render to our targetTexture by binding the framebuffer
+        gl.bindFramebuffer(gl.FRAMEBUFFER, data.fb);
+
+        // attach the texture as the first color attachment
+        const attachmentPoint = gl.COLOR_ATTACHMENT0;
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, data.texture, 0);
     }
 }
 

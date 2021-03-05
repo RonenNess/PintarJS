@@ -11,7 +11,7 @@ const Rectangle = require('./../../rectangle');
 const BlendModes = require('./../../blend_modes');
 const Point = require('./../../point');
 const Viewport = require('./../../viewport');
-const TextSprite = require('./../../text_sprite');
+const Texture = require('../../texture');
 
 /**
  * Implement the built-in canvas renderer.
@@ -304,6 +304,15 @@ class CanvasRenderer extends Renderer
         // restore ctx after drawing
         this._ctx.restore();
     }    
+
+    /**
+     * Create and return an empty texture.
+     * @param {PintarJS.Point} size Texture size.
+     */
+    createEmptyTexture(size)
+    {
+        return new Texture(size);
+    }
 
     /**
      * Draw a single pixel.
