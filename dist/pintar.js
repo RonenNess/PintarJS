@@ -1464,6 +1464,8 @@ const BlendModes = require('./../../blend_modes');
 const Point = require('./../../point');
 const Viewport = require('./../../viewport');
 const Texture = require('../../texture');
+const RenderTarget = require('../../render_target');
+
 
 /**
  * Implement the built-in canvas renderer.
@@ -1478,8 +1480,8 @@ class CanvasRenderer extends Renderer
         PintarConsole.debug("Initialize canvas renderer..");
 
         // store canvas and get context
-        this._canvas = canvas;
-        this._ctx = canvas.getContext('2d');
+        this._originCanvas = this._canvas = canvas;
+        this._originCtx = this._ctx = canvas.getContext('2d');
         if (!this._ctx) {
             throw new PintarConsole.Error("Canvas API is not supported or canvas is already used with a different context!");
         }
@@ -1793,11 +1795,57 @@ class CanvasRenderer extends Renderer
         this._ctx.stroke();
         this._ctx.restore();
     }
+
+    
+    /**
+     * Create and return a render target.
+     * @param {PintarJS.Point} size Texture size.
+     */
+    createRenderTarget(size)
+    {     
+        // create canvas at the desired size
+        var canvas = document.createElement("CANVAS");
+        canvas.width = size.x;
+        canvas.height = size.y;
+
+        // create and return render target
+        var ret = new RenderTarget(size, {canvas: canvas, ctx: canvas.getContext('2d')});
+        return ret;
+    }
+    
+    /**
+     * Set currently active render target, or null to remove render target.
+     * @param {PintarJS.RenderTarget} renderTarget Render target to set.
+     */
+    setRenderTarget(renderTarget)
+    {
+        // store current render target
+        var prevCanvas = this._renderTarget;
+        this._renderTarget = renderTarget;
+
+        // set new render target
+        if (renderTarget) {
+            this._canvas = renderTarget._data.canvas;
+            this._ctx = renderTarget._data.ctx;
+        }
+        // clear render target
+        else {
+            // set active canvas and ctx
+            this._canvas = this._originCanvas;
+            this._ctx = this._originCtx;
+
+            // create mage from previous canvas
+            if (prevCanvas) {
+                prevCanvas.image = new Image();
+                prevCanvas.image.src = prevCanvas._data.canvas.toDataURL();
+            }
+        }
+    }
 }
 
 // export CanvasRenderer
 module.exports = CanvasRenderer;
-},{"../../texture":26,"./../../blend_modes":1,"./../../console":5,"./../../point":8,"./../../rectangle":9,"./../../viewport":27,"./../renderer":15}],13:[function(require,module,exports){
+},{"../../render_target":10,"../../texture":26,"./../../blend_modes":1,"./../../console":5,"./../../point":8,"./../../rectangle":9,"./../../viewport":27,"./../renderer":15}],13:[function(require,module,exports){
 /**
  * file: index.js
  * description: Index file for canvas renderer.

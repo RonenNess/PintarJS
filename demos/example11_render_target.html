@@ -61,7 +61,7 @@
         // draw on texture
         pintar.setRenderTarget(rt);
         pintar.clear(PintarJS.Color.white());
-        pintar.drawText(new PintarJS.TextSprite("You can draw on texture\nThen use this texture to\ndraw sprites.", new PintarJS.Point(5, 95)));
+        pintar.drawText(new PintarJS.TextSprite("You can draw on texture\nThen use this texture to\ndraw sprites.", new PintarJS.Point(15, 95)));
         for (var i = 0; i < 10; ++i) {
           pintar.drawSprite(new PintarJS.Sprite(texture, new PintarJS.Point(50 + i * 50, 240)));
         }
