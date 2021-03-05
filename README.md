@@ -823,6 +823,29 @@ varying vec2 v_texCoord;
 
 ### Extras
 
+#### Render Targets
+
+You can create an empty texture, draw on it, and then use that texture to draw sprites. In other words, create a texture at runtime using PintarJS.
+
+To create an empty `Render Target` (ie a texture you can draw on) in the size of 512x512:
+
+```javascript
+var rt = pintar.createRenderTarget(new PintarJS.Point(512,512));
+```
+
+Now you can set this render target as the active render target, and start drawing directly on it:
+
+```javascript
+pintar.setRenderTarget(rt);
+// draw some stuff...
+
+// after you finish, clear render target so we'll be back to draw on screen:
+pintar.setRenderTarget(null);
+```
+
+And once your texture is ready, you can use it with sprites, just as you would with a normal texture. There are few niche things, like greyscale effect, that won't work with render targets. But most things will.
+
+
 #### Resolution
 
 PintarJS can help you set a constant resolution.

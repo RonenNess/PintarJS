@@ -150,6 +150,23 @@ class PintarJS
     }
 
     /**
+     * Return canvas size.
+     */
+    get canvasSize()
+    {
+        return new Point(this._canvas.width, this._canvas.height);
+    }
+
+    /**
+     * Set canvas size.
+     */
+    set canvasSize(val)
+    {
+        this._canvas.width = val.x;
+        this._canvas.height = val.y;
+    }
+
+    /**
      * Get active renderer name.
      */
     get rendererName()

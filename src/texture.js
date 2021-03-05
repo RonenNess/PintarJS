@@ -60,6 +60,14 @@ class Texture
     }
 
     /**
+     * Is this texture a valid render target?
+     */
+    get isRenderTarget()
+    {
+        return false;
+    }
+
+    /**
      * Return if texture's image is loaded / ready.
      */
     get isReady() 

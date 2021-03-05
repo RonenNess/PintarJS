@@ -648,6 +648,23 @@ class PintarJS
     }
 
     /**
+     * Return canvas size.
+     */
+    get canvasSize()
+    {
+        return new Point(this._canvas.width, this._canvas.height);
+    }
+
+    /**
+     * Set canvas size.
+     */
+    set canvasSize(val)
+    {
+        this._canvas.width = val.x;
+        this._canvas.height = val.y;
+    }
+
+    /**
      * Get active renderer name.
      */
     get rendererName()
@@ -1327,6 +1344,14 @@ class RenderTarget
     {
         this.size = size.clone();
         this._data = data;
+    }
+
+    /**
+     * Is this a valid render target?
+     */
+    get isRenderTarget()
+    {
+        return true;
     }
 
     /**
@@ -2257,8 +2282,14 @@ class DefaultShader extends ShaderBase
     prepare(renderable, viewport)
     {
         // set position and size
-        this.setUniform2f(this.uniforms.u_offset, renderable.position.x - viewport.offset.x, -renderable.position.y + viewport.offset.y);
-        this.setUniform2f(this.uniforms.u_size, renderable.width * renderable.scale.x, renderable.height * renderable.scale.y);
+        var flipY = (renderable.texture && renderable.texture.isRenderTarget) ? -1 : 1;
+        var x = renderable.position.x - viewport.offset.x;
+        var y = -renderable.position.y + viewport.offset.y;
+        var width = renderable.width * renderable.scale.x;
+        var height = renderable.height * renderable.scale.y;
+        //if (flipY) { y -= height * (1 - renderable.origin.y); }
+        this.setUniform2f(this.uniforms.u_offset, x, y);
+        this.setUniform2f(this.uniforms.u_size, width, height * flipY);
         
         // set source rect
         var srcRect = renderable.sourceRectangleRelative;
@@ -2277,7 +2308,7 @@ class DefaultShader extends ShaderBase
         this.setUniform2f(this.uniforms.u_rotation, rotation.x, rotation.y)
 
         // set origin
-        this.setUniform2f(this.uniforms.u_origin, renderable.origin.x, renderable.origin.y)
+        this.setUniform2f(this.uniforms.u_origin, renderable.origin.x, flipY ? (1 - renderable.origin.y) : renderable.origin.y)
     }
 };
 
@@ -5901,6 +5932,14 @@ class Texture
         else {
             throw new PintarConsole.Error("Invalid param for texture creation; Should either be Image, string, or Point!");
         }
+    }
+
+    /**
+     * Is this texture a valid render target?
+     */
+    get isRenderTarget()
+    {
+        return false;
     }
 
     /**

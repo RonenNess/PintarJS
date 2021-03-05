@@ -28,6 +28,14 @@ class RenderTarget
     }
 
     /**
+     * Is this a valid render target?
+     */
+    get isRenderTarget()
+    {
+        return true;
+    }
+
+    /**
      * Get texture width.
      */
     get width()
