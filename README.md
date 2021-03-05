@@ -957,7 +957,7 @@ pintar.adjustToParentSize();
 - Added drawing rectangles.
 - Added drawing pixels.
 - Added drawing line.
-- Added render to texture.
+- Added render targets.
 
 ## License
 
