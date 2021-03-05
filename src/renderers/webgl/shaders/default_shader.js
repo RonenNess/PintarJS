@@ -196,7 +196,7 @@ class DefaultShader extends ShaderBase
         this.setUniform2f(this.uniforms.u_rotation, rotation.x, rotation.y)
 
         // set origin
-        this.setUniform2f(this.uniforms.u_origin, renderable.origin.x, flipY ? (1 - renderable.origin.y) : renderable.origin.y)
+        this.setUniform2f(this.uniforms.u_origin, renderable.origin.x, flipY ? renderable.origin.y : (1 - renderable.origin.y))
     }
 };
 
