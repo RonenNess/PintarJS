@@ -43,7 +43,10 @@
       var rt = pintar.createRenderTarget(new PintarJS.Point(512,512));
       pintar.startFrame();
       pintar.setRenderTarget(rt);
-      pintar.drawText(new PintarJS.TextSprite("You can draw on texture\nThen use this texture in sprites.", new PintarJS.Point(5, 145)));
+      pintar.clear(PintarJS.Color.white());
+      pintar.drawPixel(new PintarJS.Pixel(new PintarJS.Point(0, 0), 
+                                            PintarJS.Color.black(), 4));
+      pintar.drawText(new PintarJS.TextSprite("You can draw on texture\nThen use this texture in sprites.", new PintarJS.Point(5, 45)));
       pintar.drawRectangle(new PintarJS.ColoredRectangle(new PintarJS.Point(40, 100), new PintarJS.Point(120, 100), PintarJS.Color.red(), null, false));
       pintar.drawSprite(new PintarJS.Sprite(texture, new PintarJS.Point(100, 150)));
       pintar.endFrame();
@@ -52,8 +55,8 @@
       // create a sprite that uses the render target
       var sprite = new PintarJS.Sprite(rt);
       sprite.smoothingEnabled = false;
-      sprite.size.set(512, 512);
-      sprite.position.set(500, 10);
+      sprite.size.set(512, -512);
+      sprite.position.set(4, 516);
 
       // draw shapes
       function drawShapes()
@@ -66,8 +69,8 @@
 
 
         pintar.drawText(new PintarJS.TextSprite("You can draw on texture\nThen use this texture in sprites.", new PintarJS.Point(5, 45)));
-      pintar.drawRectangle(new PintarJS.ColoredRectangle(new PintarJS.Point(40, 100), new PintarJS.Point(120, 100), PintarJS.Color.red(), null, false));
-      pintar.drawSprite(new PintarJS.Sprite(texture, new PintarJS.Point(100, 150)));
+        pintar.drawRectangle(new PintarJS.ColoredRectangle(new PintarJS.Point(40, 100), new PintarJS.Point(120, 100), PintarJS.Color.red(), null, false));
+        pintar.drawSprite(new PintarJS.Sprite(texture, new PintarJS.Point(100, 150)));
 
    
         // end frame

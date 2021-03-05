@@ -4213,9 +4213,30 @@ class WebGlRenderer extends Renderer
         if (!shader) { shader = this._defaultSpritesShader; }
         shader.initIfNeeded(this._gl);
         shader.setAsActive();
-        shader.setResolution(this._gl.canvas.width, this._gl.canvas.height);
-        this._gl.viewport(0, 0, this._gl.canvas.width, this._gl.canvas.height);
+        this._updateShaderResolution();
         this.shader = shader;
+    }
+
+    /**
+     * Update active shaders resolution.
+     */
+    _updateShaderResolution()
+    {
+        if (!this.shader) { return; }
+        var resolution = this._getResolution();
+        this.shader.setResolution(resolution.x, resolution.y);
+        this._gl.viewport(0, 0, resolution.x, resolution.y);
+    }
+
+    /**
+     * Get current resolution.
+     */
+    _getResolution()
+    {
+        if (this._renderTarget) {
+            return new Point(this._renderTarget.width, this._renderTarget.height);
+        }
+        return new Point(this._gl.canvas.width, this._gl.canvas.height);
     }
 
     /**
@@ -4230,7 +4251,7 @@ class WebGlRenderer extends Renderer
 
         // set the resolution
         var gl = this._gl;
-        this.shader.setResolution(gl.canvas.width, gl.canvas.height);
+        this._updateShaderResolution();
        
         // tell WebGL how to convert from clip space to pixels
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
@@ -4254,6 +4275,9 @@ class WebGlRenderer extends Renderer
         this._currTexture = null;
         this._lastBlend = null;
         this._smoothing = null;
+
+        // update resolution
+        this._updateShaderResolution();
     }
 
     /**
@@ -4786,6 +4810,7 @@ class WebGlRenderer extends Renderer
 
         // set current render target
         this._renderTarget = renderTarget;
+        this._updateShaderResolution();
 
         // if we just canceled render targer, reset viewport and stop here
         if (!renderTarget) {
