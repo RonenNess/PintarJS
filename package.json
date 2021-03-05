@@ -1,6 +1,6 @@
 {
   "name": "pintar",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Micro JS lib for direct WebGL and canvas rendering.",
   "main": "dist/pintar.js",
   "scripts": {

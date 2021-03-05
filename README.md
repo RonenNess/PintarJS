@@ -959,6 +959,10 @@ pintar.adjustToParentSize();
 - Added drawing line.
 - Added render targets.
 
+### 2.1.1
+
+- Tiny fix in shader switching and setting resolution.
+
 ## License
 
 PintarJS is distributed under the permissive MIT License and is absolutely free to use for any purpose (commercial included).

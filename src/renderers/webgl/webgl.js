@@ -113,10 +113,10 @@ class WebGlRenderer extends Renderer
     setShader(shader)
     {
         if (!shader) { shader = this._defaultSpritesShader; }
+        this.shader = shader;
         shader.initIfNeeded(this._gl);
         shader.setAsActive();
         this._updateShaderResolution();
-        this.shader = shader;
     }
 
     /**

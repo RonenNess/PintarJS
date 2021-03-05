@@ -523,7 +523,7 @@ const DefaultShader = require('./renderers/webgl/shaders/default_shader');
 const ShapesShader = require('./renderers/webgl/shaders/shapes_shader');
 
 // current version and author
-const __version__ = "2.1.0";
+const __version__ = "2.1.1";
 const __author__ = "Ronen Ness";
 
 /**
@@ -2658,6 +2658,15 @@ class ShaderBase
             gl.vertexAttribPointer(this._texcoordLocation, 2, gl.FLOAT, this.normalizeVertexData, 0, 0);
         }
 
+        // init all shader uniforms
+        if (!this.uniforms) {
+            this.uniforms = {}
+            var uniforms = this.uniformNames;
+            for (var i = 0; i < uniforms.length; ++i) {
+                this.uniforms[uniforms[i]] = gl.getUniformLocation(this._program, uniforms[i]);
+            }
+        }
+
         // set default 'last value' to uniforms so we'll only update them when needed
         for (var key in this.uniforms) {
             if (this.uniforms.hasOwnProperty(key)) {
@@ -2707,13 +2716,6 @@ class ShaderBase
         // Create a buffer to put three 2d clip space points in
         var positionBuffer = gl.createBuffer();
         this._positionBuffer = positionBuffer;
-        
-        // init all shader uniforms
-        this.uniforms = {}
-        var uniforms = this.uniformNames;
-        for (var i = 0; i < uniforms.length; ++i) {
-            this.uniforms[uniforms[i]] = gl.getUniformLocation(this._program, uniforms[i]);
-        }
     }
 }
 
@@ -4290,10 +4292,10 @@ class WebGlRenderer extends Renderer
     setShader(shader)
     {
         if (!shader) { shader = this._defaultSpritesShader; }
+        this.shader = shader;
         shader.initIfNeeded(this._gl);
         shader.setAsActive();
         this._updateShaderResolution();
-        this.shader = shader;
     }
 
     /**
