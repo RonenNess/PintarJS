@@ -364,8 +364,8 @@ class WebGlRenderer extends Renderer
                     var posX = textSprite.position.x + offset;
                     var posY = textSprite.position.y + ((i - 0.75) * textSprite.calculatedLineHeight);
                     var position = new Point(posX, posY);
-                    sprite.width = size.base.x;
-                    sprite.height = size.base.y;
+                    sprite.width = Math.floor(size.base.x);
+                    sprite.height = Math.floor(size.base.y);
                     sprite.smoothingEnabled = this.smoothText;
 
                     // apply line-height based offset
@@ -374,7 +374,7 @@ class WebGlRenderer extends Renderer
                     }
 
                     // set sprite position
-                    sprite.position.set(position.x, position.y);
+                    sprite.position.set(Math.floor(position.x), Math.floor(position.y));
 
                     // actually draw sprite
                     drawSpriteMethod(sprite, position, fillColor, strokeWidth, strokeColor);
@@ -406,10 +406,10 @@ class WebGlRenderer extends Renderer
                         var centerPart = sx == 0 && sy == 0;
                         var extraWidth = (centerPart ? strokeWidth : 0);
                         var extraHeight = (centerPart ? strokeWidth : 0);
-                        sprite.width = width + extraWidth;
-                        sprite.height = height + extraHeight;
-                        sprite.position.x = position.x + sx * (strokeWidth / 2.5) - extraWidth / 2;
-                        sprite.position.y = position.y + sy * (strokeWidth / 2.5) - extraHeight / 2;
+                        sprite.width = Math.floor(width + extraWidth);
+                        sprite.height = Math.floor(height + extraHeight);
+                        sprite.position.x = Math.floor(position.x + sx * (strokeWidth / 2.5) - extraWidth / 2);
+                        sprite.position.y = Math.floor(position.y + sy * (strokeWidth / 2.5) - extraHeight / 2);
                         this.drawSprite(sprite);
                     }   
                 }

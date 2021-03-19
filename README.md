@@ -963,6 +963,10 @@ pintar.adjustToParentSize();
 
 - Tiny fix in shader switching and setting resolution.
 
+### 2.1.2
+
+- Fixed text sprites to round position and size to avoid blurry edges.
+
 ## License
 
 PintarJS is distributed under the permissive MIT License and is absolutely free to use for any purpose (commercial included).
