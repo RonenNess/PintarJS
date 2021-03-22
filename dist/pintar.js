@@ -2325,19 +2325,19 @@ class FontTexture
 
             // check if need to break line down in texture
             if (x + currCharWidth > textureWidth) {
-                y += fontHeight + margin.y;
+                y += Math.round(fontHeight + margin.y);
                 x = 0;
             }
 
             // calc source rect
-            var sourceRect = new Rectangle(x, y + fontHeight / 4, currCharWidth, fontHeight);
+            var sourceRect = new Rectangle(x, y + Math.round(fontHeight / 4), currCharWidth, fontHeight);
             this._sourceRects[currChar] = sourceRect;
 
             // draw character
             ctx.fillText(currChar, x, y + fontHeight);
 
             // move to next spot in texture
-            x += currCharWidth + margin.x;
+            x += Math.round(currCharWidth + margin.x);
         }
                 
         // do threshold effect
@@ -4634,11 +4634,12 @@ class WebGlRenderer extends Renderer
      * @param {Number} maxTextureWidth Max texture width (default to 2048). 
      * @param {Char} missingCharPlaceholder Character to use when trying to render a missing character (defaults to '?').
      * @param {Boolean} smooth Set if to smooth text (recommended to set false when drawing small texts) (defaults to true).
+     * @param {String} key Key to use for this font in the fonts dictionary. If not set, will use fontName.
      */
-    generateFontTexture(fontName, fontSize, charsSet, maxTextureWidth, missingCharPlaceholder, smooth) 
+    generateFontTexture(fontName, fontSize, charsSet, maxTextureWidth, missingCharPlaceholder, smooth, key) 
     {
         var ret = new FontTexture(fontName, fontSize, charsSet, maxTextureWidth, missingCharPlaceholder, smooth);
-        this._fontTextures[fontName] = ret;
+        this._fontTextures[key || fontName] = ret;
         return ret;
     }
 
@@ -4647,10 +4648,11 @@ class WebGlRenderer extends Renderer
      */
     _getOrCreateFontTexture(fontName, size)
     {
-        if (!this._fontTextures[fontName]) {
-            this.generateFontTexture(fontName, size || this.fontTextureDefaultSize, undefined, undefined, undefined, this.smoothText);
+        var key = size ? fontName + '_' + size.toString() : fontName;
+        if (!this._fontTextures[key]) {
+            this.generateFontTexture(fontName, size || this.fontTextureDefaultSize, undefined, undefined, undefined, this.smoothText, key);
         }
-        return this._fontTextures[fontName];
+        return this._fontTextures[key];
     }
     
     /**
@@ -4688,9 +4690,7 @@ class WebGlRenderer extends Renderer
         this._setSpritesShaderIfNeeded();
 
         // get font texture to use
-        var fontTexture = textSprite.accurateFontSize ? 
-            this._getOrCreateFontTexture(textSprite.font + '_' + textSprite.fontSize.toString(), textSprite.fontSize) : 
-            this._getOrCreateFontTexture(textSprite.font);
+        var fontTexture = this._getOrCreateFontTexture(textSprite.font, textSprite.sourceFontSize);
 
         // create sprite to draw
         var sprite = new Sprite(fontTexture.texture);
@@ -5577,7 +5577,7 @@ class TextSprite extends Renderable
         this.useStyleCommands = TextSprite.defaults.useStyleCommands;
         this.extraLineHeight = TextSprite.defaults.extraLineHeight;
         this.tracking = TextSprite.defaults.tracking;
-        this.accurateFontSize = Boolean(options.accurateFontSize);
+        this.sourceFontSize = options.sourceFontSize || 0;
         this.maxWidth = null;
         
         // optional offset to add on Y axis based on actual line height
@@ -5814,19 +5814,18 @@ class TextSprite extends Renderable
     /**
      * Get if this text sprite requires accurate font size from source font texture.
      */
-    get accurateFontSize()
+    get sourceFontSize()
     {
-        return this._accurateFontSize;
+        return this._sourceFontSize;
     }
 
     /**
      * Set if this text sprite requires accurate font size from source font texture.
      */
-    set accurateFontSize(value)
+    set sourceFontSize(value)
     {
-        value = Boolean(value);
-        if (this._accurateFontSize !== value) {
-            this._accurateFontSize = value;
+        if (this._sourceFontSize !== value) {
+            this._sourceFontSize = value;
             this._resetCachedValues(true);
         }
     }

@@ -500,9 +500,9 @@ Text font size (in pixels):
 text.fontSize = 30;
 ```
 
-#### text.accurateFontSize
+#### text.sourceFontSize
 
-If true, will demand a 1:1 match in font size when using Font Textures. This will look best on low resolution renderings, at the price of memory to generate more textures when using multiple font sizes.
+If set to a positive number and Font Textures are used, will force the source Font Texture to be in this font size (may create a new Font Texture if needed). Use this option when you want to draw small texts in low resolution, and you want sharp text.
 
 #### text.useStyleCommands
 

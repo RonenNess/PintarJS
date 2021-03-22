@@ -121,19 +121,19 @@ class FontTexture
 
             // check if need to break line down in texture
             if (x + currCharWidth > textureWidth) {
-                y += fontHeight + margin.y;
+                y += Math.round(fontHeight + margin.y);
                 x = 0;
             }
 
             // calc source rect
-            var sourceRect = new Rectangle(x, y + fontHeight / 4, currCharWidth, fontHeight);
+            var sourceRect = new Rectangle(x, y + Math.round(fontHeight / 4), currCharWidth, fontHeight);
             this._sourceRects[currChar] = sourceRect;
 
             // draw character
             ctx.fillText(currChar, x, y + fontHeight);
 
             // move to next spot in texture
-            x += currCharWidth + margin.x;
+            x += Math.round(currCharWidth + margin.x);
         }
                 
         // do threshold effect

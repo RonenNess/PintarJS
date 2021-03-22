@@ -221,11 +221,12 @@ class WebGlRenderer extends Renderer
      * @param {Number} maxTextureWidth Max texture width (default to 2048). 
      * @param {Char} missingCharPlaceholder Character to use when trying to render a missing character (defaults to '?').
      * @param {Boolean} smooth Set if to smooth text (recommended to set false when drawing small texts) (defaults to true).
+     * @param {String} key Key to use for this font in the fonts dictionary. If not set, will use fontName.
      */
-    generateFontTexture(fontName, fontSize, charsSet, maxTextureWidth, missingCharPlaceholder, smooth) 
+    generateFontTexture(fontName, fontSize, charsSet, maxTextureWidth, missingCharPlaceholder, smooth, key) 
     {
         var ret = new FontTexture(fontName, fontSize, charsSet, maxTextureWidth, missingCharPlaceholder, smooth);
-        this._fontTextures[fontName] = ret;
+        this._fontTextures[key || fontName] = ret;
         return ret;
     }
 
@@ -234,10 +235,11 @@ class WebGlRenderer extends Renderer
      */
     _getOrCreateFontTexture(fontName, size)
     {
-        if (!this._fontTextures[fontName]) {
-            this.generateFontTexture(fontName, size || this.fontTextureDefaultSize, undefined, undefined, undefined, this.smoothText);
+        var key = size ? fontName + '_' + size.toString() : fontName;
+        if (!this._fontTextures[key]) {
+            this.generateFontTexture(fontName, size || this.fontTextureDefaultSize, undefined, undefined, undefined, this.smoothText, key);
         }
-        return this._fontTextures[fontName];
+        return this._fontTextures[key];
     }
     
     /**
@@ -275,9 +277,7 @@ class WebGlRenderer extends Renderer
         this._setSpritesShaderIfNeeded();
 
         // get font texture to use
-        var fontTexture = textSprite.accurateFontSize ? 
-            this._getOrCreateFontTexture(textSprite.font + '_' + textSprite.fontSize.toString(), textSprite.fontSize) : 
-            this._getOrCreateFontTexture(textSprite.font);
+        var fontTexture = this._getOrCreateFontTexture(textSprite.font, textSprite.sourceFontSize);
 
         // create sprite to draw
         var sprite = new Sprite(fontTexture.texture);
