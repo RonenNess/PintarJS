@@ -40,6 +40,7 @@ class TextSprite extends Renderable
         this.useStyleCommands = TextSprite.defaults.useStyleCommands;
         this.extraLineHeight = TextSprite.defaults.extraLineHeight;
         this.tracking = TextSprite.defaults.tracking;
+        this.accurateFontSize = Boolean(options.accurateFontSize);
         this.maxWidth = null;
         
         // optional offset to add on Y axis based on actual line height
@@ -164,8 +165,7 @@ class TextSprite extends Renderable
     {
         if (this._maxWidth !== val) {
             this._maxWidth = val;
-            this._cachedLinesAndCommands = null;
-            this._version++;
+            this._resetCachedValues();
         }
     }
 
@@ -184,8 +184,7 @@ class TextSprite extends Renderable
     {
         if (this._strokeWidth !== val) {
             this._strokeWidth = val;
-            this._cachedLinesAndCommands = null;
-            this._version++;
+            this._resetCachedValues();
         }
     }
 
@@ -204,8 +203,7 @@ class TextSprite extends Renderable
     {
         if (this._text !== val) {
             this._text = val;
-            this._cachedLinesAndCommands = null;
-            this._version++;
+            this._resetCachedValues();
         }
     }
 
@@ -235,9 +233,7 @@ class TextSprite extends Renderable
     {
         if (this._font !== val) {
             this._font = val;
-            this._fontString = null;
-            this._cachedLinesAndCommands = null;
-            this._version++;
+            this._resetCachedValues(true);
         }
     }
 
@@ -256,10 +252,18 @@ class TextSprite extends Renderable
     {
         if (this._fontSize !== val) {
             this._fontSize = val;
-            this._fontString = null;
-            this._cachedLinesAndCommands = null;
-            this._version++;
+            this._resetCachedValues(true);
         }
+    }
+
+    /**
+     * Reset internally cached stuff.
+     */
+    _resetCachedValues(includeFontString)
+    {
+        if (includeFontString) this._fontString = null;
+        this._cachedLinesAndCommands = null;
+        this._version++;
     }
 
     /**
@@ -268,6 +272,26 @@ class TextSprite extends Renderable
     get fontSize()
     {
         return this._fontSize;
+    }
+
+    /**
+     * Get if this text sprite requires accurate font size from source font texture.
+     */
+    get accurateFontSize()
+    {
+        return this._accurateFontSize;
+    }
+
+    /**
+     * Set if this text sprite requires accurate font size from source font texture.
+     */
+    set accurateFontSize(value)
+    {
+        value = Boolean(value);
+        if (this._accurateFontSize !== value) {
+            this._accurateFontSize = value;
+            this._resetCachedValues(true);
+        }
     }
 
     /**
@@ -525,6 +549,7 @@ class TextSprite extends Renderable
         ret.maxWidth = this.maxWidth;
         ret.strokeColor = this.strokeColor.clone();
         ret.extraLineHeight = this.extraLineHeight;
+        ret.accurateFontSize = this.accurateFontSize;
         return ret;
     }
 }

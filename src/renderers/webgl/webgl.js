@@ -232,10 +232,10 @@ class WebGlRenderer extends Renderer
     /**
      * Get or create a font texture.
      */
-    _getOrCreateFontTexture(fontName)
+    _getOrCreateFontTexture(fontName, size)
     {
         if (!this._fontTextures[fontName]) {
-            this.generateFontTexture(fontName, this.fontTextureDefaultSize, undefined, undefined, undefined, this.smoothText);
+            this.generateFontTexture(fontName, size || this.fontTextureDefaultSize, undefined, undefined, undefined, this.smoothText);
         }
         return this._fontTextures[fontName];
     }
@@ -275,7 +275,9 @@ class WebGlRenderer extends Renderer
         this._setSpritesShaderIfNeeded();
 
         // get font texture to use
-        var fontTexture = this._getOrCreateFontTexture(textSprite.font);
+        var fontTexture = textSprite.accurateFontSize ? 
+            this._getOrCreateFontTexture(textSprite.font + '_' + textSprite.fontSize.toString(), textSprite.fontSize) : 
+            this._getOrCreateFontTexture(textSprite.font);
 
         // create sprite to draw
         var sprite = new Sprite(fontTexture.texture);

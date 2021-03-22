@@ -500,6 +500,10 @@ Text font size (in pixels):
 text.fontSize = 30;
 ```
 
+#### text.accurateFontSize
+
+If true, will demand a 1:1 match in font size when using Font Textures. This will look best on low resolution renderings, at the price of memory to generate more textures when using multiple font sizes.
+
 #### text.useStyleCommands
 
 Set to true to support style commands. If false, will draw text as-is.
@@ -972,6 +976,7 @@ pintar.adjustToParentSize();
 - Added lots of useful methods to Point, Color and Rectangle.
 - Fixed sprite clone() to also copy size.
 - Better handling crisp font texture (smoothText = false).
+- Added accurateFontSize property to text sprite. 
 
 ## License
 
