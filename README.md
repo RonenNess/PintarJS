@@ -976,7 +976,7 @@ pintar.adjustToParentSize();
 - Added lots of useful methods to Point, Color and Rectangle.
 - Fixed sprite clone() to also copy size.
 - Better handling crisp font texture (smoothText = false).
-- Added accurateFontSize property to text sprite. 
+- Added `sourceFontSize` property to text sprite. 
 
 ## License
 
