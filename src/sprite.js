@@ -236,6 +236,7 @@ class Sprite extends Renderable
         ret.skew = this.skew.clone();
         ret.cacheRelativeSourceRectangle = this.cacheRelativeSourceRectangle;
         ret.applyAntiBleeding = this.applyAntiBleeding;
+        ret.size = this.size.clone();
         this._copyBasics(ret);
         return ret;
     }

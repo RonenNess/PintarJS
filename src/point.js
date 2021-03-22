@@ -160,6 +160,30 @@ class Point
       var b = this.y - other.y;
       return Math.sqrt(a*a + b*b);
     }
+
+    /**
+     * Convert to string.
+     */
+    toString() 
+    {
+        return 'Point(' + this.x + ',' + this.y + ')';
+    }
+
+    /**
+     * Get magnitude (length).
+     */
+    getMagnitude() 
+    {
+        return Math.sqrt((this.x * this.x) + (this.y * this.y));
+    }
+
+    /**
+     * Return a copy of this point multiplied by a factor.
+     */
+    scale(fac) 
+    {
+        return new PintarJS.Point(this.x * fac, this.y * fac);
+    }
 }
 
 /**
@@ -194,6 +218,31 @@ Point.fromAngle = function(degrees)
     var rads = degrees * (Math.PI / 180);
     return new Point(Math.cos(rads), Math.sin(rads));
 }
+
+// lerp two numbers
+function lerp(start, end, a)
+{
+    return ((1-a) * start) + (a * end);
+}
+
+/**
+ * Lerp between two points.
+ */
+Point.lerp = function(p1, p2, a)
+{
+    return new Point(lerp(p1.x, p2.x, a), lerp(p1.y, p2.y, a));
+}
+
+/**
+ * Get angle between two points.
+ */
+Point.angleBetween = function(P1, P2) 
+{
+	var deltaY = P2.y - P1.y,
+		deltaX = P2.x - P1.x;
+	return Math.atan2(deltaY, deltaX) * (180 / Math.PI);
+};
+
 
 // export Point
 module.exports = Point;

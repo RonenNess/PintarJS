@@ -220,10 +220,11 @@ class WebGlRenderer extends Renderer
      * @param {String} charsSet String with all the characters to generate (default to whole ASCII range). If you try to render a character that's not in this string, it will draw 'missingCharPlaceholder' instead.
      * @param {Number} maxTextureWidth Max texture width (default to 2048). 
      * @param {Char} missingCharPlaceholder Character to use when trying to render a missing character (defaults to '?').
+     * @param {Boolean} smooth Set if to smooth text (recommended to set false when drawing small texts) (defaults to true).
      */
-    generateFontTexture(fontName, fontSize, charsSet, maxTextureWidth, missingCharPlaceholder) 
+    generateFontTexture(fontName, fontSize, charsSet, maxTextureWidth, missingCharPlaceholder, smooth) 
     {
-        var ret = new FontTexture(fontName, fontSize, charsSet, maxTextureWidth, missingCharPlaceholder);
+        var ret = new FontTexture(fontName, fontSize, charsSet, maxTextureWidth, missingCharPlaceholder, smooth);
         this._fontTextures[fontName] = ret;
         return ret;
     }
@@ -234,7 +235,7 @@ class WebGlRenderer extends Renderer
     _getOrCreateFontTexture(fontName)
     {
         if (!this._fontTextures[fontName]) {
-            this.generateFontTexture(fontName, this.fontTextureDefaultSize);
+            this.generateFontTexture(fontName, this.fontTextureDefaultSize, undefined, undefined, undefined, this.smoothText);
         }
         return this._fontTextures[fontName];
     }

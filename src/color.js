@@ -181,6 +181,14 @@ class Color
     }
 
     /**
+     * Convert to string.
+     */
+    toString() 
+    {
+        return 'Color(' + this.r + ',' + this.g + ',' + this.b + ',' + this.a + ')';
+    }
+
+    /**
      * Get if this color is transparent black.
      */
     get isTransparentBlack()

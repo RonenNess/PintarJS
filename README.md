@@ -572,7 +572,7 @@ You can, however, ask the renderer to generate a font texture on demand with you
 
 ```javascript
 // will only work if you use the WebGL renderer!
-pintar._renderer.generateFontTexture(fontName, fontSize, charsSet, maxTextureWidth, missingCharPlaceholder);
+pintar._renderer.generateFontTexture(fontName, fontSize, charsSet, maxTextureWidth, missingCharPlaceholder, smoothing);
 ```
 
 Generating the font texture manually can help you solve some of the drawbacks of this technique, which will be listed next.
@@ -966,6 +966,12 @@ pintar.adjustToParentSize();
 ### 2.1.2
 
 - Fixed text sprites to round position and size to avoid blurry edges.
+
+### 2.1.3
+
+- Added lots of useful methods to Point, Color and Rectangle.
+- Fixed sprite clone() to also copy size.
+- Better handling crisp font texture (smoothText = false).
 
 ## License
 

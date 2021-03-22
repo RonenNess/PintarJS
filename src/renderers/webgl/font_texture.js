@@ -45,12 +45,16 @@ class FontTexture
      * @param {String} charsSet String with all the characters to generate (default to whole ASCII range). If you try to render a character that's not in this string, it will draw 'missingCharPlaceholder' instead.
      * @param {Number} maxTextureWidth Max texture width (default to 2048). 
      * @param {Char} missingCharPlaceholder Character to use when trying to render a missing character (defaults to '?').
+     * @param {Boolean} smooth Determine if to smooth text while creating the font texture (defaults to true).
      */
-    constructor(fontName, fontSize, charsSet, maxTextureWidth, missingCharPlaceholder) 
+    constructor(fontName, fontSize, charsSet, maxTextureWidth, missingCharPlaceholder, smooth) 
     {
         // set default missing char placeholder + store it
         missingCharPlaceholder = (missingCharPlaceholder || '?')[0];
         this._placeholderChar = missingCharPlaceholder;
+
+        // default smoothing
+        if (smooth === undefined) smooth = true;
 
         // default max texture size
         maxTextureWidth = maxTextureWidth || 2048;
@@ -94,6 +98,11 @@ class FontTexture
         var canvas = document.createElement('canvas');
         canvas.width = textureWidth;
         canvas.height = textureHeight;
+        if (!smooth) {
+            canvas.style.webkitFontSmoothing = "none";
+            canvas.style.fontSmooth = "never";
+            canvas.style.textRendering = "geometricPrecision";
+        }
         var ctx = canvas.getContext('2d');
 
         // set font and white color

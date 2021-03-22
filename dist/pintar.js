@@ -204,6 +204,14 @@ class Color
     }
 
     /**
+     * Convert to string.
+     */
+    toString() 
+    {
+        return 'Color(' + this.r + ',' + this.g + ',' + this.b + ',' + this.a + ')';
+    }
+
+    /**
      * Get if this color is transparent black.
      */
     get isTransparentBlack()
@@ -523,7 +531,7 @@ const DefaultShader = require('./renderers/webgl/shaders/default_shader');
 const ShapesShader = require('./renderers/webgl/shaders/shapes_shader');
 
 // current version and author
-const __version__ = "2.1.2";
+const __version__ = "2.1.3";
 const __author__ = "Ronen Ness";
 
 /**
@@ -1157,6 +1165,30 @@ class Point
       var b = this.y - other.y;
       return Math.sqrt(a*a + b*b);
     }
+
+    /**
+     * Convert to string.
+     */
+    toString() 
+    {
+        return 'Point(' + this.x + ',' + this.y + ')';
+    }
+
+    /**
+     * Get magnitude (length).
+     */
+    getMagnitude() 
+    {
+        return Math.sqrt((this.x * this.x) + (this.y * this.y));
+    }
+
+    /**
+     * Return a copy of this point multiplied by a factor.
+     */
+    scale(fac) 
+    {
+        return new PintarJS.Point(this.x * fac, this.y * fac);
+    }
 }
 
 /**
@@ -1191,6 +1223,31 @@ Point.fromAngle = function(degrees)
     var rads = degrees * (Math.PI / 180);
     return new Point(Math.cos(rads), Math.sin(rads));
 }
+
+// lerp two numbers
+function lerp(start, end, a)
+{
+    return ((1-a) * start) + (a * end);
+}
+
+/**
+ * Lerp between two points.
+ */
+Point.lerp = function(p1, p2, a)
+{
+    return new Point(lerp(p1.x, p2.x, a), lerp(p1.y, p2.y, a));
+}
+
+/**
+ * Get angle between two points.
+ */
+Point.angleBetween = function(P1, P2) 
+{
+	var deltaY = P2.y - P1.y,
+		deltaX = P2.x - P1.x;
+	return Math.atan2(deltaY, deltaX) * (180 / Math.PI);
+};
+
 
 // export Point
 module.exports = Point;
@@ -1303,7 +1360,107 @@ class Rectangle
     {
         return new Rectangle(this.x, this.y, this.width, this.height);
     }
+
+    /**
+     * Get top-left corner.
+     */
+    get topLeft()
+    {
+        return new Point(this.x, this.y);
+    }
+
+    /**
+     * Get top-right corner.
+     */
+    get topRight()
+    {
+        return new Point(this.x + this.width, this.y);
+    }
         
+    /**
+     * Get bottom-left corner.
+     */
+    get bottomLeft()
+    {
+        return new Point(this.x, this.y + this.height);
+    }
+
+    /**
+     * Get bottom-right corner.
+     */
+    get bottomRight()
+    {
+        return new Point(this.x + this.width, this.y + this.height);
+    }
+
+    /**
+     * Convert to string.
+     */
+    toString() 
+    {
+        return 'Rectangle(' + this.x + ',' + this.y + ',' + this.width + ',' + this.height + ')';
+    }
+
+    /**
+     * Check if rectangle contains a point.
+     */
+    containsPoint(p) 
+    {
+        return p.x >= this.x && p.x <= this.x + this.width && p.y >= this.y && p.y <= this.y + this.height;
+    }
+
+    /**
+     * Check if this rectangle collides with another.
+     */
+    collidesWithOther(other)
+    {
+        var r1 = this;
+        var r2 = other;
+        return !(r2.left > r1.right ||
+                r2.right < r1.left ||
+                r2.top > r1.bottom ||
+                r2.bottom < r1.top);
+    }
+
+    /**
+     * Checks if this rectangle collides with circle.
+     */
+    collidesWithCircle(center, radius) 
+    {
+        // first check if circle center is inside the rectangle - easy case
+        var rect = this;
+        if (rect.containsPoint(center)) {
+            return true;
+        }
+
+        // get rectangle center
+        var rectCenter = rect.getCenter();
+
+        // create a list of lines to check (in the rectangle) based on circle position to rect center
+        var lines = [];
+        if (rectCenter.x > center.x) {
+            lines.push([rect.topLeft, rect.bottomLeft]);
+        } else {
+            lines.push([rect.topRight, rect.bottomRight]);
+        }
+        if (rectCenter.y > center.y) {
+            lines.push([rect.topLeft, rect.topRight]);
+        } else {
+            lines.push([rect.bottomLeft, rect.bottomRight]);
+        }
+
+        // now check intersection between circle and each of the rectangle lines
+        for (var i = 0; i < lines.length; ++i) {
+            var disToLine = _engine.managers.xmath.pointLineDistance(center, lines[i][0], lines[i][1]);
+            if (disToLine <= radius) {
+                return true;
+            }
+        }
+
+        // no collision..
+        return false;
+    }
+
     /**
      * Check if equal to another rect.
      * @param {PintarJS.Rectangle} other Other rectangle to compare to.
@@ -1312,6 +1469,26 @@ class Rectangle
     {
         return other && this.x == other.x && this.y == other.y && this.width == other.width && this.height == other.height;
     }
+}
+
+/**
+ * Build a rectangle from a list of points.
+ */
+Rectangle.fromPoints = function(points)
+{
+    var min_x = points[0].x;
+    var min_y = points[0].y;
+    var max_x = min_x;
+    var max_y = min_y;
+
+    for (var i = 1; i < points.length; ++i) {
+        min_x = Math.min(min_x, points[i].x);
+        min_y = Math.min(min_y, points[i].y);
+        max_x = Math.max(max_x, points[i].x);
+        max_y = Math.max(max_y, points[i].y);
+    }
+
+    return new Rectangle(min_x, min_y, max_x - min_x, max_y - min_y);
 }
 
 // export Rect
@@ -2036,12 +2213,16 @@ class FontTexture
      * @param {String} charsSet String with all the characters to generate (default to whole ASCII range). If you try to render a character that's not in this string, it will draw 'missingCharPlaceholder' instead.
      * @param {Number} maxTextureWidth Max texture width (default to 2048). 
      * @param {Char} missingCharPlaceholder Character to use when trying to render a missing character (defaults to '?').
+     * @param {Boolean} smooth Determine if to smooth text while creating the font texture (defaults to true).
      */
-    constructor(fontName, fontSize, charsSet, maxTextureWidth, missingCharPlaceholder) 
+    constructor(fontName, fontSize, charsSet, maxTextureWidth, missingCharPlaceholder, smooth) 
     {
         // set default missing char placeholder + store it
         missingCharPlaceholder = (missingCharPlaceholder || '?')[0];
         this._placeholderChar = missingCharPlaceholder;
+
+        // default smoothing
+        if (smooth === undefined) smooth = true;
 
         // default max texture size
         maxTextureWidth = maxTextureWidth || 2048;
@@ -2085,6 +2266,11 @@ class FontTexture
         var canvas = document.createElement('canvas');
         canvas.width = textureWidth;
         canvas.height = textureHeight;
+        if (!smooth) {
+            canvas.style.webkitFontSmoothing = "none";
+            canvas.style.fontSmooth = "never";
+            canvas.style.textRendering = "geometricPrecision";
+        }
         var ctx = canvas.getContext('2d');
 
         // set font and white color
@@ -4399,10 +4585,11 @@ class WebGlRenderer extends Renderer
      * @param {String} charsSet String with all the characters to generate (default to whole ASCII range). If you try to render a character that's not in this string, it will draw 'missingCharPlaceholder' instead.
      * @param {Number} maxTextureWidth Max texture width (default to 2048). 
      * @param {Char} missingCharPlaceholder Character to use when trying to render a missing character (defaults to '?').
+     * @param {Boolean} smooth Set if to smooth text (recommended to set false when drawing small texts) (defaults to true).
      */
-    generateFontTexture(fontName, fontSize, charsSet, maxTextureWidth, missingCharPlaceholder) 
+    generateFontTexture(fontName, fontSize, charsSet, maxTextureWidth, missingCharPlaceholder, smooth) 
     {
-        var ret = new FontTexture(fontName, fontSize, charsSet, maxTextureWidth, missingCharPlaceholder);
+        var ret = new FontTexture(fontName, fontSize, charsSet, maxTextureWidth, missingCharPlaceholder, smooth);
         this._fontTextures[fontName] = ret;
         return ret;
     }
@@ -4413,7 +4600,7 @@ class WebGlRenderer extends Renderer
     _getOrCreateFontTexture(fontName)
     {
         if (!this._fontTextures[fontName]) {
-            this.generateFontTexture(fontName, this.fontTextureDefaultSize);
+            this.generateFontTexture(fontName, this.fontTextureDefaultSize, undefined, undefined, undefined, this.smoothText);
         }
         return this._fontTextures[fontName];
     }
@@ -5276,6 +5463,7 @@ class Sprite extends Renderable
         ret.skew = this.skew.clone();
         ret.cacheRelativeSourceRectangle = this.cacheRelativeSourceRectangle;
         ret.applyAntiBleeding = this.applyAntiBleeding;
+        ret.size = this.size.clone();
         this._copyBasics(ret);
         return ret;
     }
