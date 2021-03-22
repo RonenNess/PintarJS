@@ -197,7 +197,7 @@ class Rectangle
 
         // now check intersection between circle and each of the rectangle lines
         for (var i = 0; i < lines.length; ++i) {
-            var disToLine = _engine.managers.xmath.pointLineDistance(center, lines[i][0], lines[i][1]);
+            var disToLine = pointLineDistance(center, lines[i][0], lines[i][1]);
             if (disToLine <= radius) {
                 return true;
             }
@@ -236,6 +236,42 @@ Rectangle.fromPoints = function(points)
 
     return new Rectangle(min_x, min_y, max_x - min_x, max_y - min_y);
 }
+
+
+/**
+ * Get distance between a point and a line segment.
+ * @param {Point} p Point to get distance from.
+ * @param {Point} v Line starting point.
+ * @param {Point} w Line ending point.
+ */
+function pointLineDistance(p, v, w) 
+{
+    var dist2 = function(p1, p2) {
+        var dx = p2.x - p1.x,
+            dy = p2.y - p1.y;
+        return (dx * dx + dy * dy);
+    };
+
+    var distance = function(p1, p2) {
+        var dx = p2.x - p1.x,
+            dy = p2.y - p1.y;
+        return Math.sqrt(dx * dx + dy * dy);
+    };
+
+    var l2 = dist2(v, w);
+    var t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+    if (t < 0) {
+        return distance(p, v);
+    }
+    if (t > 1) {
+        return distance(p, w);
+    }
+    return distance(p, {
+        x: v.x + t * (w.x - v.x),
+        y: v.y + t * (w.y - v.y)
+    });
+}
+
 
 // export Rect
 module.exports = Rectangle;

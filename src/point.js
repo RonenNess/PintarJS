@@ -182,7 +182,7 @@ class Point
      */
     scale(fac) 
     {
-        return new PintarJS.Point(this.x * fac, this.y * fac);
+        return new Point(this.x * fac, this.y * fac);
     }
 }
 
