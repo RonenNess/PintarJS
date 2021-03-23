@@ -65,7 +65,15 @@
 	  textSprite.color = PintarJS.Color.blue();
 	  textSprite.alignment = "right";
 	  pintar.draw(textSprite);
-		  
+		 	  
+	  // text with shadow
+	  textSprite.text = "Text with shadow.";
+	  textSprite.position = new PintarJS.Point(600, 200);
+	  textSprite.shadowColor = new PintarJS.Color(0.35, 0.35, 0.35, 0.35);
+    textSprite.color = PintarJS.Color.green();
+	  textSprite.alignment = "left";
+	  pintar.draw(textSprite);
+
 	  // text with opacity
 	  textSprite.text = "Opacity..";
 	  textSprite.color = new PintarJS.Color(1, 0, 1, 0.25);

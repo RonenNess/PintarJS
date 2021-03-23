@@ -281,6 +281,7 @@ class WebGlRenderer extends Renderer
 
         // create sprite to draw
         var sprite = new Sprite(fontTexture.texture);
+        sprite.blendMode = textSprite.blendMode;
         
         // style properties
         var fillColor = null;
@@ -388,12 +389,22 @@ class WebGlRenderer extends Renderer
             }
         };
 
+        // draw text shadow
+        if (textSprite.shadowColor && textSprite.shadowColor.a > 0) {
+            sprite.blendMode = textSprite.shadowBlendMode;
+            drawText((sprite, position, fillColor, strokeWidth, strokeColor) => 
+            {
+                sprite.color = textSprite.shadowColor;
+                sprite.position.x += textSprite.shadowOffset.x;
+                sprite.position.y += textSprite.shadowOffset.y;
+                this.drawSprite(sprite);
+            });
+            sprite.blendMode = textSprite.blendMode;
+        }
+
         // draw strokes
         drawText((sprite, position, fillColor, strokeWidth, strokeColor) => 
         {
-            // set shader
-            this._setSpritesShaderIfNeeded();
-
             // get width and height
             var width = sprite.width;
             var height = sprite.height;
@@ -409,10 +420,10 @@ class WebGlRenderer extends Renderer
                         var centerPart = sx == 0 && sy == 0;
                         var extraWidth = (centerPart ? strokeWidth : 0);
                         var extraHeight = (centerPart ? strokeWidth : 0);
-                        sprite.width = Math.floor(width + extraWidth);
-                        sprite.height = Math.floor(height + extraHeight);
-                        sprite.position.x = Math.floor(position.x + sx * (strokeWidth / 2.5) - extraWidth / 2);
-                        sprite.position.y = Math.floor(position.y + sy * (strokeWidth / 2.5) - extraHeight / 2);
+                        sprite.width = Math.ceil(width + extraWidth);
+                        sprite.height = Math.ceil(height + extraHeight);
+                        sprite.position.x = Math.floor(position.x + sx * (strokeWidth / 2) - extraWidth / 2);
+                        sprite.position.y = Math.floor(position.y + sy * (strokeWidth / 2) - extraHeight / 2);
                         this.drawSprite(sprite);
                     }   
                 }

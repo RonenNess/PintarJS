@@ -37,6 +37,9 @@ class TextSprite extends Renderable
         this.alignment = this.__getFromOptions(options, 'alignment', TextSprite.defaults.alignment);
         this.strokeWidth = this.__getFromOptions(options, 'strokeWidth', TextSprite.defaults.strokeWidth);
         this.strokeColor = this.__getFromOptions(options, 'strokeColor', TextSprite.defaults.strokeColor);
+        this.shadowColor = this.__getFromOptions(options, 'shadowColor', TextSprite.defaults.shadowColor);
+        this.shadowOffset = this.__getFromOptions(options, 'shadowOffset', TextSprite.defaults.shadowOffset);
+        this.shadowBlendMode = TextSprite.defaults.shadowBlendMode;
         this.useStyleCommands = TextSprite.defaults.useStyleCommands;
         this.extraLineHeight = TextSprite.defaults.extraLineHeight;
         this.tracking = TextSprite.defaults.tracking;
@@ -549,6 +552,9 @@ class TextSprite extends Renderable
         ret.strokeColor = this.strokeColor.clone();
         ret.extraLineHeight = this.extraLineHeight;
         ret.accurateFontSize = this.accurateFontSize;
+        ret.shadowColor = this.shadowColor.clone();
+        ret.shadowOffset = this.shadowOffset.clone();
+        ret.shadowBlendMode = this.shadowBlendMode;
         return ret;
     }
 }
@@ -575,6 +581,9 @@ TextSprite.defaults = {
     lineHeightOffsetFactor: 0,                  // default offset based on line calculated height.
     tracking: 0,                                // default extra spacing between characters.
     extraLineHeight: 0,                         // default extra line height.
+    shadowColor: null,                          // default shadow color.
+    shadowBlendMode: BlendModes.Multiply,       // default shadow blend mode.
+    shadowOffset: new Point(-3, -3),            // default shadow offset
 };
 
 /**

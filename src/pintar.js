@@ -25,7 +25,7 @@ const DefaultShader = require('./renderers/webgl/shaders/default_shader');
 const ShapesShader = require('./renderers/webgl/shaders/shapes_shader');
 
 // current version and author
-const __version__ = "2.1.3";
+const __version__ = "2.1.4";
 const __author__ = "Ronen Ness";
 
 /**

@@ -531,7 +531,7 @@ const DefaultShader = require('./renderers/webgl/shaders/default_shader');
 const ShapesShader = require('./renderers/webgl/shaders/shapes_shader');
 
 // current version and author
-const __version__ = "2.1.3";
+const __version__ = "2.1.4";
 const __author__ = "Ronen Ness";
 
 /**
@@ -4694,6 +4694,7 @@ class WebGlRenderer extends Renderer
 
         // create sprite to draw
         var sprite = new Sprite(fontTexture.texture);
+        sprite.blendMode = textSprite.blendMode;
         
         // style properties
         var fillColor = null;
@@ -4801,12 +4802,22 @@ class WebGlRenderer extends Renderer
             }
         };
 
+        // draw text shadow
+        if (textSprite.shadowColor && textSprite.shadowColor.a > 0) {
+            sprite.blendMode = textSprite.shadowBlendMode;
+            drawText((sprite, position, fillColor, strokeWidth, strokeColor) => 
+            {
+                sprite.color = textSprite.shadowColor;
+                sprite.position.x += textSprite.shadowOffset.x;
+                sprite.position.y += textSprite.shadowOffset.y;
+                this.drawSprite(sprite);
+            });
+            sprite.blendMode = textSprite.blendMode;
+        }
+
         // draw strokes
         drawText((sprite, position, fillColor, strokeWidth, strokeColor) => 
         {
-            // set shader
-            this._setSpritesShaderIfNeeded();
-
             // get width and height
             var width = sprite.width;
             var height = sprite.height;
@@ -4822,10 +4833,10 @@ class WebGlRenderer extends Renderer
                         var centerPart = sx == 0 && sy == 0;
                         var extraWidth = (centerPart ? strokeWidth : 0);
                         var extraHeight = (centerPart ? strokeWidth : 0);
-                        sprite.width = Math.floor(width + extraWidth);
-                        sprite.height = Math.floor(height + extraHeight);
-                        sprite.position.x = Math.floor(position.x + sx * (strokeWidth / 2.5) - extraWidth / 2);
-                        sprite.position.y = Math.floor(position.y + sy * (strokeWidth / 2.5) - extraHeight / 2);
+                        sprite.width = Math.ceil(width + extraWidth);
+                        sprite.height = Math.ceil(height + extraHeight);
+                        sprite.position.x = Math.floor(position.x + sx * (strokeWidth / 2) - extraWidth / 2);
+                        sprite.position.y = Math.floor(position.y + sy * (strokeWidth / 2) - extraHeight / 2);
                         this.drawSprite(sprite);
                     }   
                 }
@@ -5574,6 +5585,9 @@ class TextSprite extends Renderable
         this.alignment = this.__getFromOptions(options, 'alignment', TextSprite.defaults.alignment);
         this.strokeWidth = this.__getFromOptions(options, 'strokeWidth', TextSprite.defaults.strokeWidth);
         this.strokeColor = this.__getFromOptions(options, 'strokeColor', TextSprite.defaults.strokeColor);
+        this.shadowColor = this.__getFromOptions(options, 'shadowColor', TextSprite.defaults.shadowColor);
+        this.shadowOffset = this.__getFromOptions(options, 'shadowOffset', TextSprite.defaults.shadowOffset);
+        this.shadowBlendMode = TextSprite.defaults.shadowBlendMode;
         this.useStyleCommands = TextSprite.defaults.useStyleCommands;
         this.extraLineHeight = TextSprite.defaults.extraLineHeight;
         this.tracking = TextSprite.defaults.tracking;
@@ -6086,6 +6100,9 @@ class TextSprite extends Renderable
         ret.strokeColor = this.strokeColor.clone();
         ret.extraLineHeight = this.extraLineHeight;
         ret.accurateFontSize = this.accurateFontSize;
+        ret.shadowColor = this.shadowColor.clone();
+        ret.shadowOffset = this.shadowOffset.clone();
+        ret.shadowBlendMode = this.shadowBlendMode;
         return ret;
     }
 }
@@ -6112,6 +6129,9 @@ TextSprite.defaults = {
     lineHeightOffsetFactor: 0,                  // default offset based on line calculated height.
     tracking: 0,                                // default extra spacing between characters.
     extraLineHeight: 0,                         // default extra line height.
+    shadowColor: null,                          // default shadow color.
+    shadowBlendMode: BlendModes.Multiply,       // default shadow blend mode.
+    shadowOffset: new Point(-3, -3),            // default shadow offset
 };
 
 /**

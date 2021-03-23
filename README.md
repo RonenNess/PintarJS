@@ -532,6 +532,32 @@ Text stroke color:
 text.strokeColor = PintarJS.Color.blue();
 ```
 
+#### text.shadowColor
+
+Text shadow color:
+
+```javascript
+text.shadowColor = PintarJS.Color.blue();
+```
+
+This property defaults to null, ie no shadow.
+
+#### text.shadowOffset
+
+Text shadow offset:
+
+```javascript
+text.shadowOffset = new PintarJS.Point(-5, -5);
+```
+
+#### text.shadowBlendMode
+
+Text shadow blend mode (defaults to multiply):
+
+```javascript
+text.shadowBlendMode = PintarJS.BlendModes.Multiply;
+```
+
 #### Text Defaults
 
 Similar to with Sprites, Text Sprites got defaults dictionary as well you can set to control default values when creating new text sprites - `PintarJS.TextSprite.defaults`. To learn more, check out the keys contained in the defaults dictionary.
@@ -977,6 +1003,11 @@ pintar.adjustToParentSize();
 - Fixed sprite clone() to also copy size.
 - Better handling crisp font texture (smoothText = false).
 - Added `sourceFontSize` property to text sprite. 
+
+### 2.1.4
+
+- Improved text stroke.
+- Added text shadow.
 
 ## License
 
