@@ -11,6 +11,7 @@ const Point = require('./../../point');
 const Sprite = require('./../../sprite');
 const TextSprite = require('./../../text_sprite');
 const BlendModes = require('../../blend_modes');
+const WrapModes = require('../../wrap_modes');
 const Viewport = require('./../../viewport');
 const Rectangle = require('./../../rectangle');
 const DefaultShader = require('./shaders/default_shader');
@@ -59,6 +60,12 @@ class WebGlRenderer extends Renderer
         this.smoothText = true;
         this._fontTextures = {};
 
+        // convert enum to gl wrap modes
+        this._wrapEnumToGl = {};
+        this._wrapEnumToGl[WrapModes.Clamp] = this._gl.CLAMP_TO_EDGE;
+        this._wrapEnumToGl[WrapModes.Repeat] = this._gl.REPEAT;
+        this._wrapEnumToGl[WrapModes.RepeatMirrored] = this._gl.MIRRORED_REPEAT;
+
         // ready!
         PintarConsole.debug("WebGL renderer ready!");
     }
@@ -77,6 +84,24 @@ class WebGlRenderer extends Renderer
 
         // Update size
         this._onResize();
+    }
+
+    /**
+     * Set the default sprites shader, or null to use the built-in default.
+     */
+    setDefaultSpriteShader(shader)
+    {
+        this._defaultSpritesShader = shader || new DefaultShader();
+        this.shader = null;
+    }
+
+    /**
+     * Set the default shapes shader, or null to use the built-in default.
+     */
+    setDefaultShapesShader(shader)
+    {
+        this._defaultShapesShader = shader || new ShapesShader();
+        this.shader = null;
     }
 
     /**
@@ -476,11 +501,30 @@ class WebGlRenderer extends Renderer
                 var gltexture = texture._glTextures[textureMode];
                 gl.bindTexture(gl.TEXTURE_2D, gltexture);
             }
-
-            // init texture params
-            gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE );
-            gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE );
         }
+    }
+
+    /**
+     * Set texture wrapping properties
+     */
+    _setWrapModes(wrapX, wrapY)
+    {
+        var gl = this._gl;
+        if (this._wrapX !== wrapX) {
+            this._wrapX = wrapX;
+            wrapX = this._wrapEnumToGl[wrapX];
+            gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrapX );
+        }
+        if (this._wrapY !== wrapY) {
+            this._wrapY = wrapY;
+            wrapY = this._wrapEnumToGl[wrapY];
+            gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrapY );
+        }
+    }
+
+    setWrapVertically(wrap)
+    {
+
     }
 
     /**
@@ -617,6 +661,9 @@ class WebGlRenderer extends Renderer
         // set texture
         var textureMode = this._calcTextureMode(sprite);
         this._setTexture(sprite.texture, textureMode);
+
+        // set wrap modes
+        this._setWrapModes(sprite.wrapX, sprite.wrapY);
         
         // set smoothing mode
         this._setSmoothingEnabled(sprite.smoothingEnabled);

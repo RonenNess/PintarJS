@@ -7,12 +7,12 @@
     <link href="style.css" rel="stylesheet" type="text/css" media="all">
   </head>
   <body>
-    <div class="container container-int">
+    <div style="position:fixed; width:100%; height:100%; display:block;">
       <br />
-      <div style="position: fixed; z-index: 1009">
-        <h1>Example 6: Resolution</h1>
-        <p>PintarJS can help you maintain a constant rendering resolution. Due to browser limitations and the fact that users can control the window size, you can't really set both X and Y resolution, you must either set resolution width or height, and PintarJS will adjust the other axis accordingly to maintain a 1:1 ratio.<br/><br/>
-          In this example, we lock width to 800px resolution, which means our rendering width will always be 800, and height will vary based on browser size.</p> <br /><br />
+      <div style="position:fixed; z-index:1009; margin-left:10px;">
+        <h1>Example 6: Fixed Resolution</h1>
+        <p>This demo demonstrate how to make PintarJS work with internal fixed resolution.<br />
+        The canvas size is fixed to 800x600, and it will be stretched to take as much of its *parent* size as possible, while keeping the correct ratio and placing the canvas in center.</p> <br /><br />
       </div>
 
       <canvas></canvas>
@@ -26,20 +26,22 @@
     // set default renderer
     var mode = location.search.substr(1).split('?')[0];
     PintarJS.DefaultRenderers = PintarJS.Renderers[mode] || PintarJS.DefaultRenderers;
-    
+
     // initialize pintar
     var pintar = new PintarJS();
-    pintar.clearColor = PintarJS.Color.lavender();
     PintarJS.Sprite.defaults.smoothingEnabled = false;
-    pintar.makeFullscreen();
+    pintar.clearColor = PintarJS.Color.lavender();
     pintar.makePixelatedScaling();
-    pintar.fixedResolutionX = 800;
     var texture = new PintarJS.Texture("imgs/necro.png");
     var sprite = new PintarJS.Sprite(texture, new PintarJS.Point(400, 200), {scale: new PintarJS.Point(2, 2)});
+
 
     // set a function to animate sprites and redraw
     function drawSprites()
     {
+      // adjust resolution
+      pintar.resizeAndCenter(800, 600);
+
       // start frame
       pintar.startFrame();
 

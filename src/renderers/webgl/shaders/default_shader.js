@@ -27,6 +27,8 @@ uniform vec2 u_rotation;
 uniform vec2 u_origin;
 uniform vec2 u_skew;
 
+__vertex_shader_extra_uniforms__
+
 // output texture coord
 varying vec2 v_texCoord;
 
@@ -36,6 +38,8 @@ void main()
     __vertex_shader_position_calc__
 
     __vertex_shader_texture_coord_calc__
+
+    __vertex_shader_extra__
 }
 `;
 
@@ -52,6 +56,8 @@ uniform vec4 u_colorBooster;
 
 // the texCoords passed in from the vertex shader.
 varying vec2 v_texCoord;
+
+__fragment_shader_extra_uniforms__
 
 // main fragment shader func
 void main() 
@@ -109,6 +115,22 @@ class DefaultShader extends ShaderBase
     }
 
     /**
+     * Extra vertex shader code to add in the end.
+     */
+    get vertexShaderExtra()
+    {
+        return '';
+    }
+
+    /**
+     * Optional additional uniforms to add.
+     */
+    get vertexShaderAdditionalUniforms()
+    {
+        return '';
+    }
+
+    /**
      * Get the fragment shader code that handle textures.
      */
     get fragmentShaderTextureCode()
@@ -130,13 +152,23 @@ class DefaultShader extends ShaderBase
     }
 
     /**
+     * Optional additional uniforms to add.
+     */
+    get fragmentShaderAdditionalUniforms()
+    {
+        return '';
+    }
+
+    /**
      * Return vertex shader code.
      */
     get vertexShaderCode()
     {
         return vsSource
         .replace("__vertex_shader_position_calc__", this.vertexShaderPositionCode)
-        .replace("__vertex_shader_texture_coord_calc__", this.haveTexture ? this.vertexShaderTextureCoordCode : "");
+        .replace("__vertex_shader_texture_coord_calc__", this.haveTexture ? this.vertexShaderTextureCoordCode : "")
+        .replace("__vertex_shader_extra__", this.vertexShaderExtra)
+        .replace("__vertex_shader_extra_uniforms__", this.vertexShaderAdditionalUniforms);
     }
     
     /**
@@ -145,7 +177,8 @@ class DefaultShader extends ShaderBase
     get fragmentShaderCode()
     {
         return fsSource
-            .replace("__fragment_shader_color__", this.haveTexture ? this.fragmentShaderTextureCode : this.fragmentShaderNoTextureCode);
+            .replace("__fragment_shader_color__", this.haveTexture ? this.fragmentShaderTextureCode : this.fragmentShaderNoTextureCode)
+            .replace("__fragment_shader_extra_uniforms__", this.fragmentShaderAdditionalUniforms);
     }
 
     /**
@@ -175,7 +208,6 @@ class DefaultShader extends ShaderBase
         var y = -renderable.position.y + viewport.offset.y;
         var width = renderable.width * renderable.scale.x;
         var height = renderable.height * renderable.scale.y;
-        //if (flipY) { y -= height * (1 - renderable.origin.y); }
         this.setUniform2f(this.uniforms.u_offset, x, y);
         this.setUniform2f(this.uniforms.u_size, width, height * flipY);
         
@@ -196,7 +228,7 @@ class DefaultShader extends ShaderBase
         this.setUniform2f(this.uniforms.u_rotation, rotation.x, rotation.y)
 
         // set origin
-        this.setUniform2f(this.uniforms.u_origin, renderable.origin.x, flipY ? renderable.origin.y : (1 - renderable.origin.y))
+        this.setUniform2f(this.uniforms.u_origin, renderable.origin.x, flipY === 1 ? renderable.origin.y : (1 - renderable.origin.y))
     }
 };
 

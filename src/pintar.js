@@ -15,6 +15,7 @@ const Color = require('./color');
 const Renderers = require('./renderers');
 const Texture = require('./texture');
 const BlendModes = require('./blend_modes');
+const WrapModes = require('./wrap_modes');
 const Viewport = require('./viewport');
 const PintarConsole = require('./console');
 const ColoredRectangle = require('./colored_rectangle');
@@ -25,7 +26,7 @@ const DefaultShader = require('./renderers/webgl/shaders/default_shader');
 const ShapesShader = require('./renderers/webgl/shaders/shapes_shader');
 
 // current version and author
-const __version__ = "2.1.4";
+const __version__ = "2.1.5";
 const __author__ = "Ronen Ness";
 
 /**
@@ -98,6 +99,7 @@ class PintarJS
                 break;
             }
             catch (err) {
+                PintarConsole.warn("Error: " + err);
                 PintarConsole.warn("Failed to init renderer, try fallback to next type..");
             }
         }    
@@ -244,6 +246,47 @@ class PintarJS
 
         // add curr fps count
         this._currFps++;
+    }
+
+    /**
+     * Set the canvas to a desired resolution, and stretch it on screen as much as possible while maintaining ratio.
+     * @param {Number} width Desired width.
+     * @param {Number} height Desired height.
+     */
+    resizeAndCenter(width, height)
+    {
+        // sanity
+        if (this.fixedResolutionX || this.fixedResolutionY || this.matchCanvasSizeToBounds) {
+            throw new Error("Cannot set resolution while fixedResolutionX, fixedResolutionY or matchCanvasSizeToBounds is set!");
+        }
+
+        // get canvas
+        var _canvas = this._canvas;
+
+        // set width and height, if changed
+        if (_canvas.width != width) { _canvas.width = width; }
+        if (_canvas.height != height) { _canvas.height = height; }
+
+        // get bounding width and height
+        var deviceWidth = _canvas.parentElement.clientWidth;
+        var deviceHeight = _canvas.parentElement.clientHeight;
+
+        // set canvas dest size to match resolution
+        _canvas.style.width = _canvas.width + 'px';
+        _canvas.style.height = _canvas.height + 'px';
+
+        // set correct position
+        if (_canvas.style.position !== 'absolute' && _canvas.style.position !== 'fixed') {
+            PintarConsole.warn("To set canvas resolution properly canvas should have 'fixed' or 'absolute' positioning. Change position from '" + _canvas.style.position + "' to 'absolute'.");
+            _canvas.style.position = 'absolute';
+        }
+
+        // set scale
+        var scaleFitNative = Math.min(deviceWidth / _canvas.width, deviceHeight / _canvas.height);
+        _canvas.style.transform = "scale(" + scaleFitNative + ")";
+        _canvas.style.transformOrigin = "top left";
+        _canvas.style.left = Math.round((deviceWidth - _canvas.width * scaleFitNative) / 2) + 'px';
+        _canvas.style.top = Math.round((deviceHeight - _canvas.height * scaleFitNative) / 2) + 'px';
     }
 
     /**
@@ -463,6 +506,7 @@ PintarJS.Pixel = Pixel;
 PintarJS.ShaderBase = ShaderBase;
 PintarJS.DefaultShader = DefaultShader;
 PintarJS.ShapesShader = ShapesShader;
+PintarJS.WrapModes = WrapModes;
 
 // show version
 PintarJS._version = __version__;

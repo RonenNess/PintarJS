@@ -521,6 +521,7 @@ const Color = require('./color');
 const Renderers = require('./renderers');
 const Texture = require('./texture');
 const BlendModes = require('./blend_modes');
+const WrapModes = require('./wrap_modes');
 const Viewport = require('./viewport');
 const PintarConsole = require('./console');
 const ColoredRectangle = require('./colored_rectangle');
@@ -531,7 +532,7 @@ const DefaultShader = require('./renderers/webgl/shaders/default_shader');
 const ShapesShader = require('./renderers/webgl/shaders/shapes_shader');
 
 // current version and author
-const __version__ = "2.1.4";
+const __version__ = "2.1.5";
 const __author__ = "Ronen Ness";
 
 /**
@@ -604,6 +605,7 @@ class PintarJS
                 break;
             }
             catch (err) {
+                PintarConsole.warn("Error: " + err);
                 PintarConsole.warn("Failed to init renderer, try fallback to next type..");
             }
         }    
@@ -750,6 +752,47 @@ class PintarJS
 
         // add curr fps count
         this._currFps++;
+    }
+
+    /**
+     * Set the canvas to a desired resolution, and stretch it on screen as much as possible while maintaining ratio.
+     * @param {Number} width Desired width.
+     * @param {Number} height Desired height.
+     */
+    resizeAndCenter(width, height)
+    {
+        // sanity
+        if (this.fixedResolutionX || this.fixedResolutionY || this.matchCanvasSizeToBounds) {
+            throw new Error("Cannot set resolution while fixedResolutionX, fixedResolutionY or matchCanvasSizeToBounds is set!");
+        }
+
+        // get canvas
+        var _canvas = this._canvas;
+
+        // set width and height, if changed
+        if (_canvas.width != width) { _canvas.width = width; }
+        if (_canvas.height != height) { _canvas.height = height; }
+
+        // get bounding width and height
+        var deviceWidth = _canvas.parentElement.clientWidth;
+        var deviceHeight = _canvas.parentElement.clientHeight;
+
+        // set canvas dest size to match resolution
+        _canvas.style.width = _canvas.width + 'px';
+        _canvas.style.height = _canvas.height + 'px';
+
+        // set correct position
+        if (_canvas.style.position !== 'absolute' && _canvas.style.position !== 'fixed') {
+            PintarConsole.warn("To set canvas resolution properly canvas should have 'fixed' or 'absolute' positioning. Change position from '" + _canvas.style.position + "' to 'absolute'.");
+            _canvas.style.position = 'absolute';
+        }
+
+        // set scale
+        var scaleFitNative = Math.min(deviceWidth / _canvas.width, deviceHeight / _canvas.height);
+        _canvas.style.transform = "scale(" + scaleFitNative + ")";
+        _canvas.style.transformOrigin = "top left";
+        _canvas.style.left = Math.round((deviceWidth - _canvas.width * scaleFitNative) / 2) + 'px';
+        _canvas.style.top = Math.round((deviceHeight - _canvas.height * scaleFitNative) / 2) + 'px';
     }
 
     /**
@@ -969,6 +1012,7 @@ PintarJS.Pixel = Pixel;
 PintarJS.ShaderBase = ShaderBase;
 PintarJS.DefaultShader = DefaultShader;
 PintarJS.ShapesShader = ShapesShader;
+PintarJS.WrapModes = WrapModes;
 
 // show version
 PintarJS._version = __version__;
@@ -978,7 +1022,7 @@ PintarConsole.log("PintarJS v" + __version__ + " ready! 🎨");
 // export main module
 module.exports = PintarJS;
 
-},{"./blend_modes":1,"./color":2,"./colored_line":3,"./colored_rectangle":4,"./console":5,"./pixel":7,"./point":8,"./rectangle":9,"./renderers":14,"./renderers/webgl/shaders/default_shader":18,"./renderers/webgl/shaders/shader_base":19,"./renderers/webgl/shaders/shapes_shader":20,"./sprite":24,"./text_sprite":25,"./texture":26,"./viewport":27}],7:[function(require,module,exports){
+},{"./blend_modes":1,"./color":2,"./colored_line":3,"./colored_rectangle":4,"./console":5,"./pixel":7,"./point":8,"./rectangle":9,"./renderers":14,"./renderers/webgl/shaders/default_shader":18,"./renderers/webgl/shaders/shader_base":19,"./renderers/webgl/shaders/shapes_shader":20,"./sprite":24,"./text_sprite":25,"./texture":26,"./viewport":27,"./wrap_modes":28}],7:[function(require,module,exports){
 const PintarJS = require("./pintar");
 
 /**
@@ -2421,6 +2465,8 @@ uniform vec2 u_rotation;
 uniform vec2 u_origin;
 uniform vec2 u_skew;
 
+__vertex_shader_extra_uniforms__
+
 // output texture coord
 varying vec2 v_texCoord;
 
@@ -2430,6 +2476,8 @@ void main()
     __vertex_shader_position_calc__
 
     __vertex_shader_texture_coord_calc__
+
+    __vertex_shader_extra__
 }
 `;
 
@@ -2446,6 +2494,8 @@ uniform vec4 u_colorBooster;
 
 // the texCoords passed in from the vertex shader.
 varying vec2 v_texCoord;
+
+__fragment_shader_extra_uniforms__
 
 // main fragment shader func
 void main() 
@@ -2503,6 +2553,22 @@ class DefaultShader extends ShaderBase
     }
 
     /**
+     * Extra vertex shader code to add in the end.
+     */
+    get vertexShaderExtra()
+    {
+        return '';
+    }
+
+    /**
+     * Optional additional uniforms to add.
+     */
+    get vertexShaderAdditionalUniforms()
+    {
+        return '';
+    }
+
+    /**
      * Get the fragment shader code that handle textures.
      */
     get fragmentShaderTextureCode()
@@ -2524,13 +2590,23 @@ class DefaultShader extends ShaderBase
     }
 
     /**
+     * Optional additional uniforms to add.
+     */
+    get fragmentShaderAdditionalUniforms()
+    {
+        return '';
+    }
+
+    /**
      * Return vertex shader code.
      */
     get vertexShaderCode()
     {
         return vsSource
         .replace("__vertex_shader_position_calc__", this.vertexShaderPositionCode)
-        .replace("__vertex_shader_texture_coord_calc__", this.haveTexture ? this.vertexShaderTextureCoordCode : "");
+        .replace("__vertex_shader_texture_coord_calc__", this.haveTexture ? this.vertexShaderTextureCoordCode : "")
+        .replace("__vertex_shader_extra__", this.vertexShaderExtra)
+        .replace("__vertex_shader_extra_uniforms__", this.vertexShaderAdditionalUniforms);
     }
     
     /**
@@ -2539,7 +2615,8 @@ class DefaultShader extends ShaderBase
     get fragmentShaderCode()
     {
         return fsSource
-            .replace("__fragment_shader_color__", this.haveTexture ? this.fragmentShaderTextureCode : this.fragmentShaderNoTextureCode);
+            .replace("__fragment_shader_color__", this.haveTexture ? this.fragmentShaderTextureCode : this.fragmentShaderNoTextureCode)
+            .replace("__fragment_shader_extra_uniforms__", this.fragmentShaderAdditionalUniforms);
     }
 
     /**
@@ -2569,7 +2646,6 @@ class DefaultShader extends ShaderBase
         var y = -renderable.position.y + viewport.offset.y;
         var width = renderable.width * renderable.scale.x;
         var height = renderable.height * renderable.scale.y;
-        //if (flipY) { y -= height * (1 - renderable.origin.y); }
         this.setUniform2f(this.uniforms.u_offset, x, y);
         this.setUniform2f(this.uniforms.u_size, width, height * flipY);
         
@@ -2590,7 +2666,7 @@ class DefaultShader extends ShaderBase
         this.setUniform2f(this.uniforms.u_rotation, rotation.x, rotation.y)
 
         // set origin
-        this.setUniform2f(this.uniforms.u_origin, renderable.origin.x, flipY ? renderable.origin.y : (1 - renderable.origin.y))
+        this.setUniform2f(this.uniforms.u_origin, renderable.origin.x, flipY === 1 ? renderable.origin.y : (1 - renderable.origin.y))
     }
 };
 
@@ -4424,6 +4500,7 @@ const Point = require('./../../point');
 const Sprite = require('./../../sprite');
 const TextSprite = require('./../../text_sprite');
 const BlendModes = require('../../blend_modes');
+const WrapModes = require('../../wrap_modes');
 const Viewport = require('./../../viewport');
 const Rectangle = require('./../../rectangle');
 const DefaultShader = require('./shaders/default_shader');
@@ -4472,6 +4549,12 @@ class WebGlRenderer extends Renderer
         this.smoothText = true;
         this._fontTextures = {};
 
+        // convert enum to gl wrap modes
+        this._wrapEnumToGl = {};
+        this._wrapEnumToGl[WrapModes.Clamp] = this._gl.CLAMP_TO_EDGE;
+        this._wrapEnumToGl[WrapModes.Repeat] = this._gl.REPEAT;
+        this._wrapEnumToGl[WrapModes.RepeatMirrored] = this._gl.MIRRORED_REPEAT;
+
         // ready!
         PintarConsole.debug("WebGL renderer ready!");
     }
@@ -4490,6 +4573,24 @@ class WebGlRenderer extends Renderer
 
         // Update size
         this._onResize();
+    }
+
+    /**
+     * Set the default sprites shader, or null to use the built-in default.
+     */
+    setDefaultSpriteShader(shader)
+    {
+        this._defaultSpritesShader = shader || new DefaultShader();
+        this.shader = null;
+    }
+
+    /**
+     * Set the default shapes shader, or null to use the built-in default.
+     */
+    setDefaultShapesShader(shader)
+    {
+        this._defaultShapesShader = shader || new ShapesShader();
+        this.shader = null;
     }
 
     /**
@@ -4889,11 +4990,30 @@ class WebGlRenderer extends Renderer
                 var gltexture = texture._glTextures[textureMode];
                 gl.bindTexture(gl.TEXTURE_2D, gltexture);
             }
-
-            // init texture params
-            gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE );
-            gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE );
         }
+    }
+
+    /**
+     * Set texture wrapping properties
+     */
+    _setWrapModes(wrapX, wrapY)
+    {
+        var gl = this._gl;
+        if (this._wrapX !== wrapX) {
+            this._wrapX = wrapX;
+            wrapX = this._wrapEnumToGl[wrapX];
+            gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrapX );
+        }
+        if (this._wrapY !== wrapY) {
+            this._wrapY = wrapY;
+            wrapY = this._wrapEnumToGl[wrapY];
+            gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrapY );
+        }
+    }
+
+    setWrapVertically(wrap)
+    {
+
     }
 
     /**
@@ -5030,6 +5150,9 @@ class WebGlRenderer extends Renderer
         // set texture
         var textureMode = this._calcTextureMode(sprite);
         this._setTexture(sprite.texture, textureMode);
+
+        // set wrap modes
+        this._setWrapModes(sprite.wrapX, sprite.wrapY);
         
         // set smoothing mode
         this._setSmoothingEnabled(sprite.smoothingEnabled);
@@ -5162,7 +5285,7 @@ class WebGlRenderer extends Renderer
 
 // export WebGlRenderer
 module.exports = WebGlRenderer;
-},{"../../blend_modes":1,"../../render_target":10,"./../../console":5,"./../../point":8,"./../../rectangle":9,"./../../sprite":24,"./../../text_sprite":25,"./../../viewport":27,"./../renderer":15,"./font_texture":16,"./shaders/default_shader":18,"./shaders/shapes_shader":20}],23:[function(require,module,exports){
+},{"../../blend_modes":1,"../../render_target":10,"../../wrap_modes":28,"./../../console":5,"./../../point":8,"./../../rectangle":9,"./../../sprite":24,"./../../text_sprite":25,"./../../viewport":27,"./../renderer":15,"./font_texture":16,"./shaders/default_shader":18,"./shaders/shapes_shader":20}],23:[function(require,module,exports){
 /**
  * file: webgl.js
  * description: Implement webgl renderer.
@@ -5298,6 +5421,7 @@ const Point = require('./point');
 const Color = require('./color');
 const Rectangle = require('./rectangle');
 const BlendModes = require('./blend_modes');
+const WrapModes = require('./wrap_modes');
 
 // radians / degrees factor
 const degreesToRadFactor = (Math.PI / 180.0);
@@ -5332,6 +5456,8 @@ class Sprite extends Renderable
             options.color || Sprite.defaults.color, 
             options.blendMode !== undefined ? options.blendMode : Sprite.defaults.blendMode);
         
+        this.wrapX = options.wrapX !== undefined ? options.wrapX : Sprite.defaults.wrapX;
+        this.wrapY = options.wrapY !== undefined ? options.wrapY : Sprite.defaults.wrapY;
         this.texture = texture;
         var size = this.__getFromOptions(options, 'size', Sprite.defaults.size);
         this.size = new Point(size.x, size.y);
@@ -5525,6 +5651,8 @@ class Sprite extends Renderable
         ret.cacheRelativeSourceRectangle = this.cacheRelativeSourceRectangle;
         ret.applyAntiBleeding = this.applyAntiBleeding;
         ret.size = this.size.clone();
+        ret.wrapX = this.wrapX;
+        ret.wrapY = this.wrapY;
         this._copyBasics(ret);
         return ret;
     }
@@ -5541,11 +5669,13 @@ Sprite.defaults = {
     colorBoost: Color.transparent(),
     applyAntiBleeding: false,
     size: new Point(64, 64),
+    wrapX: WrapModes.Clamp,
+    wrapY: WrapModes.Clamp,
 }
 
 // export Sprite
 module.exports = Sprite;
-},{"./blend_modes":1,"./color":2,"./point":8,"./rectangle":9,"./renderable":11}],25:[function(require,module,exports){
+},{"./blend_modes":1,"./color":2,"./point":8,"./rectangle":9,"./renderable":11,"./wrap_modes":28}],25:[function(require,module,exports){
 /**
  * file: text_sprite.js
  * description: A drawable text sprite.
@@ -6349,5 +6479,21 @@ class Viewport
 
 // export Viewport
 module.exports = Viewport;
-},{"./point":8}]},{},[6])(6)
+},{"./point":8}],28:[function(require,module,exports){
+/**
+ * file: wrap_modes.js
+ * description: Define wrap modes enum.
+ * author: Ronen Ness.
+ * since: 2021.
+ */
+"use strict";
+
+
+// export blend modes
+module.exports = {
+    Clamp: "clamp",
+    Repeat: "repeat",
+    RepeatMirrored: "repeat-mirrored",
+};
+},{}]},{},[6])(6)
 });

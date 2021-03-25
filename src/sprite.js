@@ -10,6 +10,7 @@ const Point = require('./point');
 const Color = require('./color');
 const Rectangle = require('./rectangle');
 const BlendModes = require('./blend_modes');
+const WrapModes = require('./wrap_modes');
 
 // radians / degrees factor
 const degreesToRadFactor = (Math.PI / 180.0);
@@ -44,6 +45,8 @@ class Sprite extends Renderable
             options.color || Sprite.defaults.color, 
             options.blendMode !== undefined ? options.blendMode : Sprite.defaults.blendMode);
         
+        this.wrapX = options.wrapX !== undefined ? options.wrapX : Sprite.defaults.wrapX;
+        this.wrapY = options.wrapY !== undefined ? options.wrapY : Sprite.defaults.wrapY;
         this.texture = texture;
         var size = this.__getFromOptions(options, 'size', Sprite.defaults.size);
         this.size = new Point(size.x, size.y);
@@ -237,6 +240,8 @@ class Sprite extends Renderable
         ret.cacheRelativeSourceRectangle = this.cacheRelativeSourceRectangle;
         ret.applyAntiBleeding = this.applyAntiBleeding;
         ret.size = this.size.clone();
+        ret.wrapX = this.wrapX;
+        ret.wrapY = this.wrapY;
         this._copyBasics(ret);
         return ret;
     }
@@ -253,6 +258,8 @@ Sprite.defaults = {
     colorBoost: Color.transparent(),
     applyAntiBleeding: false,
     size: new Point(64, 64),
+    wrapX: WrapModes.Clamp,
+    wrapY: WrapModes.Clamp,
 }
 
 // export Sprite

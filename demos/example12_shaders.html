@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>PintarJS - Demos</title>
+    <script src="../dist/pintar.js"></script>
+    <link href="style.css" rel="stylesheet" type="text/css" media="all">
+  </head>
+  <body>
+    <div class="container container-int">
+      <br />
+      <h1>Example 12: Shaders</h1>
+      <p>This example shows how to draw with custom effects (shaders).<br/>
+      Only work with WebGL renderer.</p> <br /><br />
+
+      <div style="display:block; height:100%;width:100%;">
+        <canvas></canvas>
+      </div>
+    </div>
+
+  </body>
+  <script>
+    // enable debug mode
+    //PintarJS.enableDebugMessages();
+
+    // set default renderer
+    var mode = location.search.substr(1).split('?')[0];
+    PintarJS.DefaultRenderers = PintarJS.Renderers[mode] || PintarJS.DefaultRenderers;
+
+    // initialize pintar
+    var pintar = new PintarJS();
+    pintar.clearColor = PintarJS.Color.lavender();
+
+    // adjust size
+    pintar.adjustToParentSize();
+    window.onresize = () => {
+      pintar.adjustToParentSize();
+    };
+
+    // time passed
+    var deltaTime = 0;
+
+    // set our custom shader
+    class MyShader extends PintarJS.DefaultShader
+    {
+      get vertexShaderExtra()
+      {
+          return `v_texCoord.x += sin(gl_Position.y * u_deltaTime) * 0.2 + rand(gl_Position.xy);`;
+      }
+
+      get uniformNames()
+      {
+          return ["u_deltaTime", "u_resolution", "u_offset", "u_size", "u_skew", "u_textureOffset", "u_textureSize", "u_color", "u_colorBooster", "u_rotation", "u_origin"];
+      }
+
+      get vertexShaderAdditionalUniforms()
+      {
+        return `uniform float u_deltaTime;
+        float rand(vec2 co){
+            return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+        }
+        `;
+      }
+
+      prepare(renderable, viewport)
+      {
+        super.prepare(renderable, viewport);
+        this.setUniformf(this.uniforms.u_deltaTime, deltaTime);
+        deltaTime += 0.1;
+      }
+    }
+    pintar._renderer.setDefaultSpriteShader(new MyShader());
+
+    // load texture and set callback to invoke when ready
+    var texture = new PintarJS.Texture("imgs/mountains.png", () => {  
+
+      // create a test sprite
+      var sprite = new PintarJS.Sprite(texture);
+      sprite.smoothingEnabled = false;
+      sprite.size.set(texture.width, texture.height);
+      sprite.origin.set(0, 0);
+      sprite.wrapX = PintarJS.WrapModes.Wrap;
+
+      // draw shapes
+      var effect = 0;
+      function drawShapes()
+      {
+        // start frame
+        pintar.startFrame();
+
+        // draw sprite
+        pintar.draw(sprite);
+
+        // end frame
+        pintar.endFrame();
+      }
+
+      // draw shapes
+      setInterval(drawShapes, 1000 / 24);
+  });
+
+  </script>
+</html>

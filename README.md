@@ -86,6 +86,7 @@ Or you can download `dist/pinter.js` and include in your HTML file.
         - Subtract
         - Screen
         - Overlay
+    - Wrap modes
     - Viewport
         - Drawing region
         - Offset
@@ -94,7 +95,7 @@ Or you can download `dist/pinter.js` and include in your HTML file.
         - Scale
         - Flip
         - Skew
-    - Source rectangle from spritesheet
+    - Spritesheets
 - Custom shaders
 - Built-in UI plugin
 - Fixed resolution
@@ -271,6 +272,18 @@ sprite.blendMode = PintarJS.BlendModes.Additive;       // add sprite colors to t
 sprite.blendMode = PintarJS.BlendModes.Multiply;       // multiply sprite colors with the colors below - useful for shadows
 // to see more modes, check out the options in 'PintarJS.BlendModes'
 ```
+
+#### sprite.wrapX / sprite.wrapY
+
+What to do when source rectangle exceed texture boundaries on X and Y axis. Options are:
+
+```javascript
+sprite.wrapX = PintarJS.WrapModes.Clamp;                // will repeat edge pixels 
+sprite.wrapX = PintarJS.WrapModes.Repeat;               // will repeat texture from the other side
+sprite.wrapX = PintarJS.WrapModes.RepeatMirrored;   // will mirror and repeat texture
+```
+
+Note: wrapping only works with WebGL renderer.
 
 #### sprite.scale
 
@@ -767,7 +780,7 @@ Last thing you need to set is `prepare(renderable, viewport)`, which is a method
 
 You can also override the `draw()` method if you want to change how it renders completely.
 
-#### Wait where are the vertices?
+#### Where are the vertices?
 
 You probably wonder where do we actually set the vertices to draw in all this.
 
@@ -776,7 +789,7 @@ The answer is that every shader will create a default buffer with 4 vertices, fo
 If you want to change this behavior, you'll need to override the init() and draw() methods, and there you can create and use your own buffers the way you see fit.
 
 
-#### Using the default shader as base
+#### Extending Default Shaders
 
 You can also use the default sprites shader as a base class for your shader, and override just specific parts of it:
 
@@ -851,6 +864,17 @@ uniform vec4 u_colorBooster;
 varying vec2 v_texCoord;
 ```
 
+#### Setting Default Shaders
+
+You can override the default shaders used to draw shapes and sprites:
+
+```javascript
+pintar.setDefaultSpriteShader(mySpritesShader);
+pintar.setDefaultShapesShader(myShapesShader);
+```
+
+Once set, PintarJS will automatically enable your custom shaders when it need to draw sprites or shapes. To restore the default built-in shaders, set these to null.
+
 ### Extras
 
 #### Render Targets
@@ -881,7 +905,11 @@ And once your texture is ready, you can use it with sprites, just as you would w
 PintarJS can help you set a constant resolution.
 Note that because you have no control over the browser size (and users can change it at runtime), setting the "resolution" don't work the same as with desktop apps.
 
-In this case, you either set desired width or desired height, and PintarJS will adjust the canvas' other dimention to match this size whild keeping 1:1 ratio.
+##### FixedResolutionX / FixedResolutionY
+
+One option to control resolution is with the `fixedResolutionX` and `fixedResolutionY` flags.
+
+When setting one of them, PintarJS will adjust the canvas other dimention to match this size whild keeping a 1:1 ratio. 
 
 ```javascript
 // will make width exactly 800 pixels, and adjust height accordingly
@@ -894,6 +922,19 @@ Note that when you scale a canvas and there's no match between its width/height 
 // will make sure that canvas scales with nearest neighbor filter, ie no blur
 pintar.makePixelatedScaling();
 ```
+
+##### resizeAndCenter()
+
+Second option to control resolution is to use the `resizeAndCenter(width, height)` method. This function will resize the canvas into the given size, and stretch it as much as possible on its parent size while keeping it a 1:1 ratio and centerized.
+
+To make sure resolution is kept even if users resize browser, you need to call this every frame:
+
+```javascript
+pintar.resizeAndCenter(800, 600);
+```
+
+Note that if one of the `fixedResolution` or `matchCanvasSizeToBounds` flags are set, it will throw an exception as these options collide.
+
 
 #### Fullscreen
 
@@ -1008,6 +1049,14 @@ pintar.adjustToParentSize();
 
 - Improved text stroke.
 - Added text shadow.
+
+### 2.1.5
+
+- Added `resizeAndCenter` to better control resolution.
+- Fixed Render Target faulty origin.
+- Added shaders example.
+- Added `setDefaultSpriteShader()` and `setDefaultShapesShader()` to set default shaders.
+- Added `wrapX` and `wrapY` properties to sprites.
 
 ## License
 
