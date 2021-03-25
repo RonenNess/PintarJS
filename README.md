@@ -1058,6 +1058,10 @@ pintar.adjustToParentSize();
 - Added `setDefaultSpriteShader()` and `setDefaultShapesShader()` to set default shaders.
 - Added `wrapX` and `wrapY` properties to sprites.
 
+### 2.1.6
+
+- Fixed bug in setting wrap modes with different textures.
+
 ## License
 
 PintarJS is distributed under the permissive MIT License and is absolutely free to use for any purpose (commercial included).

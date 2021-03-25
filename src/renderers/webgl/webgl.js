@@ -501,6 +501,9 @@ class WebGlRenderer extends Renderer
                 var gltexture = texture._glTextures[textureMode];
                 gl.bindTexture(gl.TEXTURE_2D, gltexture);
             }
+
+            // reset wrap mode
+            this._wrapX = this._wrapY = null;
         }
     }
 
