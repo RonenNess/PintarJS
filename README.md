@@ -1,3 +1,14 @@
+# Deprecated Notice
+
+PintarJS did not meet the goals I set up for it.
+Furthermore, the lack of input and sound handling makes it less viable for game dev as you only need additional packages.
+
+For that reason I took another shoot at this and wrote [Shaku](https://github.com/RonenNess/Shaku) which I believe is vastly superior. 
+Hope you'll find it useful :)
+
+Note: you can still submit PRs to this git and if they're good I'll merge them, but I won't be working on this project myself.
+
+
 # PintarJS
 
 Micro JS lib (80KB minified) for direct WebGL and canvas rendering.
